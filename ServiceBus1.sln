@@ -17,6 +17,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventBus.Microsoft.ServiceB
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventBus.Abstractions", "BuildingBlocks\EventBus.Abstractions\EventBus.Abstractions.csproj", "{0B4D0587-F964-4305-86DF-9B7866F8E2DD}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventBus.Microsoft.ServiceBus.Tests.Integration", "BuildingBlocks\EventBus.Microsoft.ServiceBus.Tests.Integration\EventBus.Microsoft.ServiceBus.Tests.Integration.csproj", "{F8A80F34-6A7E-493F-8851-BE8BFDFC6245}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{FA790153-FB39-4F56-A26E-E84D06B2666B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,15 +51,21 @@ Global
 		{0B4D0587-F964-4305-86DF-9B7866F8E2DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0B4D0587-F964-4305-86DF-9B7866F8E2DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0B4D0587-F964-4305-86DF-9B7866F8E2DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8A80F34-6A7E-493F-8851-BE8BFDFC6245}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8A80F34-6A7E-493F-8851-BE8BFDFC6245}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8A80F34-6A7E-493F-8851-BE8BFDFC6245}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8A80F34-6A7E-493F-8851-BE8BFDFC6245}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{129C8DB8-5854-4557-9C5C-89470D116281} = {06FD6DAB-950A-45C9-8739-2BB0742ECDC0}
-		{72F33EC9-6571-4290-BAFF-9B61D20872F7} = {06FD6DAB-950A-45C9-8739-2BB0742ECDC0}
+		{72F33EC9-6571-4290-BAFF-9B61D20872F7} = {FA790153-FB39-4F56-A26E-E84D06B2666B}
 		{68B67212-9C98-41DB-966C-13445DE256CD} = {06FD6DAB-950A-45C9-8739-2BB0742ECDC0}
 		{0B4D0587-F964-4305-86DF-9B7866F8E2DD} = {06FD6DAB-950A-45C9-8739-2BB0742ECDC0}
+		{F8A80F34-6A7E-493F-8851-BE8BFDFC6245} = {FA790153-FB39-4F56-A26E-E84D06B2666B}
+		{FA790153-FB39-4F56-A26E-E84D06B2666B} = {06FD6DAB-950A-45C9-8739-2BB0742ECDC0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5B5C0CCC-D3CB-4F2D-A365-967A08E12D68}
