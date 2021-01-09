@@ -1,6 +1,7 @@
 ﻿using EventBus.Abstractions;
 using EventBus.Extensions.Microsoft.DependencyInjection;
-using EventBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Models;
+using EventBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Handlers;
+using EventBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Models.Events;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
