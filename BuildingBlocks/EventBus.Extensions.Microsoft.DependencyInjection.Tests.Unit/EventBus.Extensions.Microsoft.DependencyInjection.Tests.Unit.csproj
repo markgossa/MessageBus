@@ -21,7 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\EventBus.Abstractions\EventBus.Abstractions.csproj" />
     <ProjectReference Include="..\EventBus.Extensions.Microsoft.DependencyInjection\EventBus.Extensions.Microsoft.DependencyInjection.csproj" />
   </ItemGroup>
 

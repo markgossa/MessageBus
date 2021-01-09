@@ -10,12 +10,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="EventBus\" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <ProjectReference Include="..\BuildingBlocks\EventBus.Abstractions\EventBus.Abstractions.csproj" />
     <ProjectReference Include="..\BuildingBlocks\EventBus.Extensions.Microsoft.DependencyInjection\EventBus.Extensions.Microsoft.DependencyInjection.csproj" />
-    <ProjectReference Include="..\EventBus.Abstractions\EventBus.Abstractions.csproj" />
+    <ProjectReference Include="..\BuildingBlocks\EventBus.Microsoft.ServiceBus\EventBus.Microsoft.ServiceBus.csproj" />
   </ItemGroup>
 
 </Project>
