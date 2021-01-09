@@ -12,23 +12,23 @@ namespace ServiceBus1.Tests.Unit
         private const string topic = "topic1";
 
 
-        [Fact]
-        public async Task ReceivesAMessageAsync()
-        {
-            const string messageType = "string";
-            var messageBody = Guid.NewGuid().ToString();
-            var mockMessageProcessor = new Mock<IDefaultMessageHandler>(MockBehavior.Strict);
-            mockMessageProcessor.Setup(m => m.Process(It.IsAny<string>()));
-            var mockAircraftLandedService = new Mock<IAircraftLandedService>();
-            var client = await SendMessage(new ServiceBusClient(connectionString), messageBody, messageType);
+        //[Fact]
+        //public async Task ReceivesAMessageAsync()
+        //{
+        //    const string messageType = "string";
+        //    var messageBody = Guid.NewGuid().ToString();
+        //    var mockMessageProcessor = new Mock<IDefaultMessageHandler>(MockBehavior.Strict);
+        //    mockMessageProcessor.Setup(m => m.Process(It.IsAny<string>()));
+        //    var mockAircraftLandedService = new Mock<IAircraftLandedService>();
+        //    var client = await SendMessage(new ServiceBusClient(connectionString), messageBody, messageType);
 
-            var sut = new ServiceBusMessageRouter(client, mockMessageProcessor.Object,
-                mockAircraftLandedService.Object);
-            await sut.InitializeAsync();
-            await Task.Delay(TimeSpan.FromSeconds(1));
+        //    var sut = new ServiceBusMessageRouter(client, mockMessageProcessor.Object,
+        //        mockAircraftLandedService.Object);
+        //    await sut.InitializeAsync();
+        //    await Task.Delay(TimeSpan.FromSeconds(1));
 
-            mockMessageProcessor.Verify(x => x.Process(messageBody), Times.Once);
-        }
+        //    mockMessageProcessor.Verify(x => x.Process(messageBody), Times.Once);
+        //}
 
         //[Fact]
         //public async Task ReceivesAnAircraftLandedAsync()
