@@ -1,4 +1,4 @@
-﻿using ServiceBus1.EventBus;
+﻿using EventBus.Abstractions;
 
 namespace ServiceBus1.Events
 {

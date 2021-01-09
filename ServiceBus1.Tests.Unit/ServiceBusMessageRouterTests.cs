@@ -1,11 +1,8 @@
-using Xunit;
 using Azure.Messaging.ServiceBus;
-using System.Threading.Tasks;
 using Moq;
 using System;
-using System.Text.Json;
-using ServiceBus1.EventBus;
-using ServiceBus1.Events;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace ServiceBus1.Tests.Unit
 {
@@ -13,7 +10,6 @@ namespace ServiceBus1.Tests.Unit
     {
         private const string connectionString = "Endpoint=sb://sb43719.servicebus.windows.net/;SharedAccessKeyName=Manage;SharedAccessKey=FqCICJRc9BFQbXNaiXDRSmUe1sGLwVpGP1OdcAFdkhQ=";
         private const string topic = "topic1";
-        private const string subscription = "ServiceBus1";
 
 
         [Fact]
@@ -51,7 +47,7 @@ namespace ServiceBus1.Tests.Unit
             mockMessageProcessor.Verify(x => x.Process(messageBody), Times.Never);
             mockAircraftLandedService.Verify(x => x.Process(messageBody), Times.Once);
         }
-        
+
         //[Fact]
         //public async Task ReceivesAnAircraftTakenOffAsync()
         //{

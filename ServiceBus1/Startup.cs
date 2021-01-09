@@ -1,5 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using ServiceBus1.EventBus;
+﻿using EventBus.Extensions.Microsoft.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using ServiceBus1.Events;
 using ServiceBus1.Handlers;
 

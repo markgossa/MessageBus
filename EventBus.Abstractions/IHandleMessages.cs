@@ -1,4 +1,4 @@
-﻿namespace ServiceBus1.EventBus
+﻿namespace EventBus.Abstractions
 {
     public interface IHandleMessages<T>
     {

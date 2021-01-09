@@ -9,4 +9,13 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="EventBus\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BuildingBlocks\EventBus.Extensions.Microsoft.DependencyInjection\EventBus.Extensions.Microsoft.DependencyInjection.csproj" />
+    <ProjectReference Include="..\EventBus.Abstractions\EventBus.Abstractions.csproj" />
+  </ItemGroup>
+
 </Project>

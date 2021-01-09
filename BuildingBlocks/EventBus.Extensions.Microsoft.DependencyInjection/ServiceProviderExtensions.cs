@@ -1,7 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using EventBus.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 
-namespace ServiceBus1.EventBus
+namespace EventBus.Extensions.Microsoft.DependencyInjection
 {
     public static class ServiceProviderExtensions
     {
@@ -11,7 +12,7 @@ namespace ServiceBus1.EventBus
             services.AddScoped(typeof(IHandleMessages<>).MakeGenericType(eventType), handlerType);
             return services;
         }
-        
+
         public static ServiceCollection SubscribeToMessage<TMessage, TMessageHandler>(this ServiceCollection services)
             where TMessage : IEvent
             where TMessageHandler : IHandleMessages<TMessage>
