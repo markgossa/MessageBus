@@ -1,6 +1,6 @@
 ﻿using EventBus.Abstractions;
 
-namespace EventBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Models.Events
+namespace EventBus.Microsoft.ServiceBus.Tests.Integration.Models
 {
     public class CarPainted : IEvent
     {

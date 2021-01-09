@@ -43,11 +43,12 @@ namespace EventBus.Microsoft.ServiceBus.Tests.Integration
         public async Task UpdatesSubscriptionRulesWithMultipleHandlersAsync()
         {
             var services = new ServiceCollection()
-                .SubscribeToMessage<CarWashed, CarWashedHandler>();
+                .SubscribeToMessage<CarWashed, CarWashedHandler>()
+                .SubscribeToMessage<CarPainted, CarPaintedHandler>();
 
             await new EventBus(_connectionString, _topic, _subscription).InitializeAsync(services);
 
-            await AssertSubscriptionRules(new Type[] { typeof(CarWashed) });
+            await AssertSubscriptionRules(new Type[] { typeof(CarWashed), typeof(CarPainted) });
         }
 
         private async Task AssertSubscriptionRules(Type[] messageTypes, string messagePropertyName = "MessageType")
