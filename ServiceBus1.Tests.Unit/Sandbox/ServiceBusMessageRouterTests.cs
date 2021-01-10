@@ -8,7 +8,7 @@ namespace ServiceBus1.Tests.Unit
 {
     public class ServiceBusMessageRouterTests
     {
-        private const string connectionString = "Endpoint=sb://sb43719.servicebus.windows.net/;SharedAccessKeyName=Manage;SharedAccessKey=FqCICJRc9BFQbXNaiXDRSmUe1sGLwVpGP1OdcAFdkhQ=";
+        private const string connectionString = "";
         private const string topic = "topic1";
 
 

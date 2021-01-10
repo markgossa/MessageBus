@@ -10,9 +10,18 @@ namespace ServiceBus1.Tests.Unit
         [Fact]
         public void RegistersAircraftTakenOffHandler()
         {
-            var serviceProvider = Startup.ConfigureServices();
+            var serviceProvider = Startup.Initialize();
 
             Assert.NotNull(serviceProvider.GetRequiredService<IHandleMessages<AircraftTakenOff>>());
+        }
+        
+        [Fact]
+        public void AddsConfiguration()
+        {
+            Startup.Initialize();
+
+            Assert.NotNull(Startup.Configuration);
+            Assert.Equal("topic1", Startup.Configuration.GetSection("ServiceBus:Topic").Value);
         }
     }
 }

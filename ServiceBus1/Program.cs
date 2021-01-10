@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+﻿using Microsoft.Extensions.Hosting;
 
 namespace ServiceBus1
 {
@@ -6,6 +6,8 @@ namespace ServiceBus1
     {
         static void Main()
         {
+            Startup.Initialize();
+            new HostBuilder().Build().Run();
         }
     }
 }
