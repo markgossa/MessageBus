@@ -1,11 +1,10 @@
 ﻿using MessageBus.Abstractions;
-using Microsoft.Azure.ServiceBus;
-using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Azure.Messaging.ServiceBus.Administration;
 
 namespace MessageBus.Microsoft.ServiceBus
 {
@@ -27,7 +26,7 @@ namespace MessageBus.Microsoft.ServiceBus
 
         public async Task StartAsync(ServiceCollection services)
         {
-            var client = new SubscriptionClient(_connectionString, _topic, _subscription);
+            var client = new ServiceBusAdministrationClient(_connectionString);
             await RemoveAllRulesAsync(client);
 
             foreach (var handler in FindRegisteredHandlers(services))
@@ -39,12 +38,12 @@ namespace MessageBus.Microsoft.ServiceBus
         private static IEnumerable<ServiceDescriptor> FindRegisteredHandlers(ServiceCollection services)
             => services.Where(s => s.ServiceType.Name.Contains(typeof(IHandleMessages<>).Name));
 
-        private static async Task RemoveAllRulesAsync(SubscriptionClient client)
+        private async Task RemoveAllRulesAsync(ServiceBusAdministrationClient client)
         {
-            var rules = await client.GetRulesAsync();
-            foreach (var rule in rules)
+            var rules = client.GetRulesAsync(_topic, _subscription);
+            await foreach (var rule in rules)
             {
-                await client.RemoveRuleAsync(rule.Name);
+                await client.DeleteRuleAsync(_topic, _subscription, rule.Name);
             }
         }
 
@@ -54,7 +53,8 @@ namespace MessageBus.Microsoft.ServiceBus
                 .First(i => i.Name.Contains(typeof(IHandleMessages<>).Name))
                 .GenericTypeArguments.First();
 
-        private async Task AddRulesAsync(SubscriptionClient client, Type messageType)
-            => await client.AddRuleAsync(messageType.Name, new SqlFilter($"{_messageTypePropertyName} = '{messageType.Name}'"));
+        private async Task AddRulesAsync(ServiceBusAdministrationClient client, Type messageType)
+            => await client.CreateRuleAsync(_topic, _subscription, 
+                new CreateRuleOptions(messageType.Name, new SqlRuleFilter($"{_messageTypePropertyName} = '{messageType.Name}'")));
     }
 }
