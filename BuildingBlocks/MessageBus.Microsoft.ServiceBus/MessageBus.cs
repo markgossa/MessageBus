@@ -1,4 +1,4 @@
-﻿using EventBus.Abstractions;
+﻿using MessageBus.Abstractions;
 using Microsoft.Azure.ServiceBus;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 
 namespace EventBus.Microsoft.ServiceBus
 {
-    public class EventBus
+    public class MessageBus
     {
         private readonly string _connectionString;
         private readonly string _topic;
         private readonly string _subscription;
         private readonly string _messageTypePropertyName;
 
-        public EventBus(string connectionString, string topic, string subscription, 
+        public MessageBus(string connectionString, string topic, string subscription, 
             string messageTypePropertyName = "MessageType")
         {
             _connectionString = connectionString;

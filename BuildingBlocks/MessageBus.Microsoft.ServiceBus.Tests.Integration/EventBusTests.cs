@@ -2,7 +2,7 @@ using Microsoft.Azure.ServiceBus;
 using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
 using System.Threading.Tasks;
-using EventBus.Extensions.Microsoft.DependencyInjection;
+using MessageBus.Extensions.Microsoft.DependencyInjection;
 using Xunit;
 using EventBus.Microsoft.ServiceBus.Tests.Integration.Models;
 using System;
@@ -23,7 +23,7 @@ namespace EventBus.Microsoft.ServiceBus.Tests.Integration
         {
             var services = new ServiceCollection().SubscribeToMessage<CarWashed, CarWashedHandler>();
 
-            await new EventBus(_connectionString, _topic, _subscription).InitializeAsync(services);
+            await new MessageBus(_connectionString, _topic, _subscription).InitializeAsync(services);
 
             await AssertSubscriptionRules(new Type[] { typeof(CarWashed) });
         }
@@ -34,7 +34,7 @@ namespace EventBus.Microsoft.ServiceBus.Tests.Integration
             const string messagePropertyName = "MessageIdentifier";
             var services = new ServiceCollection().SubscribeToMessage<CarWashed, CarWashedHandler>();
 
-            await new EventBus(_connectionString, _topic, _subscription, messagePropertyName).InitializeAsync(services);
+            await new MessageBus(_connectionString, _topic, _subscription, messagePropertyName).InitializeAsync(services);
 
             await AssertSubscriptionRules(new Type[] { typeof(CarWashed) }, messagePropertyName);
         }
@@ -46,7 +46,7 @@ namespace EventBus.Microsoft.ServiceBus.Tests.Integration
                 .SubscribeToMessage<CarWashed, CarWashedHandler>()
                 .SubscribeToMessage<CarPainted, CarPaintedHandler>();
 
-            await new EventBus(_connectionString, _topic, _subscription).InitializeAsync(services);
+            await new MessageBus(_connectionString, _topic, _subscription).InitializeAsync(services);
 
             await AssertSubscriptionRules(new Type[] { typeof(CarWashed), typeof(CarPainted) });
         }

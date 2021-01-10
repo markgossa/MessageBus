@@ -23,8 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EventBus.Abstractions\EventBus.Abstractions.csproj" />
-    <ProjectReference Include="..\EventBus.Microsoft.ServiceBus\EventBus.Microsoft.ServiceBus.csproj" />
+    <ProjectReference Include="..\MessageBus.Abstractions\MessageBus.Abstractions.csproj" />
+    <ProjectReference Include="..\MessageBus.Microsoft.ServiceBus\MessageBus.Microsoft.ServiceBus.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-﻿using EventBus.Extensions.Microsoft.DependencyInjection;
+﻿using MessageBus.Extensions.Microsoft.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ServiceBus1.Events;

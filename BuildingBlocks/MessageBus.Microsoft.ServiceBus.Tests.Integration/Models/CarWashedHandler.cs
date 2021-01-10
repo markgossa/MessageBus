@@ -1,4 +1,4 @@
-﻿using EventBus.Abstractions;
+﻿using MessageBus.Abstractions;
 
 namespace EventBus.Microsoft.ServiceBus.Tests.Integration.Models
 {

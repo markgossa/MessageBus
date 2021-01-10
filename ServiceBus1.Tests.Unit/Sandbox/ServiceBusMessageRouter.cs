@@ -1,5 +1,5 @@
 ﻿using Azure.Messaging.ServiceBus;
-using EventBus.Abstractions;
+using MessageBus.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using ServiceBus1.Events;
 using ServiceBus1.Handlers;

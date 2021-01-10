@@ -9,7 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EventBus.Extensions.Microsoft.DependencyInjection\EventBus.Extensions.Microsoft.DependencyInjection.csproj" />
+    <ProjectReference Include="..\MessageBus.Extensions.Microsoft.DependencyInjection\MessageBus.Extensions.Microsoft.DependencyInjection.csproj" />
   </ItemGroup>
 
 </Project>

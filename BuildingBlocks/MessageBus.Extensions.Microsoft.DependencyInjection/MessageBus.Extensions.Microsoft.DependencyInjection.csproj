@@ -9,7 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EventBus.Abstractions\EventBus.Abstractions.csproj" />
+    <ProjectReference Include="..\MessageBus.Abstractions\MessageBus.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

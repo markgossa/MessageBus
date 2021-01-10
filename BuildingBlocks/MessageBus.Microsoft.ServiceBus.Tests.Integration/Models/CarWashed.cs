@@ -1,8 +1,8 @@
-﻿using EventBus.Abstractions;
+﻿using MessageBus.Abstractions;
 
 namespace EventBus.Microsoft.ServiceBus.Tests.Integration.Models
 {
-    public class CarPainted : IEvent
+    public class CarWashed : IEvent
     {
     }
 }

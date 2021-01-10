@@ -1,8 +1,8 @@
-﻿using EventBus.Abstractions;
+﻿using MessageBus.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 
-namespace EventBus.Extensions.Microsoft.DependencyInjection
+namespace MessageBus.Extensions.Microsoft.DependencyInjection
 {
     public static class ServiceProviderExtensions
     {

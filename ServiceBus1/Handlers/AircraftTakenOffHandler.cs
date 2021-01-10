@@ -1,4 +1,4 @@
-﻿using EventBus.Abstractions;
+﻿using MessageBus.Abstractions;
 using ServiceBus1.Events;
 using System.Diagnostics;
 

@@ -9,15 +9,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceBus1.Tests.Unit", "S
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BuildingBlocks", "BuildingBlocks", "{06FD6DAB-950A-45C9-8739-2BB0742ECDC0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBus.Extensions.Microsoft.DependencyInjection", "BuildingBlocks\EventBus.Extensions.Microsoft.DependencyInjection\EventBus.Extensions.Microsoft.DependencyInjection.csproj", "{129C8DB8-5854-4557-9C5C-89470D116281}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessageBus.Extensions.Microsoft.DependencyInjection", "BuildingBlocks\MessageBus.Extensions.Microsoft.DependencyInjection\MessageBus.Extensions.Microsoft.DependencyInjection.csproj", "{129C8DB8-5854-4557-9C5C-89470D116281}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBus.Extensions.Microsoft.DependencyInjection.Tests.Unit", "BuildingBlocks\EventBus.Extensions.Microsoft.DependencyInjection.Tests.Unit\EventBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.csproj", "{72F33EC9-6571-4290-BAFF-9B61D20872F7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit", "BuildingBlocks\MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit\MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.csproj", "{72F33EC9-6571-4290-BAFF-9B61D20872F7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventBus.Microsoft.ServiceBus", "BuildingBlocks\EventBus.Microsoft.ServiceBus\EventBus.Microsoft.ServiceBus.csproj", "{68B67212-9C98-41DB-966C-13445DE256CD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MessageBus.Microsoft.ServiceBus", "BuildingBlocks\MessageBus.Microsoft.ServiceBus\MessageBus.Microsoft.ServiceBus.csproj", "{68B67212-9C98-41DB-966C-13445DE256CD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventBus.Abstractions", "BuildingBlocks\EventBus.Abstractions\EventBus.Abstractions.csproj", "{0B4D0587-F964-4305-86DF-9B7866F8E2DD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MessageBus.Abstractions", "BuildingBlocks\MessageBus.Abstractions\MessageBus.Abstractions.csproj", "{0B4D0587-F964-4305-86DF-9B7866F8E2DD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventBus.Microsoft.ServiceBus.Tests.Integration", "BuildingBlocks\EventBus.Microsoft.ServiceBus.Tests.Integration\EventBus.Microsoft.ServiceBus.Tests.Integration.csproj", "{F8A80F34-6A7E-493F-8851-BE8BFDFC6245}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MessageBus.Microsoft.ServiceBus.Tests.Integration", "BuildingBlocks\MessageBus.Microsoft.ServiceBus.Tests.Integration\MessageBus.Microsoft.ServiceBus.Tests.Integration.csproj", "{F8A80F34-6A7E-493F-8851-BE8BFDFC6245}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{FA790153-FB39-4F56-A26E-E84D06B2666B}"
 EndProject
