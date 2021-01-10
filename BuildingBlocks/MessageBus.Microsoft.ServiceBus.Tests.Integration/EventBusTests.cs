@@ -4,13 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using MessageBus.Extensions.Microsoft.DependencyInjection;
 using Xunit;
-using EventBus.Microsoft.ServiceBus.Tests.Integration.Models;
+using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
 using System;
 
-namespace EventBus.Microsoft.ServiceBus.Tests.Integration
+namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 {
     [Collection("Serialize")]
-    public class EventBusTests
+    public class MessageBusTests
     {
         private const string _connectionString = "Endpoint=sb://sb43719.servicebus.windows.net/;" +
             "SharedAccessKeyName=Manage;SharedAccessKey=FqCICJRc9BFQbXNaiXDRSmUe1sGLwVpGP1OdcAFdkhQ=;";

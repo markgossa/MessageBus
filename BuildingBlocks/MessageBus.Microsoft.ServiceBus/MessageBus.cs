@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace EventBus.Microsoft.ServiceBus
+namespace MessageBus.Microsoft.ServiceBus
 {
     public class MessageBus
     {
@@ -15,7 +15,7 @@ namespace EventBus.Microsoft.ServiceBus
         private readonly string _subscription;
         private readonly string _messageTypePropertyName;
 
-        public MessageBus(string connectionString, string topic, string subscription, 
+        public MessageBus(string connectionString, string topic, string subscription,
             string messageTypePropertyName = "MessageType")
         {
             _connectionString = connectionString;
@@ -47,7 +47,7 @@ namespace EventBus.Microsoft.ServiceBus
             }
         }
 
-        private static Type GetMessageTypeFromHandler(Type handler) 
+        private static Type GetMessageTypeFromHandler(Type handler)
             => handler
                 .GetInterfaces()
                 .First(i => i.Name.Contains(typeof(IHandleMessages<>).Name))

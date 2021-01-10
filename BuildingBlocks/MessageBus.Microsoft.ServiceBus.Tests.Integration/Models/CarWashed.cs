@@ -1,6 +1,6 @@
 ﻿using MessageBus.Abstractions;
 
-namespace EventBus.Microsoft.ServiceBus.Tests.Integration.Models
+namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Models
 {
     public class CarWashed : IEvent
     {
