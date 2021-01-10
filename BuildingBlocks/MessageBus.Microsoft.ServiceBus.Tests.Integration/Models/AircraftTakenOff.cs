@@ -2,7 +2,7 @@
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Models
 {
-    public class CarPainted : IEvent
+    public class AircraftTakenOff : IEvent
     {
     }
 }

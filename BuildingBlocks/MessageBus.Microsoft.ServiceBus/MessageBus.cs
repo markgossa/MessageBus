@@ -1,5 +1,6 @@
 ﻿using MessageBus.Abstractions;
 using Microsoft.Azure.ServiceBus;
+using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -24,7 +25,7 @@ namespace MessageBus.Microsoft.ServiceBus
             _messageTypePropertyName = messageTypePropertyName;
         }
 
-        public async Task InitializeAsync(ServiceCollection services)
+        public async Task StartAsync(ServiceCollection services)
         {
             var client = new SubscriptionClient(_connectionString, _topic, _subscription);
             await RemoveAllRulesAsync(client);
