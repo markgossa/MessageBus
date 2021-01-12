@@ -10,7 +10,7 @@ using System.Text.Json;
 
 namespace MessageBus.Microsoft.ServiceBus
 {
-    public class MessageBus
+    public class MessageBus : IMessageBus
     {
         private readonly string _connectionString;
         private readonly string _topic;

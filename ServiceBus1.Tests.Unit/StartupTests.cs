@@ -7,13 +7,13 @@ namespace ServiceBus1.Tests.Unit
 {
     public class StartupTests
     {
-        [Fact]
-        public void RegistersAircraftTakenOffHandler()
-        {
-            var serviceProvider = Startup.Initialize();
+        //[Fact]
+        //public void RegistersAircraftTakenOffHandler()
+        //{
+        //    var serviceProvider = Startup.Initialize();
 
-            Assert.NotNull(serviceProvider.GetRequiredService<IHandleMessages<AircraftTakenOff>>());
-        }
+        //    Assert.NotNull(serviceProvider.GetRequiredService<IHandleMessages<AircraftTakenOff>>());
+        //}
         
         [Fact]
         public void AddsConfiguration()

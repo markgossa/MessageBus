@@ -21,6 +21,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MessageBus.Microsoft.Servic
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{FA790153-FB39-4F56-A26E-E84D06B2666B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessageBus.Microsoft.ServiceBus.Tests.Unit", "BuildingBlocks\MessageBus.Microsoft.ServiceBus.Tests.Unit\MessageBus.Microsoft.ServiceBus.Tests.Unit.csproj", "{D1EA4BAE-F915-49B4-892F-F05CB04F6318}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,10 @@ Global
 		{F8A80F34-6A7E-493F-8851-BE8BFDFC6245}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F8A80F34-6A7E-493F-8851-BE8BFDFC6245}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F8A80F34-6A7E-493F-8851-BE8BFDFC6245}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1EA4BAE-F915-49B4-892F-F05CB04F6318}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1EA4BAE-F915-49B4-892F-F05CB04F6318}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1EA4BAE-F915-49B4-892F-F05CB04F6318}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1EA4BAE-F915-49B4-892F-F05CB04F6318}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -66,6 +72,7 @@ Global
 		{0B4D0587-F964-4305-86DF-9B7866F8E2DD} = {06FD6DAB-950A-45C9-8739-2BB0742ECDC0}
 		{F8A80F34-6A7E-493F-8851-BE8BFDFC6245} = {FA790153-FB39-4F56-A26E-E84D06B2666B}
 		{FA790153-FB39-4F56-A26E-E84D06B2666B} = {06FD6DAB-950A-45C9-8739-2BB0742ECDC0}
+		{D1EA4BAE-F915-49B4-892F-F05CB04F6318} = {FA790153-FB39-4F56-A26E-E84D06B2666B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5B5C0CCC-D3CB-4F2D-A365-967A08E12D68}

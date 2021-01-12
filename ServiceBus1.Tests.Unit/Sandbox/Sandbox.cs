@@ -30,14 +30,8 @@ namespace ServiceBus1.Tests.Unit.Sandbox
         }
 
         [Fact]
-        public async Task SendTestMessage()
-        {
-            var mockAircraftTakenOffHandler = new Mock<IHandleMessages<AircraftTakenOff>>();
-            var services = new ServiceCollection()
-                .SubscribeToMessage(typeof(AircraftTakenOff), mockAircraftTakenOffHandler.Object.GetType());
-            var aircraftTakenOffEvent = BuildAircraftTakenOffEvent();
-            await SendMessage(aircraftTakenOffEvent);
-        }
+        public async Task SendTestMessage() 
+            => await SendMessage(BuildAircraftTakenOffEvent());
 
         private async Task SendMessage(AircraftTakenOff aircraftTakenOffEvent)
         {
