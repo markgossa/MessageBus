@@ -10,22 +10,20 @@ namespace ServiceBus1
     {
         public static IConfiguration Configuration { get; private set; }
 
-
-        public static ServiceProvider Initialize()
+        public static ServiceCollection Initialize()
         {
             BuildConfiguration();
             return ConfigureServices();
         }
-
-        private static ServiceProvider ConfigureServices() 
-            => new ServiceCollection()
-                .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>()
-                .BuildServiceProvider();
 
         private static void BuildConfiguration() 
             => Configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddUserSecrets<Program>()
                 .Build();
+
+        private static ServiceCollection ConfigureServices() 
+            => new ServiceCollection()
+                .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
     }
 }

@@ -20,7 +20,8 @@ namespace ServiceBus1.Tests.Unit
         private readonly IAircraftLandedService _aircraftLandedService;
         private ServiceProvider _serviceProvider;
 
-        public ServiceBusMessageRouter(ServiceBusClient serviceBusClient, IDefaultMessageHandler messageProcessor, IAircraftLandedService aircraftLandedService)
+        public ServiceBusMessageRouter(ServiceBusClient serviceBusClient, 
+            IDefaultMessageHandler messageProcessor, IAircraftLandedService aircraftLandedService)
         {
             _serviceBusClient = serviceBusClient;
             _messageProcessor = messageProcessor;

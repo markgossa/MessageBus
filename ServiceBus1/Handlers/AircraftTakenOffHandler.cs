@@ -1,12 +1,12 @@
 ﻿using MessageBus.Abstractions;
 using ServiceBus1.Events;
-using System.Diagnostics;
+using System;
 
 namespace ServiceBus1.Handlers
 {
     public class AircraftTakenOffHandler : IHandleMessages<AircraftTakenOff>
     {
         public void Handle(AircraftTakenOff aircraftTakenOff)
-            => Debug.WriteLine(aircraftTakenOff.AircraftId);
+            => Console.WriteLine(aircraftTakenOff.AircraftId);
     }
 }
