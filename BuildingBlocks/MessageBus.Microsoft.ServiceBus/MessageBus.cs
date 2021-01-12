@@ -33,15 +33,19 @@ namespace MessageBus.Microsoft.ServiceBus
         public async Task StartAsync(ServiceCollection services)
         {
             await RemoveAllRulesAsync(_serviceBusAdminClient);
+            await AddRulesAsync(services);
 
-            _handlers = FindRegisteredHandlers(services);
             _serviceProvider = services.BuildServiceProvider();
+            await BuildServiceBusProcessor();
+        }
+
+        private async Task AddRulesAsync(ServiceCollection services)
+        {
+            _handlers = FindRegisteredHandlers(services);
             foreach (var handler in _handlers)
             {
-                await AddRulesAsync(_serviceBusAdminClient, GetMessageTypeFromHandler(handler.ImplementationType));
+                await AddRuleAsync(_serviceBusAdminClient, GetMessageTypeFromHandler(handler.ImplementationType));
             }
-
-            await BuildServiceBusProcessor();
         }
 
         private async Task BuildServiceBusProcessor()
@@ -101,7 +105,7 @@ namespace MessageBus.Microsoft.ServiceBus
                 .First(i => i.Name.Contains(typeof(IHandleMessages<>).Name))
                 .GenericTypeArguments.First();
 
-        private async Task AddRulesAsync(ServiceBusAdministrationClient client, Type messageType)
+        private async Task AddRuleAsync(ServiceBusAdministrationClient client, Type messageType)
             => await client.CreateRuleAsync(_topic, _subscription,
                 new CreateRuleOptions(messageType.Name, new SqlRuleFilter($"{_messageTypePropertyName} = '{messageType.Name}'")));
     }

@@ -9,9 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceBus1.Tests.Unit", "S
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BuildingBlocks", "BuildingBlocks", "{06FD6DAB-950A-45C9-8739-2BB0742ECDC0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessageBus.Extensions.Microsoft.DependencyInjection", "BuildingBlocks\MessageBus.Extensions.Microsoft.DependencyInjection\MessageBus.Extensions.Microsoft.DependencyInjection.csproj", "{129C8DB8-5854-4557-9C5C-89470D116281}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MessageBus.Extensions.Microsoft.DependencyInjection", "BuildingBlocks\MessageBus.Extensions.Microsoft.DependencyInjection\MessageBus.Extensions.Microsoft.DependencyInjection.csproj", "{129C8DB8-5854-4557-9C5C-89470D116281}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit", "BuildingBlocks\MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit\MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.csproj", "{72F33EC9-6571-4290-BAFF-9B61D20872F7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit", "BuildingBlocks\MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit\MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.csproj", "{72F33EC9-6571-4290-BAFF-9B61D20872F7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MessageBus.Microsoft.ServiceBus", "BuildingBlocks\MessageBus.Microsoft.ServiceBus\MessageBus.Microsoft.ServiceBus.csproj", "{68B67212-9C98-41DB-966C-13445DE256CD}"
 EndProject
