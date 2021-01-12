@@ -6,14 +6,14 @@ using Xunit;
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 {
-    public class MessageBusServiceBusAdminClientTests : MessageBusServiceBusAdminClientTestsBase
+    public class MessageBusServiceBusAdminTests : MessageBusServiceBusAdminTestsBase
     {
         [Fact]
         public async Task UpdatesSubscriptionRulesAsync()
         {
             var messageHandlers = new List<Type> { typeof(AircraftLandedHandler) };
 
-            await new MessageBusServiceBusAdminClient(_connectionString, _topic, _subscription).Configure(messageHandlers);
+            await new MessageBusServiceBusAdmin(_connectionString, _topic, _subscription).Configure(messageHandlers);
 
             await AssertSubscriptionRules(new Type[] { typeof(AircraftLanded) });
         }
@@ -24,7 +24,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             const string messagePropertyName = "MessageIdentifier";
             var messageHandlers = new List<Type> { typeof(AircraftLandedHandler) };
 
-            await new MessageBusServiceBusAdminClient(_connectionString, _topic, _subscription, messagePropertyName).Configure(messageHandlers);
+            await new MessageBusServiceBusAdmin(_connectionString, _topic, _subscription, messagePropertyName).Configure(messageHandlers);
 
             await AssertSubscriptionRules(new Type[] { typeof(AircraftLanded) }, messagePropertyName);
         }
@@ -34,18 +34,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             var messageHandlers = new List<Type> { typeof(AircraftLandedHandler), typeof(AircraftTakenOffHandler) };
 
-            await new MessageBusServiceBusAdminClient(_connectionString, _topic, _subscription).Configure(messageHandlers);
+            await new MessageBusServiceBusAdmin(_connectionString, _topic, _subscription).Configure(messageHandlers);
 
             await AssertSubscriptionRules(new Type[] { typeof(AircraftLanded), typeof(AircraftTakenOff) });
         }
     }
-
-    //class MessageBusProcessorFactory
-    //{
-    //    public MessageBusProcessorFactory(IMessageBusClient messageBusClient, 
-    //        IMessageBusManagementClient messageBusManagementClient, IMessageBusHandlerResolver messageBusHandlerResolver)
-    //    {
-
-    //    }
-    //}
 }

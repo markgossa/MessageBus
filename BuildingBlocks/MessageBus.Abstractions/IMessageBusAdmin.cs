@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace MessageBus.Abstractions
 {
-    public interface IMessageBusAdminClient
+    public interface IMessageBusAdmin
     {
         Task Configure(List<Type> messageHandlers);
     }

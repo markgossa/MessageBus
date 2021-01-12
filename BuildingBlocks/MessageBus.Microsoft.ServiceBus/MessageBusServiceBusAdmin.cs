@@ -1,5 +1,4 @@
 ﻿using MessageBus.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +7,7 @@ using Azure.Messaging.ServiceBus.Administration;
 
 namespace MessageBus.Microsoft.ServiceBus
 {
-    public class MessageBusServiceBusAdminClient : IMessageBusAdminClient
+    public class MessageBusServiceBusAdmin : IMessageBusAdmin
     {
         private readonly string _connectionString;
         private readonly string _topic;
@@ -16,9 +15,8 @@ namespace MessageBus.Microsoft.ServiceBus
         private readonly string _messageTypePropertyName;
         private readonly ServiceBusAdministrationClient _serviceBusAdminClient;
         private IEnumerable<Type> _handlers;
-        private ServiceProvider _serviceProvider;
 
-        public MessageBusServiceBusAdminClient(string connectionString, string topic, string subscription,
+        public MessageBusServiceBusAdmin(string connectionString, string topic, string subscription,
             string messageTypePropertyName = "MessageType")
         {
             _connectionString = connectionString;
@@ -84,9 +82,6 @@ namespace MessageBus.Microsoft.ServiceBus
 
         //    return Task.CompletedTask;
         //}
-
-        private static IEnumerable<ServiceDescriptor> FindRegisteredHandlers(ServiceCollection services)
-            => services.Where(s => s.ServiceType.Name.Contains(typeof(IHandleMessages<>).Name));
 
         private async Task RemoveAllRulesAsync(ServiceBusAdministrationClient client)
         {
