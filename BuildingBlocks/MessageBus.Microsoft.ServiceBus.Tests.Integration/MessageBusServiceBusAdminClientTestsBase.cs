@@ -1,6 +1,5 @@
 ﻿using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
-using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,17 +8,17 @@ using Xunit;
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 {
-    public class MessageBusTestsBase
+    public class MessageBusServiceBusAdminClientTestsBase
     {
         protected const string _connectionString = "Endpoint=sb://sb43719.servicebus.windows.net/;" +
             "SharedAccessKeyName=Manage;SharedAccessKey=FqCICJRc9BFQbXNaiXDRSmUe1sGLwVpGP1OdcAFdkhQ=;";
         protected const string _topic = "topic1";
         protected const string _subscription = "ServiceBus1";
-        protected readonly ServiceBusClient _serviceBusClient = new ServiceBusClient(_connectionString);
+        protected readonly ServiceBusClient _serviceBusClient = new Azure.Messaging.ServiceBus.ServiceBusClient(_connectionString);
         protected readonly ServiceBusAdministrationClient _serviceBusAdminClient = new ServiceBusAdministrationClient(_connectionString);
         protected readonly ServiceBusSender _topicClient;
 
-        public MessageBusTestsBase()
+        public MessageBusServiceBusAdminClientTestsBase()
         {
             _topicClient = _serviceBusClient.CreateSender(_topic);
         }
@@ -37,9 +36,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             Assert.Equal(messageTypes.Length, rules.Count);
             foreach (var messageType in messageTypes)
             {
-                var sqlFilter = new SqlRuleFilter($"{messagePropertyName} = '{nameof(AircraftLanded)}'");
+                var sqlFilter = new SqlRuleFilter($"{messagePropertyName} = '{messageType.Name}'");
                 Assert.Single(rules.Where(r => r.Filter.Equals(sqlFilter)));
-                Assert.Single(rules.Where(r => r.Name == nameof(AircraftLanded)));
+                Assert.Single(rules.Where(r => r.Name == messageType.Name));
             }
         }
     }

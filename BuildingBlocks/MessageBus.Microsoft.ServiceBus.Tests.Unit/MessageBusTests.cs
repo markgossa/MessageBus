@@ -1,6 +1,3 @@
-using MessageBus.Extensions.Microsoft.DependencyInjection;
-using MessageBus.Microsoft.ServiceBus.Tests.Unit.Models;
-using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Unit
@@ -17,7 +14,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Unit
             //    .BuildServiceProvider();
 
 
-            var sut = new MessageBus("connectionString", "topic", "subscription");
+            //var sut = new ServiceBusClient("connectionString", "topic", "subscription");
             //registers message handlers in a private field of List<IEvent, IHandleMessages<IEvent>> on MessageBus
             //sut.RegisterMessageHandler<AircraftLanded, AircraftLandedHandler>();
         }
