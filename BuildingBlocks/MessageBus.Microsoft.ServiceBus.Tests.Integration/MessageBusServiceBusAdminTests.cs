@@ -13,7 +13,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             var messageHandlers = new List<Type> { typeof(AircraftLandedHandler) };
 
-            await new MessageBusServiceBusAdmin(_connectionString, _topic, _subscription).Configure(messageHandlers);
+            await new MessageBusServiceBusAdmin(_connectionString, _topic, _subscription).ConfigureAsync(messageHandlers);
 
             await AssertSubscriptionRules(new Type[] { typeof(AircraftLanded) });
         }
@@ -24,7 +24,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             const string messagePropertyName = "MessageIdentifier";
             var messageHandlers = new List<Type> { typeof(AircraftLandedHandler) };
 
-            await new MessageBusServiceBusAdmin(_connectionString, _topic, _subscription, messagePropertyName).Configure(messageHandlers);
+            await new MessageBusServiceBusAdmin(_connectionString, _topic, _subscription, messagePropertyName).ConfigureAsync(messageHandlers);
 
             await AssertSubscriptionRules(new Type[] { typeof(AircraftLanded) }, messagePropertyName);
         }
@@ -34,7 +34,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             var messageHandlers = new List<Type> { typeof(AircraftLandedHandler), typeof(AircraftTakenOffHandler) };
 
-            await new MessageBusServiceBusAdmin(_connectionString, _topic, _subscription).Configure(messageHandlers);
+            await new MessageBusServiceBusAdmin(_connectionString, _topic, _subscription).ConfigureAsync(messageHandlers);
 
             await AssertSubscriptionRules(new Type[] { typeof(AircraftLanded), typeof(AircraftTakenOff) });
         }

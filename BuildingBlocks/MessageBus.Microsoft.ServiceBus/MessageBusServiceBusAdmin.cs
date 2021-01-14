@@ -26,7 +26,7 @@ namespace MessageBus.Microsoft.ServiceBus
             _serviceBusAdminClient = new ServiceBusAdministrationClient(_connectionString);
         }
 
-        public async Task Configure(List<Type> messageHandlers)
+        public async Task ConfigureAsync(List<Type> messageHandlers)
         {
             await RemoveAllRulesAsync(_serviceBusAdminClient);
             await AddRulesAsync(messageHandlers);

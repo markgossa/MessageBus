@@ -3,8 +3,8 @@ using MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Models.Even
 
 namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Handlers
 {
-    public class CarWashedHandler : IHandleMessages<CarWashed>
+    public class AircraftLandedHandler : IHandleMessages<AircraftLanded>
     {
-        public void Handle(CarWashed message) => System.Console.WriteLine("Car is clean");
+        public void Handle(AircraftLanded message) => System.Console.WriteLine("Welcome!");
     }
 }

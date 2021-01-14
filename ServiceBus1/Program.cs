@@ -17,7 +17,7 @@ namespace ServiceBus1
             _config = Startup.Configuration;
             var messageBus = new MessageBus.Microsoft.ServiceBus.MessageBusServiceBusAdmin(GetConfigValue("ServiceBus:ConnectionString"), 
                 GetConfigValue("ServiceBus:Topic"), GetConfigValue("ServiceBus:Subscription"));
-            await messageBus.Configure(services);
+            //await messageBus.ConfigureAsync(services);
 
             new HostBuilder().Build().Run();
         }
