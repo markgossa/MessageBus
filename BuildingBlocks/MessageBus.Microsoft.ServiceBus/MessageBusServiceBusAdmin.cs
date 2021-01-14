@@ -26,7 +26,7 @@ namespace MessageBus.Microsoft.ServiceBus
             _serviceBusAdminClient = new ServiceBusAdministrationClient(_connectionString);
         }
 
-        public async Task ConfigureAsync(List<Type> messageHandlers)
+        public async Task ConfigureAsync(IEnumerable<Type> messageHandlers)
         {
             await RemoveAllRulesAsync(_serviceBusAdminClient);
             await AddRulesAsync(messageHandlers);
@@ -35,7 +35,7 @@ namespace MessageBus.Microsoft.ServiceBus
             //await BuildServiceBusProcessor();
         }
 
-        private async Task AddRulesAsync(List<Type> messageHandlers)
+        private async Task AddRulesAsync(IEnumerable<Type> messageHandlers)
         {
             _handlers = messageHandlers;
             foreach (var handler in _handlers)

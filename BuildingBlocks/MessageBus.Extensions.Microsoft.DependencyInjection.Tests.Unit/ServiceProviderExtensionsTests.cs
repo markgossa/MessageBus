@@ -43,13 +43,13 @@ namespace ServiceBus1.Tests.Unit
             var services = CreateServiceCollection();
             var mockMessageBusAdmin = new Mock<IMessageBusAdmin>();
             var mockMessageBusProcessor = new Mock<IMessageBusProcessor>();
-            var returnServices = services.AddMessageBus(mockMessageBusAdmin.Object,
+            
+            var actualServices = services.AddMessageBus(mockMessageBusAdmin.Object,
                 mockMessageBusProcessor.Object);
 
             var list = new List<Type> { typeof(AircraftTakenOffHandler), typeof(AircraftLandedHandler) };
-
             mockMessageBusAdmin.Verify(m => m.ConfigureAsync(list), Times.Once);
-            Assert.Equal(services, returnServices);
+            Assert.Equal(services, actualServices);
         }
 
         [Fact]
