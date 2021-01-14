@@ -5,6 +5,11 @@ namespace MessageBus.Microsoft.ServiceBus
 {
     public class MessageBusServiceBusProcessor : IMessageBusProcessor
     {
+        public MessageBusServiceBusProcessor(IMessageBusHandlerResolver messageBusHandlerResolver)
+        {
+
+        }
+
         public Task StartAsync() { return Task.CompletedTask; }
     }
 }

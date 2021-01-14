@@ -1,6 +1,5 @@
-﻿using Azure.Messaging.ServiceBus;
-using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
-using System;
+﻿using MessageBus.Abstractions;
+using Moq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -11,7 +10,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         [Fact]
         public async Task CreatesMessageBusServiceBusProcessorAsync()
         {
-            var sut = new MessageBusServiceBusProcessor();
+            var mockMessageBusHandlerResolver = new Mock<IMessageBusHandlerResolver>();
+            var sut = new MessageBusServiceBusProcessor(mockMessageBusHandlerResolver.Object);
             await sut.StartAsync();
 
             await SendMessage(BuildAircraftTakenOffEvent());

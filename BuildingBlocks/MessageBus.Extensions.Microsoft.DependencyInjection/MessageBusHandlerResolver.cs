@@ -6,10 +6,10 @@ using System.Linq;
 
 namespace MessageBus.Extensions.Microsoft.DependencyInjection
 {
-    public class MessageBusHandlerResolver
+    public class MessageBusHandlerResolver : IMessageBusHandlerResolver
     {
-        private readonly ServiceProvider _serviceProvider;
-        public readonly Dictionary<Type, ServiceDescriptor> _handlerMap;
+        private ServiceProvider _serviceProvider;
+        public Dictionary<Type, ServiceDescriptor> _handlerMap;
 
         public MessageBusHandlerResolver(ServiceCollection services)
         {
@@ -21,6 +21,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
         public object Resolve(Type messageType)
         {
             var handlerServiceType = _handlerMap.First(h => h.Key == messageType).Value.ServiceType;
+            
             return _serviceProvider.GetRequiredService(handlerServiceType);
         }
 
@@ -29,7 +30,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
                 .First(i => i.Name.Contains(typeof(IHandleMessages<>).Name))
                 .GenericTypeArguments.First();
 
-        public IEnumerable<ServiceDescriptor> GetMessageBusHandlerServiceDescriptors(ServiceCollection services)
+        private static IEnumerable<ServiceDescriptor> GetMessageBusHandlerServiceDescriptors(ServiceCollection services)
             => services.AsEnumerable()
                 .Where(s => s.ServiceType.FullName.Contains(typeof(IHandleMessages<>).FullName)
                     && s.ServiceType.Assembly.FullName.Contains(typeof(IHandleMessages<>).Assembly.FullName));

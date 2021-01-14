@@ -53,7 +53,7 @@ namespace ServiceBus1.Tests.Unit
         }
 
         [Fact]
-        public void AddMessageBusCreatesIMessageBusProcessor()
+        public void AddMessageBusCreatesAndRegistersIMessageBusProcessor()
         {
             var services = CreateServiceCollection();
             var mockMessageBusAdmin = new Mock<IMessageBusAdmin>();

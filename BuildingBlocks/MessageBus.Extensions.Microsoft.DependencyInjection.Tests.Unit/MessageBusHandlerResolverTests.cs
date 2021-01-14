@@ -21,7 +21,5 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
 
             typeof(AircraftLandedHandler).GetMethod("Handle").Invoke(handler, new object[] { new AircraftLanded() });
         }
-
-        //add MessageHandlerResolver as a singleton
     }
 }
