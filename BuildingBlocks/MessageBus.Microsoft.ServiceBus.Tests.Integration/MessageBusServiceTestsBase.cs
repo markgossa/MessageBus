@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 {
-    public class MessageBusServiceBusProcessorTestsBase
+    public class MessageBusServiceTestsBase
     {
         private const string _connectionString = "Endpoint=sb://sb43719.servicebus.windows.net/;" +
     "SharedAccessKeyName=Manage;SharedAccessKey=FqCICJRc9BFQbXNaiXDRSmUe1sGLwVpGP1OdcAFdkhQ=;";
@@ -16,7 +16,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         private readonly ServiceBusClient _serviceBusClient = new ServiceBusClient(_connectionString);
         private readonly ServiceBusSender _topicClient;
 
-        public MessageBusServiceBusProcessorTestsBase()
+        public MessageBusServiceTestsBase()
         {
             _topicClient = _serviceBusClient.CreateSender(_topic);
         }

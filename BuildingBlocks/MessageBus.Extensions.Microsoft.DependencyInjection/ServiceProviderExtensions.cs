@@ -26,17 +26,10 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
         public static ServiceCollection AddMessageBus(this ServiceCollection services, IMessageBusAdmin messageBusAdmin,
             IMessageBusClient messageBusClient)
         {
-            //messageBusAdmin.ConfigureAsync(services.GetMessageBusHandlers()).Wait();
             services.AddSingleton<IMessageBusService>(new MessageBusService(new MessageBusHandlerResolver(services),
                 messageBusAdmin, messageBusClient));
 
             return services;
         }
-
-        private static IEnumerable<Type> GetMessageBusHandlers(this ServiceCollection services)
-            => services.AsEnumerable()
-                .Where(s => s.ServiceType.FullName.Contains(typeof(IHandleMessages<>).FullName)
-                    && s.ServiceType.Assembly.FullName.Contains(typeof(IHandleMessages<>).Assembly.FullName))
-                .Select(s => s.ImplementationType);
     }
 }

@@ -5,8 +5,6 @@ using MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Models.Even
 using MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using System;
-using System.Collections.Generic;
 using Xunit;
 
 namespace ServiceBus1.Tests.Unit

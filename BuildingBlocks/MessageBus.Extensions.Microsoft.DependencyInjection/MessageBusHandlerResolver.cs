@@ -8,7 +8,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
 {
     public class MessageBusHandlerResolver : IMessageBusHandlerResolver
     {
-        private ServiceProvider _serviceProvider;
+        private readonly ServiceProvider _serviceProvider;
         public Dictionary<Type, ServiceDescriptor> _handlerMap;
 
         public MessageBusHandlerResolver(ServiceCollection services)
@@ -24,6 +24,8 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
             
             return _serviceProvider.GetRequiredService(handlerServiceType);
         }
+
+        public IEnumerable<Type> GetMessageHandlers() => _handlerMap.Values.Select(h => h.ImplementationType);
 
         private static Type GetMessageTypeFromHandler(Type handler)
             => handler.GetInterfaces()
