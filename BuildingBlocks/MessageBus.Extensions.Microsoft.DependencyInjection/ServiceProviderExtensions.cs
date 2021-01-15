@@ -1,10 +1,8 @@
 ﻿using MessageBus.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Transactions;
 
 namespace MessageBus.Extensions.Microsoft.DependencyInjection
 {
@@ -24,17 +22,18 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
             services.AddScoped(typeof(IHandleMessages<>).MakeGenericType(typeof(TMessage)), typeof(TMessageHandler));
             return services;
         }
-        
+
         public static ServiceCollection AddMessageBus(this ServiceCollection services, IMessageBusAdmin messageBusAdmin,
-            IMessageBusProcessor messageBusProcessor)
+            IMessageBusClient messageBusClient)
         {
-            services.AddSingleton(messageBusProcessor);
-            messageBusAdmin.ConfigureAsync(services.GetMessageBusHandlers()).Wait();
+            //messageBusAdmin.ConfigureAsync(services.GetMessageBusHandlers()).Wait();
+            services.AddSingleton<IMessageBusService>(new MessageBusService(new MessageBusHandlerResolver(services),
+                messageBusAdmin, messageBusClient));
 
             return services;
         }
 
-        private static IEnumerable<Type> GetMessageBusHandlers(this ServiceCollection services) 
+        private static IEnumerable<Type> GetMessageBusHandlers(this ServiceCollection services)
             => services.AsEnumerable()
                 .Where(s => s.ServiceType.FullName.Contains(typeof(IHandleMessages<>).FullName)
                     && s.ServiceType.Assembly.FullName.Contains(typeof(IHandleMessages<>).Assembly.FullName))

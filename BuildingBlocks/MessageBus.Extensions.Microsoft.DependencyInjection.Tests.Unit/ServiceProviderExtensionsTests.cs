@@ -38,31 +38,17 @@ namespace ServiceBus1.Tests.Unit
         }
         
         [Fact]
-        public void AddMessageBusCallsConfigureOnMessageBusAdmin()
+        public void AddMessageBusCreatesAndRegistersIMessageBus()
         {
             var services = CreateServiceCollection();
             var mockMessageBusAdmin = new Mock<IMessageBusAdmin>();
-            var mockMessageBusProcessor = new Mock<IMessageBusProcessor>();
-            
-            var actualServices = services.AddMessageBus(mockMessageBusAdmin.Object,
-                mockMessageBusProcessor.Object);
+            var mockMessageBusClient = new Mock<IMessageBusClient>();
+            var actualServices = services.AddMessageBus(mockMessageBusAdmin.Object, mockMessageBusClient.Object);
 
-            var list = new List<Type> { typeof(AircraftTakenOffHandler), typeof(AircraftLandedHandler) };
-            mockMessageBusAdmin.Verify(m => m.ConfigureAsync(list), Times.Once);
+            var messageBusService = services.BuildServiceProvider().GetService<IMessageBusService>();
+
+            Assert.NotNull(messageBusService);
             Assert.Equal(services, actualServices);
-        }
-
-        [Fact]
-        public void AddMessageBusCreatesAndRegistersIMessageBusProcessor()
-        {
-            var services = CreateServiceCollection();
-            var mockMessageBusAdmin = new Mock<IMessageBusAdmin>();
-            var mockMessageBusProcessor = new Mock<IMessageBusProcessor>();
-            services.AddMessageBus(mockMessageBusAdmin.Object, mockMessageBusProcessor.Object);
-
-            var messageBusProcessor = services.BuildServiceProvider().GetService<IMessageBusProcessor>();
-
-            Assert.NotNull(messageBusProcessor);
         }
 
         private static ServiceCollection CreateServiceCollection()
