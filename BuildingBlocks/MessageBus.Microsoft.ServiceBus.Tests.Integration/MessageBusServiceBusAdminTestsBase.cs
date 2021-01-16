@@ -13,13 +13,14 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         protected const string _connectionString = "Endpoint=sb://sb43719.servicebus.windows.net/;" +
             "SharedAccessKeyName=Manage;SharedAccessKey=FqCICJRc9BFQbXNaiXDRSmUe1sGLwVpGP1OdcAFdkhQ=;";
         protected const string _topic = "topic1";
-        protected const string _subscription = "ServiceBus1";
+        protected readonly string _subscription = nameof(MessageBusServiceBusAdminTestsBase);
         protected readonly ServiceBusClient _serviceBusClient = new ServiceBusClient(_connectionString);
         protected readonly ServiceBusAdministrationClient _serviceBusAdminClient = new ServiceBusAdministrationClient(_connectionString);
 
-        protected async Task AssertSubscriptionRules(Type[] messageTypes, string messagePropertyName = "MessageType")
+        protected async Task AssertSubscriptionRules(Type[] messageTypes, string subscription, 
+            string messagePropertyName = "MessageType")
         {
-            var asyncRules = _serviceBusAdminClient.GetRulesAsync(_topic, _subscription);
+            var asyncRules = _serviceBusAdminClient.GetRulesAsync(_topic, subscription);
 
             var rules = new List<RuleProperties>();
             await foreach (var rule in asyncRules)
@@ -35,5 +36,17 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 Assert.Single(rules.Where(r => r.Name == messageType.Name));
             }
         }
+
+        protected async Task CreateSubscriptionAsync(string subscription)
+        {
+            var existingSubscription = await _serviceBusAdminClient.GetSubscriptionAsync(_topic, subscription);
+            if (existingSubscription.Value is null)
+            {
+                await _serviceBusAdminClient.CreateSubscriptionAsync(_topic, subscription);
+            }
+        }
+
+        protected async Task DeleteSubscriptionAsync(string subscription) 
+            => await _serviceBusAdminClient.DeleteSubscriptionAsync(_topic, subscription);
     }
 }
