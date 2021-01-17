@@ -16,7 +16,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
             Assert.NotNull(handler);
             Assert.IsType<AircraftLandedHandler>(handler);
 
-            typeof(AircraftLandedHandler).GetMethod("Handle").Invoke(handler, new object[] { new AircraftLanded() });
+            typeof(AircraftLandedHandler).GetMethod("HandleAsync").Invoke(handler, new object[] { new AircraftLanded() });
         }
 
         [Fact]

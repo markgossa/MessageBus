@@ -1,7 +1,9 @@
-﻿namespace MessageBus.Abstractions
+﻿using System.Threading.Tasks;
+
+namespace MessageBus.Abstractions
 {
     public interface IHandleMessages<T>
     {
-        void Handle(T message);
+        Task HandleAsync(T message);
     }
 }

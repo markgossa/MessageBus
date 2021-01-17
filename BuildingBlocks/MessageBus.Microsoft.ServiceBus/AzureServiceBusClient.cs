@@ -14,8 +14,8 @@ namespace MessageBus.Microsoft.ServiceBus
         {
             _serviceBusProcessor = new ServiceBusClient(connectionString).CreateProcessor(topic, subscription);
         }
-        
-        public AzureServiceBusClient(string hostname, string topic, string subscription, 
+
+        public AzureServiceBusClient(string hostname, string topic, string subscription,
             string tenantId = null)
         {
             _serviceBusProcessor = new ServiceBusClient(hostname, new ServiceBusTokenProvider(tenantId))
@@ -23,11 +23,9 @@ namespace MessageBus.Microsoft.ServiceBus
         }
 
         public void AddErrorMessageHandler(Func<EventArgs, Task> errorMessageHandler)
-        {
-            _serviceBusProcessor.ProcessErrorAsync += errorMessageHandler;
-        }
+            => _serviceBusProcessor.ProcessErrorAsync += errorMessageHandler;
 
-        public void AddMessageHandler(Func<EventArgs, Task> messageHandler) 
+        public void AddMessageHandler(Func<EventArgs, Task> messageHandler)
             => _serviceBusProcessor.ProcessMessageAsync += messageHandler;
 
         public async Task StartAsync() => await _serviceBusProcessor.StartProcessingAsync();

@@ -16,9 +16,21 @@ namespace MessageBus.Abstractions
             _messageBusClient = messageBusClient;
         }
 
-        public Task StartAsync() => Task.CompletedTask;
+        public async Task StartAsync() => await _messageBusClient.StartAsync();
 
-        public Task ConfigureAsync() 
-            => _messageBusAdmin.ConfigureAsync(_messageBusHandlerResolver.GetMessageHandlers());
+        public async Task ConfigureAsync()
+            => await _messageBusAdmin.ConfigureAsync(_messageBusHandlerResolver.GetMessageHandlers());
+
+        public async Task HandleMessageAsync(IEvent message)
+        {
+            var handler = _messageBusHandlerResolver.Resolve(message.GetType());
+            await (InvokeHandler(message, handler) as Task);
+        }
+
+        private static object InvokeHandler(IEvent message, object handler)
+        {
+            const string handlerHandleMethodName = "HandleAsync";
+            return handler.GetType().GetMethod(handlerHandleMethodName).Invoke(handler, new object[] { message });
+        }
     }
 }

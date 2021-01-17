@@ -1,4 +1,5 @@
 using MessageBus.Abstractions.Tests.Unit.Handlers;
+using MessageBus.Abstractions.Tests.Unit.Models.Events;
 using Moq;
 using System;
 using System.Collections.Generic;
@@ -9,34 +10,54 @@ namespace MessageBus.Abstractions.Tests.Unit
 {
     public class MessageBusServiceTests
     {
+        private readonly Mock<IMessageBusHandlerResolver> _mockMessageBusHandlerResolver = new Mock<IMessageBusHandlerResolver>();
+        private readonly List<Type> _handlers = new List<Type> { typeof(AircraftLandedHandler), typeof(AircraftTakenOffHandler) };
+        private readonly Mock<IMessageBusAdminClient> _mockMessageBusAdmin = new Mock<IMessageBusAdminClient>();
+        private Mock<IMessageBusClient> _mockMessageBusClient = new Mock<IMessageBusClient>();
+        
+        public MessageBusServiceTests()
+        {
+            _mockMessageBusHandlerResolver.Setup(m => m.GetMessageHandlers()).Returns(_handlers);
+        }
+
         [Fact]
         public async Task ConfiguresMessageBusAsync()
         {
-            var mockMessageBusHandlerResolver = new Mock<IMessageBusHandlerResolver>();
-            var handlers = new List<Type> { typeof(AircraftLandedHandler), typeof(AircraftTakenOffHandler) };
-            mockMessageBusHandlerResolver.Setup(m => m.GetMessageHandlers()).Returns(handlers);
-            var mockMessageBusAdmin = new Mock<IMessageBusAdminClient>();
-            var mockMessageBusClient = new Mock<IMessageBusClient>();
-            var sut = new MessageBusService(mockMessageBusHandlerResolver.Object,
-                mockMessageBusAdmin.Object, mockMessageBusClient.Object);
+            var sut = new MessageBusService(_mockMessageBusHandlerResolver.Object,
+                _mockMessageBusAdmin.Object, _mockMessageBusClient.Object);
 
             await sut.ConfigureAsync();
 
-            mockMessageBusAdmin.Verify(m => m.ConfigureAsync(handlers), Times.Once);
+            _mockMessageBusAdmin.Verify(m => m.ConfigureAsync(_handlers), Times.Once);
+        }
+        
+        [Fact]
+        public async Task StartsMessageBusClient()
+        {
+            var sut = new MessageBusService(_mockMessageBusHandlerResolver.Object,
+                _mockMessageBusAdmin.Object, _mockMessageBusClient.Object);
+
+            await sut.StartAsync();
+
+            _mockMessageBusClient.Verify(m => m.StartAsync(), Times.Once);
         }
         
         [Fact]
         public async Task CallsCorrectMessageHandler()
         {
-            var mockMessageBusHandlerResolver = new Mock<IMessageBusHandlerResolver>();
-            var handlers = new List<Type> { typeof(AircraftLandedHandler), typeof(AircraftTakenOffHandler) };
-            mockMessageBusHandlerResolver.Setup(m => m.GetMessageHandlers()).Returns(handlers);
-            var mockMessageBusAdmin = new Mock<IMessageBusAdminClient>();
-            var mockMessageBusClient = new Mock<IMessageBusClient>();
-            var sut = new MessageBusService(mockMessageBusHandlerResolver.Object,
-                mockMessageBusAdmin.Object, mockMessageBusClient.Object);
+            var mockAircraftTakenOffHandler = new AircraftTakenOffHandler();
+            _mockMessageBusHandlerResolver.Setup(m => m.Resolve(typeof(AircraftTakenOff)))
+                .Returns(mockAircraftTakenOffHandler);
+            var sut = new MessageBusService(_mockMessageBusHandlerResolver.Object,
+                _mockMessageBusAdmin.Object, _mockMessageBusClient.Object);
 
-            await sut.StartAsync();
+            var aircraftId = Guid.NewGuid().ToString();
+            var message = new AircraftTakenOff { AicraftId = aircraftId };
+            await sut.HandleMessageAsync(message);
+
+            _mockMessageBusHandlerResolver.Verify(m => m.Resolve(typeof(AircraftTakenOff)), Times.Once);
+            Assert.Equal(aircraftId, mockAircraftTakenOffHandler.AircraftId);
+            Assert.Equal(1, mockAircraftTakenOffHandler.MessageCount);
         }
     }
 }

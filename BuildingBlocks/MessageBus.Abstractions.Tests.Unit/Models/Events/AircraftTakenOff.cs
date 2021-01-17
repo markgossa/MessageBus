@@ -2,5 +2,6 @@
 {
     public class AircraftTakenOff : IEvent
     {
+        public string AicraftId { get; set; }
     }
 }

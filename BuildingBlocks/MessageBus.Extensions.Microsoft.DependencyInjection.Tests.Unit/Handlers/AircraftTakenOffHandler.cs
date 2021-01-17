@@ -1,10 +1,11 @@
 ﻿using MessageBus.Abstractions;
 using MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Models.Events;
+using System.Threading.Tasks;
 
 namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Handlers
 {
     public class AircraftTakenOffHandler : IHandleMessages<AircraftTakenOff>
     {
-        public void Handle(AircraftTakenOff message) => System.Console.WriteLine("Jeronimo!");
+        public async Task HandleAsync(AircraftTakenOff message) => System.Console.WriteLine("Jeronimo!");
     }
 }
