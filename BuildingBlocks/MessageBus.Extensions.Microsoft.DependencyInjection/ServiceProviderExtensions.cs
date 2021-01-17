@@ -1,8 +1,7 @@
 ﻿using MessageBus.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Threading.Tasks;
 
 namespace MessageBus.Extensions.Microsoft.DependencyInjection
 {
@@ -28,6 +27,22 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
         {
             services.AddSingleton<IMessageBusService>(new MessageBusService(new MessageBusHandlerResolver(services),
                 messageBusAdmin, messageBusClient));
+
+            return services;
+        }
+        
+        public static async Task<ServiceCollection> AddMessageBusAsync(this ServiceCollection services, IMessageBusClientBuilder messageBusClientBuilder)
+        {
+            AddMessageBus(services, await messageBusClientBuilder.BuildMessageBusAdminClientAsync(), 
+                await messageBusClientBuilder.BuildMessageBusClientAsync());
+
+            return services;
+        }
+        
+        public static ServiceCollection AddMessageBus(this ServiceCollection services, IMessageBusClientBuilder messageBusClientBuilder)
+        {
+            AddMessageBus(services, messageBusClientBuilder.BuildMessageBusAdminClientAsync().Result, 
+                messageBusClientBuilder.BuildMessageBusClientAsync().Result);
 
             return services;
         }

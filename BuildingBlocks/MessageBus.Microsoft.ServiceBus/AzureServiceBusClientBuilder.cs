@@ -1,11 +1,9 @@
 ﻿using MessageBus.Abstractions;
-using System;
-using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
 
 namespace MessageBus.Microsoft.ServiceBus
 {
-    public class AzureServiceBusClientBuilder
+    public class AzureServiceBusClientBuilder : IMessageBusClientBuilder
     {
         private readonly string _connectionString;
         private readonly string _hostname;

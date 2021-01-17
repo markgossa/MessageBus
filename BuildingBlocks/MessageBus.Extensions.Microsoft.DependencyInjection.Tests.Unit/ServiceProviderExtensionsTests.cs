@@ -5,6 +5,7 @@ using MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Models.Even
 using MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace ServiceBus1.Tests.Unit
@@ -36,12 +37,38 @@ namespace ServiceBus1.Tests.Unit
         }
         
         [Fact]
-        public void AddMessageBusCreatesAndRegistersIMessageBus()
+        public void AddMessageBusCreatesAndRegistersIMessageBusService()
         {
             var services = CreateServiceCollection();
             var mockMessageBusAdmin = new Mock<IMessageBusAdminClient>();
             var mockMessageBusClient = new Mock<IMessageBusClient>();
             var actualServices = services.AddMessageBus(mockMessageBusAdmin.Object, mockMessageBusClient.Object);
+
+            var messageBusService = services.BuildServiceProvider().GetService<IMessageBusService>();
+
+            Assert.NotNull(messageBusService);
+            Assert.Equal(services, actualServices);
+        }
+        
+        [Fact]
+        public async Task AddMessageBusAsyncCreatesAndRegistersIMessageBusServiceUsingIMessageBusClientBuilder()
+        {
+            var services = CreateServiceCollection();
+            var mockMessageBusClientBuilder = new Mock<IMessageBusClientBuilder>();
+            var actualServices = await services.AddMessageBusAsync(mockMessageBusClientBuilder.Object);
+
+            var messageBusService = services.BuildServiceProvider().GetService<IMessageBusService>();
+
+            Assert.NotNull(messageBusService);
+            Assert.Equal(services, actualServices);
+        }
+        
+        [Fact]
+        public void AddMessageBusCreatesAndRegistersIMessageBusServiceUsingIMessageBusClientBuilder()
+        {
+            var services = CreateServiceCollection();
+            var mockMessageBusClientBuilder = new Mock<IMessageBusClientBuilder>();
+            var actualServices = services.AddMessageBus(mockMessageBusClientBuilder.Object);
 
             var messageBusService = services.BuildServiceProvider().GetService<IMessageBusService>();
 
