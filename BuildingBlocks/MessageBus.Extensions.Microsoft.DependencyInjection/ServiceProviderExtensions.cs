@@ -23,7 +23,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
             return services;
         }
 
-        public static ServiceCollection AddMessageBus(this ServiceCollection services, IMessageBusAdmin messageBusAdmin,
+        public static ServiceCollection AddMessageBus(this ServiceCollection services, IMessageBusAdminClient messageBusAdmin,
             IMessageBusClient messageBusClient)
         {
             services.AddSingleton<IMessageBusService>(new MessageBusService(new MessageBusHandlerResolver(services),

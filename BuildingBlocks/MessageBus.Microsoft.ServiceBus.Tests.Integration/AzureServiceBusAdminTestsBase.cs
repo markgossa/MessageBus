@@ -8,12 +8,12 @@ using Xunit;
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 {
-    public class MessageBusServiceBusAdminTestsBase
+    public class AzureServiceBusAdminTestsBase
     {
         protected const string _connectionString = "Endpoint=sb://sb43719.servicebus.windows.net/;" +
             "SharedAccessKeyName=Manage;SharedAccessKey=FqCICJRc9BFQbXNaiXDRSmUe1sGLwVpGP1OdcAFdkhQ=;";
         protected const string _topic = "topic1";
-        protected readonly string _subscription = nameof(MessageBusServiceBusAdminTestsBase);
+        protected readonly string _subscription = nameof(AzureServiceBusAdminTestsBase);
         protected readonly ServiceBusClient _serviceBusClient = new ServiceBusClient(_connectionString);
         protected readonly ServiceBusAdministrationClient _serviceBusAdminClient = new ServiceBusAdministrationClient(_connectionString);
 

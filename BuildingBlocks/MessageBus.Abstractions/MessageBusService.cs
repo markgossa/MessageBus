@@ -5,11 +5,11 @@ namespace MessageBus.Abstractions
     public class MessageBusService : IMessageBusService
     {
         private readonly IMessageBusHandlerResolver _messageBusHandlerResolver;
-        private readonly IMessageBusAdmin _messageBusAdmin;
+        private readonly IMessageBusAdminClient _messageBusAdmin;
         private readonly IMessageBusClient _messageBusClient;
 
         public MessageBusService(IMessageBusHandlerResolver messageBusHandlerResolver,
-            IMessageBusAdmin messageBusAdmin, IMessageBusClient messageBusClient)
+            IMessageBusAdminClient messageBusAdmin, IMessageBusClient messageBusClient)
         {
             _messageBusHandlerResolver = messageBusHandlerResolver;
             _messageBusAdmin = messageBusAdmin;

@@ -10,7 +10,7 @@ using Xunit;
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 {
-    public class MessageBusServiceBusClientTests : MessageBusServiceTestsBase
+    public class AzureServiceBusClientTests : MessageBusServiceTestsBase
     {
         private Mock<ITestHandler> _mockTestHandler = new Mock<ITestHandler>();
 
@@ -22,7 +22,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var aircraftTakenOffEvent = BuildAircraftTakenOffEvent();
             await SendMessage(aircraftTakenOffEvent);
 
-            var sut = new MessageBusServiceBusClient(_connectionString, _topic, subscription);
+            var sut = new AzureServiceBusClient(_connectionString, _topic, subscription);
             sut.AddMessageHandler(_mockTestHandler.Object.MessageHandler);
             sut.AddErrorMessageHandler(_mockTestHandler.Object.ErrorMessageHandler);
             await sut.StartAsync();
@@ -44,7 +44,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var aircraftTakenOffEvent = BuildAircraftTakenOffEvent();
             await SendMessage(aircraftTakenOffEvent);
 
-            var sut = new MessageBusServiceBusClient(_hostname, _topic, subscription, _tenantId);
+            var sut = new AzureServiceBusClient(_hostname, _topic, subscription, _tenantId);
             sut.AddMessageHandler(_mockTestHandler.Object.MessageHandler);
             sut.AddErrorMessageHandler(_mockTestHandler.Object.ErrorMessageHandler);
             await sut.StartAsync();

@@ -15,7 +15,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             var mockMessageBusHandlerResolver = new Mock<IMessageBusHandlerResolver>();
             var handlers = new List<Type> { typeof(AircraftLandedHandler), typeof(AircraftTakenOffHandler) };
             mockMessageBusHandlerResolver.Setup(m => m.GetMessageHandlers()).Returns(handlers);
-            var mockMessageBusAdmin = new Mock<IMessageBusAdmin>();
+            var mockMessageBusAdmin = new Mock<IMessageBusAdminClient>();
             var mockMessageBusClient = new Mock<IMessageBusClient>();
             var sut = new MessageBusService(mockMessageBusHandlerResolver.Object,
                 mockMessageBusAdmin.Object, mockMessageBusClient.Object);
@@ -31,7 +31,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             var mockMessageBusHandlerResolver = new Mock<IMessageBusHandlerResolver>();
             var handlers = new List<Type> { typeof(AircraftLandedHandler), typeof(AircraftTakenOffHandler) };
             mockMessageBusHandlerResolver.Setup(m => m.GetMessageHandlers()).Returns(handlers);
-            var mockMessageBusAdmin = new Mock<IMessageBusAdmin>();
+            var mockMessageBusAdmin = new Mock<IMessageBusAdminClient>();
             var mockMessageBusClient = new Mock<IMessageBusClient>();
             var sut = new MessageBusService(mockMessageBusHandlerResolver.Object,
                 mockMessageBusAdmin.Object, mockMessageBusClient.Object);

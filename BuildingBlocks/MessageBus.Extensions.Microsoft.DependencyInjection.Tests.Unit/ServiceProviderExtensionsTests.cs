@@ -39,7 +39,7 @@ namespace ServiceBus1.Tests.Unit
         public void AddMessageBusCreatesAndRegistersIMessageBus()
         {
             var services = CreateServiceCollection();
-            var mockMessageBusAdmin = new Mock<IMessageBusAdmin>();
+            var mockMessageBusAdmin = new Mock<IMessageBusAdminClient>();
             var mockMessageBusClient = new Mock<IMessageBusClient>();
             var actualServices = services.AddMessageBus(mockMessageBusAdmin.Object, mockMessageBusClient.Object);
 

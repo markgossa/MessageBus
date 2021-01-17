@@ -6,16 +6,16 @@ using System.Threading.Tasks;
 
 namespace MessageBus.Microsoft.ServiceBus
 {
-    public class MessageBusServiceBusClient : IMessageBusClient
+    public class AzureServiceBusClient : IMessageBusClient
     {
         private readonly ServiceBusProcessor _serviceBusProcessor;
 
-        public MessageBusServiceBusClient(string connectionString, string topic, string subscription)
+        public AzureServiceBusClient(string connectionString, string topic, string subscription)
         {
             _serviceBusProcessor = new ServiceBusClient(connectionString).CreateProcessor(topic, subscription);
         }
         
-        public MessageBusServiceBusClient(string hostname, string topic, string subscription, 
+        public AzureServiceBusClient(string hostname, string topic, string subscription, 
             string tenantId = null)
         {
             _serviceBusProcessor = new ServiceBusClient(hostname, new ServiceBusTokenProvider(tenantId))

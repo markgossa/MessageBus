@@ -7,7 +7,7 @@ using Xunit;
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 {
-    public class MessageBusServiceBusAdminTests : MessageBusServiceBusAdminTestsBase, IAsyncDisposable
+    public class AzureServiceBusAdminTests : AzureServiceBusAdminTestsBase, IAsyncDisposable
     {
         [Fact]
         public async Task UpdatesSubscriptionRulesAsync()
@@ -16,7 +16,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var messageHandlers = new List<Type> { typeof(AircraftLandedHandler) };
             await CreateSubscriptionAsync(subscription);
 
-            await new MessageBusServiceBusAdmin(_connectionString, _topic, subscription).ConfigureAsync(messageHandlers);
+            await new AzureServiceBusAdminClient(_connectionString, _topic, subscription).ConfigureAsync(messageHandlers);
 
             await AssertSubscriptionRules(new Type[] { typeof(AircraftLanded) }, subscription);
         }
@@ -29,7 +29,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var messageHandlers = new List<Type> { typeof(AircraftLandedHandler) };
             await CreateSubscriptionAsync(subscription);
 
-            await new MessageBusServiceBusAdmin(_connectionString, _topic, subscription, messagePropertyName).ConfigureAsync(messageHandlers);
+            await new AzureServiceBusAdminClient(_connectionString, _topic, subscription, messagePropertyName).ConfigureAsync(messageHandlers);
 
             await AssertSubscriptionRules(new Type[] { typeof(AircraftLanded) }, subscription, messagePropertyName);
         }
@@ -41,7 +41,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var messageHandlers = new List<Type> { typeof(AircraftLandedHandler), typeof(AircraftTakenOffHandler) };
             await CreateSubscriptionAsync(subscription);
 
-            await new MessageBusServiceBusAdmin(_connectionString, _topic, subscription).ConfigureAsync(messageHandlers);
+            await new AzureServiceBusAdminClient(_connectionString, _topic, subscription).ConfigureAsync(messageHandlers);
 
             await AssertSubscriptionRules(new Type[] { typeof(AircraftLanded), typeof(AircraftTakenOff) }, subscription);
         }

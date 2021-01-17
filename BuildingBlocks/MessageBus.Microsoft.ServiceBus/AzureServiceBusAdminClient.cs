@@ -7,7 +7,7 @@ using Azure.Messaging.ServiceBus.Administration;
 
 namespace MessageBus.Microsoft.ServiceBus
 {
-    public class MessageBusServiceBusAdmin : IMessageBusAdmin
+    public class AzureServiceBusAdminClient : IMessageBusAdminClient
     {
         private readonly string _connectionString;
         private readonly string _topic;
@@ -16,7 +16,7 @@ namespace MessageBus.Microsoft.ServiceBus
         private readonly ServiceBusAdministrationClient _serviceBusAdminClient;
         private IEnumerable<Type> _handlers;
 
-        public MessageBusServiceBusAdmin(string connectionString, string topic, string subscription,
+        public AzureServiceBusAdminClient(string connectionString, string topic, string subscription,
             string messageTypePropertyName = "MessageType")
         {
             _connectionString = connectionString;
