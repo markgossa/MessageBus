@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus.Administration;
+using MessageBus.Microsoft.ServiceBus.Utilities;
 
 namespace MessageBus.Microsoft.ServiceBus
 {
@@ -14,17 +15,24 @@ namespace MessageBus.Microsoft.ServiceBus
         private readonly string _subscription;
         private readonly string _messageTypePropertyName;
         private readonly ServiceBusAdministrationClient _serviceBusAdminClient;
+        private readonly string _tenantId;
         private IEnumerable<Type> _handlers;
 
         public AzureServiceBusAdminClient(string connectionString, string topic, string subscription,
-            string messageTypePropertyName = "MessageType")
+            string tenantId = null, string messageTypePropertyName = "MessageType")
         {
             _connectionString = connectionString;
             _topic = topic;
             _subscription = subscription;
+            _tenantId = tenantId;
             _messageTypePropertyName = messageTypePropertyName;
-            _serviceBusAdminClient = new ServiceBusAdministrationClient(_connectionString);
+            _serviceBusAdminClient = BuildServiceBusAdminClient();
         }
+
+        private ServiceBusAdministrationClient BuildServiceBusAdminClient()
+            => string.IsNullOrEmpty(_tenantId)
+                ? new ServiceBusAdministrationClient(_connectionString)
+                : new ServiceBusAdministrationClient(_connectionString, new ServiceBusTokenProvider(_tenantId));
 
         public async Task ConfigureAsync(IEnumerable<Type> messageHandlers)
         {

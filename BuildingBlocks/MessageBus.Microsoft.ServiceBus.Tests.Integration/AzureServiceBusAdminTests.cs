@@ -29,7 +29,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var messageHandlers = new List<Type> { typeof(AircraftLandedHandler) };
             await CreateSubscriptionAsync(subscription);
 
-            await new AzureServiceBusAdminClient(_connectionString, _topic, subscription, messagePropertyName).ConfigureAsync(messageHandlers);
+            await new AzureServiceBusAdminClient(_connectionString, _topic, subscription, null, messagePropertyName)
+                .ConfigureAsync(messageHandlers);
 
             await AssertSubscriptionRules(new Type[] { typeof(AircraftLanded) }, subscription, messagePropertyName);
         }
