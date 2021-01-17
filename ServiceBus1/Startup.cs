@@ -1,4 +1,5 @@
 ﻿using MessageBus.Extensions.Microsoft.DependencyInjection;
+using MessageBus.Microsoft.ServiceBus;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ServiceBus1.Events;
@@ -10,7 +11,7 @@ namespace ServiceBus1
     {
         public static IConfiguration Configuration { get; private set; }
 
-        public static ServiceCollection Initialize()
+        public static ServiceProvider Initialize()
         {
             BuildConfiguration();
             return ConfigureServices();
@@ -22,8 +23,12 @@ namespace ServiceBus1
                 .AddUserSecrets<Program>()
                 .Build();
 
-        private static ServiceCollection ConfigureServices() 
+        private static ServiceProvider ConfigureServices()
             => new ServiceCollection()
-                .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
+                .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>()
+                .BuildServiceProvider();
+
+        private static string GetConfigValue(string settingName)
+        => Configuration.GetSection(settingName).Value;
     }
 }
