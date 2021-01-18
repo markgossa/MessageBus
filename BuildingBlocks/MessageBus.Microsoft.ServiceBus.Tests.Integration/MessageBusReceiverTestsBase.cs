@@ -9,19 +9,19 @@ using System.Threading.Tasks;
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 {
-    public class MessageBusServiceTestsBase
+    public class MessageBusReceiverTestsBase
     {
         protected const string _connectionString = "Endpoint=sb://sb43719.servicebus.windows.net/;" +
             "SharedAccessKeyName=Manage;SharedAccessKey=FqCICJRc9BFQbXNaiXDRSmUe1sGLwVpGP1OdcAFdkhQ=;";
         protected const string _hostname = "sb43719.servicebus.windows.net";
         protected const string _topic = "topic1";
         protected const string _tenantId = "7d4a98d2-9ed7-41f7-abd3-0884effe0ad4";
-        protected readonly string _subscription = nameof(MessageBusServiceTestsBase);
+        protected readonly string _subscription = nameof(MessageBusReceiverTestsBase);
         private readonly ServiceBusClient _serviceBusClient = new ServiceBusClient(_connectionString);
         protected readonly ServiceBusAdministrationClient _serviceBusAdminClient = new ServiceBusAdministrationClient(_connectionString);
         private readonly ServiceBusSender _serviceBusSender;
 
-        public MessageBusServiceTestsBase()
+        public MessageBusReceiverTestsBase()
         {
             _serviceBusSender = _serviceBusClient.CreateSender(_topic);
             var serviceBusAdminClient = new ServiceBusAdministrationClient(_connectionString);

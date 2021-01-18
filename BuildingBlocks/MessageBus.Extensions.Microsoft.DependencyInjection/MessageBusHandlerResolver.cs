@@ -20,8 +20,9 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
 
         public object Resolve(string messageType)
         {
-            var handlerServiceType = _handlerMap.First(h => h.Key.Name == messageType).Value.ServiceType;
-            
+            var handlerServiceType = _handlerMap.FirstOrDefault(h => h.Key.Name == messageType).Value?.ServiceType;
+            ThrowIfMessageHandlerNotFound(messageType, handlerServiceType);
+
             return _serviceProvider.GetRequiredService(handlerServiceType);
         }
 
@@ -36,5 +37,13 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
             => services.AsEnumerable()
                 .Where(s => s.ServiceType.FullName.Contains(typeof(IHandleMessages<>).FullName)
                     && s.ServiceType.Assembly.FullName.Contains(typeof(IHandleMessages<>).Assembly.FullName));
+
+        private static void ThrowIfMessageHandlerNotFound(string messageType, Type handlerServiceType)
+        {
+            if (handlerServiceType is null)
+            {
+                throw new MessageHandlerNotFoundException($"Message handler for message type {messageType} was not found");
+            }
+        }
     }
 }

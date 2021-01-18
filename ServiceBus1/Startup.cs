@@ -27,8 +27,5 @@ namespace ServiceBus1
             => new ServiceCollection()
                 .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>()
                 .BuildServiceProvider();
-
-        private static string GetConfigValue(string settingName)
-        => Configuration.GetSection(settingName).Value;
     }
 }

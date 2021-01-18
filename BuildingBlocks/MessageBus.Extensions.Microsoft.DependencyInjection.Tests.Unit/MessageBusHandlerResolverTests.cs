@@ -1,4 +1,5 @@
-﻿using MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Handlers;
+﻿using MessageBus.Abstractions;
+using MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Handlers;
 using MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Models.Events;
 using System.Linq;
 using Xunit;
@@ -11,12 +12,19 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
         public void MessageBusHandlerResolverReturnsMessageHandlerInstanceForGivenMessageType()
         {
             var sut = new MessageBusHandlerResolver(BuildServiceCollection());
-            var handler = sut.Resolve(typeof(AircraftLanded));
+            var handler = sut.Resolve(nameof(AircraftLanded));
 
             Assert.NotNull(handler);
             Assert.IsType<AircraftLandedHandler>(handler);
 
             typeof(AircraftLandedHandler).GetMethod("HandleAsync").Invoke(handler, new object[] { new AircraftLanded() });
+        }
+        
+        [Fact]
+        public void MessageBusHandlerResolverThrowsIfNoMessageHandlerFound()
+        {
+            var sut = new MessageBusHandlerResolver(BuildServiceCollection());
+            Assert.Throws<MessageHandlerNotFoundException>(() => sut.Resolve("UnknownMessage"));
         }
 
         [Fact]

@@ -10,9 +10,9 @@ using Xunit;
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 {
-    public class AzureServiceBusClientTests : MessageBusServiceTestsBase
+    public class AzureServiceBusClientTests : MessageBusReceiverTestsBase
     {
-        private Mock<ITestHandler> _mockTestHandler = new Mock<ITestHandler>();
+        private readonly Mock<ITestHandler> _mockTestHandler = new Mock<ITestHandler>();
 
         [Fact]
         public async Task CanCreateAListenerUsingConnectionString()

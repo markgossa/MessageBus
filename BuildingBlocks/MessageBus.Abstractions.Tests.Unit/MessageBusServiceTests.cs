@@ -14,7 +14,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         private readonly Mock<IMessageBusHandlerResolver> _mockMessageBusHandlerResolver = new Mock<IMessageBusHandlerResolver>();
         private readonly List<Type> _handlers = new List<Type> { typeof(AircraftLandedHandler), typeof(AircraftTakenOffHandler) };
         private readonly Mock<IMessageBusAdminClient> _mockMessageBusAdmin = new Mock<IMessageBusAdminClient>();
-        private Mock<IMessageBusClient> _mockMessageBusClient = new Mock<IMessageBusClient>();
+        private readonly Mock<IMessageBusClient> _mockMessageBusClient = new Mock<IMessageBusClient>();
         
         public MessageBusServiceTests()
         {
