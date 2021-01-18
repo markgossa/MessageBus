@@ -22,7 +22,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
             return services;
         }
 
-        public static ServiceCollection AddMessageBus(this ServiceCollection services, IMessageBusAdminClient messageBusAdmin,
+        public static ServiceCollection AddMessageBusReceiver(this ServiceCollection services, IMessageBusAdminClient messageBusAdmin,
             IMessageBusClient messageBusClient)
         {
             services.AddSingleton<IMessageBusReceiver>(new MessageBusReceiver(new MessageBusHandlerResolver(services),
@@ -31,17 +31,17 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
             return services;
         }
         
-        public static async Task<ServiceCollection> AddMessageBusAsync(this ServiceCollection services, IMessageBusClientBuilder messageBusClientBuilder)
+        public static async Task<ServiceCollection> AddMessageBusReceiverAsync(this ServiceCollection services, IMessageBusClientBuilder messageBusClientBuilder)
         {
-            AddMessageBus(services, await messageBusClientBuilder.BuildMessageBusAdminClientAsync(), 
+            AddMessageBusReceiver(services, await messageBusClientBuilder.BuildMessageBusAdminClientAsync(), 
                 await messageBusClientBuilder.BuildMessageBusClientAsync());
 
             return services;
         }
         
-        public static ServiceCollection AddMessageBus(this ServiceCollection services, IMessageBusClientBuilder messageBusClientBuilder)
+        public static ServiceCollection AddMessageBusReceiver(this ServiceCollection services, IMessageBusClientBuilder messageBusClientBuilder)
         {
-            AddMessageBus(services, messageBusClientBuilder.BuildMessageBusAdminClientAsync().Result, 
+            AddMessageBusReceiver(services, messageBusClientBuilder.BuildMessageBusAdminClientAsync().Result, 
                 messageBusClientBuilder.BuildMessageBusClientAsync().Result);
 
             return services;

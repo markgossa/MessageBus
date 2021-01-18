@@ -42,7 +42,7 @@ namespace ServiceBus1.Tests.Unit
             var services = CreateServiceCollection();
             var mockMessageBusAdmin = new Mock<IMessageBusAdminClient>();
             var mockMessageBusClient = new Mock<IMessageBusClient>();
-            var actualServices = services.AddMessageBus(mockMessageBusAdmin.Object, mockMessageBusClient.Object);
+            var actualServices = services.AddMessageBusReceiver(mockMessageBusAdmin.Object, mockMessageBusClient.Object);
 
             var messageBusService = services.BuildServiceProvider().GetService<IMessageBusReceiver>();
 
@@ -55,7 +55,7 @@ namespace ServiceBus1.Tests.Unit
         {
             var services = CreateServiceCollection();
             var mockMessageBusClientBuilder = new Mock<IMessageBusClientBuilder>();
-            var actualServices = await services.AddMessageBusAsync(mockMessageBusClientBuilder.Object);
+            var actualServices = await services.AddMessageBusReceiverAsync(mockMessageBusClientBuilder.Object);
 
             var messageBusService = services.BuildServiceProvider().GetService<IMessageBusReceiver>();
 
@@ -68,7 +68,7 @@ namespace ServiceBus1.Tests.Unit
         {
             var services = CreateServiceCollection();
             var mockMessageBusClientBuilder = new Mock<IMessageBusClientBuilder>();
-            var actualServices = services.AddMessageBus(mockMessageBusClientBuilder.Object);
+            var actualServices = services.AddMessageBusReceiver(mockMessageBusClientBuilder.Object);
 
             var messageBusService = services.BuildServiceProvider().GetService<IMessageBusReceiver>();
 
