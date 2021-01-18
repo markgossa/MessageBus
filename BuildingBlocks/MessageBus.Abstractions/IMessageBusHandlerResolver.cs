@@ -5,7 +5,7 @@ namespace MessageBus.Abstractions
 {
     public interface IMessageBusHandlerResolver
     {
-        object Resolve(Type messageType);
+        object Resolve(string messageType);
         IEnumerable<Type> GetMessageHandlers();
     }
 }

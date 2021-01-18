@@ -18,9 +18,9 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
                 h => h);
         }
 
-        public object Resolve(Type messageType)
+        public object Resolve(string messageType)
         {
-            var handlerServiceType = _handlerMap.First(h => h.Key == messageType).Value.ServiceType;
+            var handlerServiceType = _handlerMap.First(h => h.Key.Name == messageType).Value.ServiceType;
             
             return _serviceProvider.GetRequiredService(handlerServiceType);
         }

@@ -3,6 +3,7 @@ using MessageBus.Abstractions.Tests.Unit.Models.Events;
 using Moq;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -46,16 +47,16 @@ namespace MessageBus.Abstractions.Tests.Unit
         public async Task CallsCorrectMessageHandler()
         {
             var mockAircraftTakenOffHandler = new AircraftTakenOffHandler();
-            _mockMessageBusHandlerResolver.Setup(m => m.Resolve(typeof(AircraftTakenOff)))
+            _mockMessageBusHandlerResolver.Setup(m => m.Resolve(nameof(AircraftTakenOff)))
                 .Returns(mockAircraftTakenOffHandler);
             var sut = new MessageBusReceiver(_mockMessageBusHandlerResolver.Object,
                 _mockMessageBusAdmin.Object, _mockMessageBusClient.Object);
 
             var aircraftId = Guid.NewGuid().ToString();
-            var message = new AircraftTakenOff { AicraftId = aircraftId };
-            await sut.HandleMessageAsync(message);
+            var message = JsonSerializer.Serialize(new AircraftTakenOff { AicraftId = aircraftId });
+            await sut.HandleMessageAsync(message, nameof(AircraftTakenOff));
 
-            _mockMessageBusHandlerResolver.Verify(m => m.Resolve(typeof(AircraftTakenOff)), Times.Once);
+            _mockMessageBusHandlerResolver.Verify(m => m.Resolve(nameof(AircraftTakenOff)), Times.Once);
             Assert.Equal(aircraftId, mockAircraftTakenOffHandler.AircraftId);
             Assert.Equal(1, mockAircraftTakenOffHandler.MessageCount);
         }
