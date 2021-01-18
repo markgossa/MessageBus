@@ -3,7 +3,7 @@ using System;
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Models
 {
-    public class AircraftLanded : IEvent
+    public class AircraftLanded : IMessage
     {
         public string AircraftId { get; init; }
         public string FlightNumber { get; init; }

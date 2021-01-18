@@ -15,7 +15,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
         }
 
         public static ServiceCollection SubscribeToMessage<TMessage, TMessageHandler>(this ServiceCollection services)
-            where TMessage : IEvent
+            where TMessage : IMessage
             where TMessageHandler : IHandleMessages<TMessage>
         {
             services.AddScoped(typeof(IHandleMessages<>).MakeGenericType(typeof(TMessage)), typeof(TMessageHandler));
@@ -25,7 +25,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
         public static ServiceCollection AddMessageBus(this ServiceCollection services, IMessageBusAdminClient messageBusAdmin,
             IMessageBusClient messageBusClient)
         {
-            services.AddSingleton<IMessageBusService>(new MessageBusService(new MessageBusHandlerResolver(services),
+            services.AddSingleton<IMessageBusReceiver>(new MessageBusReceiver(new MessageBusHandlerResolver(services),
                 messageBusAdmin, messageBusClient));
 
             return services;

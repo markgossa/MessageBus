@@ -23,7 +23,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         [Fact]
         public async Task ConfiguresMessageBusAsync()
         {
-            var sut = new MessageBusService(_mockMessageBusHandlerResolver.Object,
+            var sut = new MessageBusReceiver(_mockMessageBusHandlerResolver.Object,
                 _mockMessageBusAdmin.Object, _mockMessageBusClient.Object);
 
             await sut.ConfigureAsync();
@@ -34,7 +34,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         [Fact]
         public async Task StartsMessageBusClient()
         {
-            var sut = new MessageBusService(_mockMessageBusHandlerResolver.Object,
+            var sut = new MessageBusReceiver(_mockMessageBusHandlerResolver.Object,
                 _mockMessageBusAdmin.Object, _mockMessageBusClient.Object);
 
             await sut.StartAsync();
@@ -48,7 +48,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             var mockAircraftTakenOffHandler = new AircraftTakenOffHandler();
             _mockMessageBusHandlerResolver.Setup(m => m.Resolve(typeof(AircraftTakenOff)))
                 .Returns(mockAircraftTakenOffHandler);
-            var sut = new MessageBusService(_mockMessageBusHandlerResolver.Object,
+            var sut = new MessageBusReceiver(_mockMessageBusHandlerResolver.Object,
                 _mockMessageBusAdmin.Object, _mockMessageBusClient.Object);
 
             var aircraftId = Guid.NewGuid().ToString();

@@ -44,7 +44,7 @@ namespace ServiceBus1.Tests.Unit
             var mockMessageBusClient = new Mock<IMessageBusClient>();
             var actualServices = services.AddMessageBus(mockMessageBusAdmin.Object, mockMessageBusClient.Object);
 
-            var messageBusService = services.BuildServiceProvider().GetService<IMessageBusService>();
+            var messageBusService = services.BuildServiceProvider().GetService<IMessageBusReceiver>();
 
             Assert.NotNull(messageBusService);
             Assert.Equal(services, actualServices);
@@ -57,7 +57,7 @@ namespace ServiceBus1.Tests.Unit
             var mockMessageBusClientBuilder = new Mock<IMessageBusClientBuilder>();
             var actualServices = await services.AddMessageBusAsync(mockMessageBusClientBuilder.Object);
 
-            var messageBusService = services.BuildServiceProvider().GetService<IMessageBusService>();
+            var messageBusService = services.BuildServiceProvider().GetService<IMessageBusReceiver>();
 
             Assert.NotNull(messageBusService);
             Assert.Equal(services, actualServices);
@@ -70,7 +70,7 @@ namespace ServiceBus1.Tests.Unit
             var mockMessageBusClientBuilder = new Mock<IMessageBusClientBuilder>();
             var actualServices = services.AddMessageBus(mockMessageBusClientBuilder.Object);
 
-            var messageBusService = services.BuildServiceProvider().GetService<IMessageBusService>();
+            var messageBusService = services.BuildServiceProvider().GetService<IMessageBusReceiver>();
 
             Assert.NotNull(messageBusService);
             Assert.Equal(services, actualServices);

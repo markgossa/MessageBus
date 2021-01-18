@@ -48,7 +48,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             sut.AddMessageHandler(_mockTestHandler.Object.MessageHandler);
             sut.AddErrorMessageHandler(_mockTestHandler.Object.ErrorMessageHandler);
             await sut.StartAsync();
-
+            
             await Task.Delay(TimeSpan.FromSeconds(5));
             _mockTestHandler.Verify(m => m.MessageHandler(It.Is<ProcessMessageEventArgs>(m => 
                 GetAircraftIdFromMessage(m.Message) == aircraftTakenOffEvent.AircraftId)), 

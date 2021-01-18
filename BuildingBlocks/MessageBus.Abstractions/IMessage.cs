@@ -1,6 +1,6 @@
 ﻿namespace MessageBus.Abstractions
 {
-    public interface IEvent
+    public interface IMessage
     {
     }
 }

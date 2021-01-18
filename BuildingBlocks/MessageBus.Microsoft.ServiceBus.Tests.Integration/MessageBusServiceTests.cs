@@ -13,7 +13,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var mockMessageBusHandlerResolver = new Mock<IMessageBusHandlerResolver>();
             var mockMessageBusAdminClient = new Mock<IMessageBusAdminClient>();
             var mockMessageBusClient = new Mock<IMessageBusClient>();
-            var sut = new MessageBusService(mockMessageBusHandlerResolver.Object,
+            var sut = new MessageBusReceiver(mockMessageBusHandlerResolver.Object,
                 mockMessageBusAdminClient.Object, mockMessageBusClient.Object);
 
             await sut.StartAsync();

@@ -2,7 +2,7 @@
 
 namespace MessageBus.Abstractions
 {
-    public interface IMessageBusService
+    public interface IMessageBusReceiver
     {
         Task ConfigureAsync();
         Task StartAsync();
