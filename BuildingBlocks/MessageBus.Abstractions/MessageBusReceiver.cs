@@ -1,6 +1,9 @@
 ﻿using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Tasks;
+
+[assembly: InternalsVisibleTo("MessageBus.Abstractions.Tests.Unit")]
 
 namespace MessageBus.Abstractions
 {
@@ -23,7 +26,7 @@ namespace MessageBus.Abstractions
         public async Task ConfigureAsync()
             => await _messageBusAdmin.ConfigureAsync(_messageBusHandlerResolver.GetMessageHandlers());
 
-        public async Task HandleMessageAsync(string messageContents, string messageType)
+        internal async Task HandleMessageAsync(string messageContents, string messageType)
         {
             var handler = _messageBusHandlerResolver.Resolve(messageType);
             await (InvokeHandler(messageContents, handler) as Task);
