@@ -9,14 +9,14 @@ using Xunit;
 
 namespace MessageBus.Abstractions.Tests.Unit
 {
-    public class MessageBusServiceTests
+    public class MessageBusReceiverTests
     {
         private readonly Mock<IMessageBusHandlerResolver> _mockMessageBusHandlerResolver = new Mock<IMessageBusHandlerResolver>();
         private readonly List<Type> _handlers = new List<Type> { typeof(AircraftLandedHandler), typeof(AircraftTakenOffHandler) };
         private readonly Mock<IMessageBusAdminClient> _mockMessageBusAdmin = new Mock<IMessageBusAdminClient>();
         private readonly Mock<IMessageBusClient> _mockMessageBusClient = new Mock<IMessageBusClient>();
         
-        public MessageBusServiceTests()
+        public MessageBusReceiverTests()
         {
             _mockMessageBusHandlerResolver.Setup(m => m.GetMessageHandlers()).Returns(_handlers);
         }
@@ -54,7 +54,10 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             var aircraftId = Guid.NewGuid().ToString();
             var message = JsonSerializer.Serialize(new AircraftTakenOff { AicraftId = aircraftId });
-            await sut.HandleMessageAsync(message, nameof(AircraftTakenOff));
+
+            //_mockMessageBusClient.Raise(m => m.AddMessageHandler += null, EventArgs.Empty);
+
+            //await sut.HandleMessageAsync(message, nameof(AircraftTakenOff));
 
             _mockMessageBusHandlerResolver.Verify(m => m.Resolve(nameof(AircraftTakenOff)), Times.Once);
             Assert.Equal(aircraftId, mockAircraftTakenOffHandler.AircraftId);

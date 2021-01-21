@@ -27,12 +27,12 @@ namespace MessageBus.Microsoft.ServiceBus
         }
 
         public async Task<IMessageBusClient> BuildMessageBusClientAsync()
-            => await Task.Run(() => string.IsNullOrEmpty(_tenantId)
+            => await Task.FromResult(string.IsNullOrEmpty(_tenantId)
                 ? new AzureServiceBusClient(_connectionString, _topic, _subscription)
                 : new AzureServiceBusClient(_hostname, _topic, _subscription, _tenantId));
 
         public async Task<IMessageBusAdminClient> BuildMessageBusAdminClientAsync()
-            => await Task.Run(() => string.IsNullOrEmpty(_tenantId)
+            => await Task.FromResult(string.IsNullOrEmpty(_tenantId)
                 ? new AzureServiceBusAdminClient(_connectionString, _topic, _subscription)
                 : new AzureServiceBusAdminClient(_hostname, _topic, _subscription, _tenantId));
     }
