@@ -49,3 +49,4 @@ namespace MessageBus.Abstractions
                 .GenericTypeArguments.First();
     }
 }
+    
