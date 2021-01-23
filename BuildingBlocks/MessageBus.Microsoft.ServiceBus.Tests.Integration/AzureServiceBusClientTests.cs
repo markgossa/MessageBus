@@ -1,4 +1,5 @@
 ﻿using Azure.Messaging.ServiceBus;
+using MessageBus.Abstractions;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
 using Moq;
@@ -12,23 +13,25 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 {
     public class AzureServiceBusClientTests : MessageBusReceiverTestsBase
     {
-        private readonly Mock<ITestHandler> _mockTestHandler = new Mock<ITestHandler>();
+        private readonly Mock<ITestHandler> mockTestHandler = new Mock<ITestHandler>();
 
         [Fact]
         public async Task CanCreateAListenerUsingConnectionString()
         {
+            var mockTestHandler = new Mock<ITestHandler>(); 
+            
             var subscription = nameof(CanCreateAListenerUsingConnectionString);
             await CreateSubscriptionAsync(subscription);
             var aircraftTakenOffEvent = BuildAircraftTakenOffEvent();
             await SendMessage(aircraftTakenOffEvent);
 
             var sut = new AzureServiceBusClient(_connectionString, _topic, subscription);
-            sut.AddMessageHandler(_mockTestHandler.Object.MessageHandler);
-            sut.AddErrorMessageHandler(_mockTestHandler.Object.ErrorMessageHandler);
+            sut.AddMessageHandler(mockTestHandler.Object.MessageHandler);
+            sut.AddErrorMessageHandler(mockTestHandler.Object.ErrorMessageHandler);
             await sut.StartAsync();
-
+            
             await Task.Delay(TimeSpan.FromSeconds(5));
-            _mockTestHandler.Verify(m => m.MessageHandler(It.Is<ProcessMessageEventArgs>(m =>
+            mockTestHandler.Verify(m => m.MessageHandler(It.Is<MessageReceivedEventArgs>(m =>
                 GetAircraftIdFromMessage(m.Message) == aircraftTakenOffEvent.AircraftId)),
                 Times.Once);
         }
@@ -36,8 +39,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         [Fact]
         public async Task CanCreateAListenerUsingManagedIdentity()
         {
-            var _mockTestHandler = new Mock<ITestHandler>();
-            _mockTestHandler.Setup(m => m.ErrorMessageHandler(It.IsAny<EventArgs>()));
+            var mockTestHandler = new Mock<ITestHandler>();
+            mockTestHandler.Setup(m => m.ErrorMessageHandler(It.IsAny<EventArgs>()));
 
             var subscription = nameof(CanCreateAListenerUsingManagedIdentity);
             await CreateSubscriptionAsync(subscription);
@@ -45,21 +48,24 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             await SendMessage(aircraftTakenOffEvent);
 
             var sut = new AzureServiceBusClient(_hostname, _topic, subscription, _tenantId);
-            sut.AddMessageHandler(_mockTestHandler.Object.MessageHandler);
-            sut.AddErrorMessageHandler(_mockTestHandler.Object.ErrorMessageHandler);
+            sut.AddMessageHandler(mockTestHandler.Object.MessageHandler);
+            sut.AddErrorMessageHandler(mockTestHandler.Object.ErrorMessageHandler);
             await sut.StartAsync();
             
             await Task.Delay(TimeSpan.FromSeconds(5));
-            _mockTestHandler.Verify(m => m.MessageHandler(It.Is<ProcessMessageEventArgs>(m => 
+            mockTestHandler.Verify(m => m.MessageHandler(It.Is<MessageReceivedEventArgs>(m => 
                 GetAircraftIdFromMessage(m.Message) == aircraftTakenOffEvent.AircraftId)), 
                 Times.Once);
         }
 
-        private static string GetAircraftIdFromMessage(ServiceBusReceivedMessage m)
-        {
-            var contents = Encoding.UTF8.GetString(m.Body);
-            
-            return JsonSerializer.Deserialize<AircraftTakenOff>(contents).AircraftId;
-        }
+        //private static string GetAircraftIdFromMessage(ServiceBusReceivedMessage m)
+        //{
+        //    var contents = Encoding.UTF8.GetString(m.Body);
+
+        //    return JsonSerializer.Deserialize<AircraftTakenOff>(contents).AircraftId;
+        //}
+
+        private static string GetAircraftIdFromMessage(string message) 
+            => JsonSerializer.Deserialize<AircraftTakenOff>(message).AircraftId;
     }
 }

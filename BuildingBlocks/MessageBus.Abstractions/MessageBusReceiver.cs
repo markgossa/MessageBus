@@ -31,12 +31,11 @@ namespace MessageBus.Abstractions
             _messageBusClient.AddErrorMessageHandler(OnErrorMessageReceived);
         }
 
-        private Task OnErrorMessageReceived(EventArgs arg) => Task.CompletedTask;
+        private Task OnErrorMessageReceived(EventArgs args) => Task.CompletedTask;
 
-        private Task OnMessageReceived(EventArgs arg) => HandleMessageAsync("{\"AicraftId\":\"d3cbb1df-f93e-4fd6-a927-c3d38162328d\"}"
-            , "AircraftTakenOff");
+        internal Task OnMessageReceived(MessageReceivedEventArgs args) => HandleMessageAsync(args.Message, "AircraftTakenOff");
 
-        internal async Task HandleMessageAsync(string messageContents, string messageType)
+        private async Task HandleMessageAsync(string messageContents, string messageType)
         {
             var handler = _messageBusHandlerResolver.Resolve(messageType);
             await (InvokeHandler(messageContents, handler) as Task);

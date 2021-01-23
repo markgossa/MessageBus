@@ -30,7 +30,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             await sut.ConfigureAsync();
 
             _mockMessageBusAdminClient.Verify(m => m.ConfigureAsync(_handlers), Times.Once);
-            _mockMessageBusClient.Verify(m => m.AddMessageHandler(It.IsAny<Func<EventArgs, Task>>()), Times.Once);
+            _mockMessageBusClient.Verify(m => m.AddMessageHandler(It.IsAny<Func<MessageReceivedEventArgs, Task>>()), Times.Once);
         }
         
         [Fact]
@@ -56,11 +56,19 @@ namespace MessageBus.Abstractions.Tests.Unit
             var aircraftId = Guid.NewGuid().ToString();
             var message = JsonSerializer.Serialize(new AircraftTakenOff { AicraftId = aircraftId });
 
-            await sut.HandleMessageAsync(message, nameof(AircraftTakenOff));
+            var args = new MessageReceivedEventArgs(message);
+
+            await sut.OnMessageReceived(args);
 
             _mockMessageBusHandlerResolver.Verify(m => m.Resolve(nameof(AircraftTakenOff)), Times.Once);
             Assert.Equal(aircraftId, mockAircraftTakenOffHandler.AircraftId);
             Assert.Equal(1, mockAircraftTakenOffHandler.MessageCount);
+        }
+
+        [Fact]
+        public async Task DoSomething()
+        {
+
         }
     }
 }
