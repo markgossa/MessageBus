@@ -3,6 +3,7 @@ using MessageBus.Abstractions.Tests.Unit.Models.Events;
 using Moq;
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
@@ -54,7 +55,8 @@ namespace MessageBus.Abstractions.Tests.Unit
                 _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object);
 
             var aircraftId = Guid.NewGuid().ToString();
-            var message = JsonSerializer.Serialize(new AircraftTakenOff { AicraftId = aircraftId });
+            var messageBody = JsonSerializer.Serialize(new AircraftTakenOff { AicraftId = aircraftId });
+            var message = new BinaryData(Encoding.UTF8.GetBytes(messageBody));
 
             var args = new MessageReceivedEventArgs(message);
 

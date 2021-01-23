@@ -32,7 +32,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             
             await Task.Delay(TimeSpan.FromSeconds(5));
             mockTestHandler.Verify(m => m.MessageHandler(It.Is<MessageReceivedEventArgs>(m =>
-                GetAircraftIdFromMessage(m.Message) == aircraftTakenOffEvent.AircraftId)),
+                GetAircraftIdFromMessage(Encoding.UTF8.GetString(m.Message)) == aircraftTakenOffEvent.AircraftId)),
                 Times.Once);
         }
 
@@ -54,7 +54,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             
             await Task.Delay(TimeSpan.FromSeconds(5));
             mockTestHandler.Verify(m => m.MessageHandler(It.Is<MessageReceivedEventArgs>(m => 
-                GetAircraftIdFromMessage(m.Message) == aircraftTakenOffEvent.AircraftId)), 
+                GetAircraftIdFromMessage(Encoding.UTF8.GetString(m.Message)) == aircraftTakenOffEvent.AircraftId)), 
                 Times.Once);
         }
 

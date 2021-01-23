@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -33,7 +34,8 @@ namespace MessageBus.Abstractions
 
         private Task OnErrorMessageReceived(EventArgs args) => Task.CompletedTask;
 
-        internal Task OnMessageReceived(MessageReceivedEventArgs args) => HandleMessageAsync(args.Message, "AircraftTakenOff");
+        internal Task OnMessageReceived(MessageReceivedEventArgs args) => HandleMessageAsync(Encoding.UTF8.GetString(args.Message)
+            , "AircraftTakenOff");
 
         private async Task HandleMessageAsync(string messageContents, string messageType)
         {

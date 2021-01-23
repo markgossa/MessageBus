@@ -4,9 +4,9 @@ namespace MessageBus.Abstractions
 {
     public class MessageReceivedEventArgs : EventArgs
     {
-        public string Message { get; }
+        public BinaryData Message { get; }
 
-        public MessageReceivedEventArgs(string message)
+        public MessageReceivedEventArgs(BinaryData message)
         {
             Message = message;
         }

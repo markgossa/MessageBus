@@ -42,7 +42,7 @@ namespace MessageBus.Microsoft.ServiceBus
 
         private async Task CallMessageHandlerAsync(ProcessMessageEventArgs args)
         {
-            var messageReceivedEventArgs = new MessageReceivedEventArgs(args.Message.Body.ToString());
+            var messageReceivedEventArgs = new MessageReceivedEventArgs(args.Message.Body);
             await _messageHandler(messageReceivedEventArgs);
         }
 
