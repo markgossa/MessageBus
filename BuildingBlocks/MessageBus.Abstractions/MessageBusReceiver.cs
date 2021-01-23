@@ -32,15 +32,16 @@ namespace MessageBus.Abstractions
             _messageBusClient.AddErrorMessageHandler(OnErrorMessageReceived);
         }
 
-        private Task OnErrorMessageReceived(EventArgs args) => Task.CompletedTask;
+        internal async Task OnErrorMessageReceived(ErrorMessageReceivedEventArgs args) 
+            => await Task.Run(() => throw new MessageReceivedException(args.Exception));
 
-        internal Task OnMessageReceived(MessageReceivedEventArgs args) => HandleMessageAsync(Encoding.UTF8.GetString(args.Message)
+        internal async Task OnMessageReceived(MessageReceivedEventArgs args) => await HandleMessageAsync(Encoding.UTF8.GetString(args.Message)
             , "AircraftTakenOff");
 
         private async Task HandleMessageAsync(string messageContents, string messageType)
         {
             var handler = _messageBusHandlerResolver.Resolve(messageType);
-            await (InvokeHandler(messageContents, handler) as Task);
+            await InvokeHandler(messageContents, handler);
         }
 
         private static async Task InvokeHandler(string messageContents, object handler)

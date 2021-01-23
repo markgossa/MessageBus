@@ -14,8 +14,8 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
         public MessageBusHandlerResolver(ServiceCollection services)
         {
             _serviceProvider = services.BuildServiceProvider();
-            _handlerMap = GetMessageBusHandlerServiceDescriptors(services).ToDictionary(h => GetMessageTypeFromHandler(h.ImplementationType),
-                h => h);
+            _handlerMap = GetMessageBusHandlerServiceDescriptors(services).ToDictionary(h => 
+                GetMessageTypeFromHandler(h.ImplementationType), h => h);
         }
 
         public object Resolve(string messageType)

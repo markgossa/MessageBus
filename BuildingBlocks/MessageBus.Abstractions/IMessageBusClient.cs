@@ -7,6 +7,6 @@ namespace MessageBus.Abstractions
     {
         Task StartAsync();
         void AddMessageHandler(Func<MessageReceivedEventArgs, Task> messageHandler);
-        void AddErrorMessageHandler(Func<EventArgs, Task> errorMessageHandler);
+        void AddErrorMessageHandler(Func<ErrorMessageReceivedEventArgs, Task> errorMessageHandler);
     }
 }

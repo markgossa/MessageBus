@@ -2,26 +2,13 @@ using MessageBus.Abstractions.Tests.Unit.Handlers;
 using MessageBus.Abstractions.Tests.Unit.Models.Events;
 using Moq;
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace MessageBus.Abstractions.Tests.Unit
 {
-    public class MessageBusReceiverTests
+    public class MessageBusReceiverTests : MessageBusReceiverTestsBase
     {
-        private readonly Mock<IMessageBusHandlerResolver> _mockMessageBusHandlerResolver = new Mock<IMessageBusHandlerResolver>();
-        private readonly List<Type> _handlers = new List<Type> { typeof(AircraftLandedHandler), typeof(AircraftTakenOffHandler) };
-        private readonly Mock<IMessageBusAdminClient> _mockMessageBusAdminClient = new Mock<IMessageBusAdminClient>();
-        private readonly Mock<IMessageBusClient> _mockMessageBusClient = new Mock<IMessageBusClient>();
-        
-        public MessageBusReceiverTests()
-        {
-            _mockMessageBusHandlerResolver.Setup(m => m.GetMessageHandlers()).Returns(_handlers);
-        }
-
         [Fact]
         public async Task ConfiguresMessageBusAsync()
         {
@@ -55,10 +42,7 @@ namespace MessageBus.Abstractions.Tests.Unit
                 _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object);
 
             var aircraftId = Guid.NewGuid().ToString();
-            var messageBody = JsonSerializer.Serialize(new AircraftTakenOff { AicraftId = aircraftId });
-            var message = new BinaryData(Encoding.UTF8.GetBytes(messageBody));
-
-            var args = new MessageReceivedEventArgs(message);
+            var args = new MessageReceivedEventArgs(BuildMessageBinaryData(aircraftId));
 
             await sut.OnMessageReceived(args);
 
@@ -68,9 +52,19 @@ namespace MessageBus.Abstractions.Tests.Unit
         }
 
         [Fact]
-        public async Task DoSomething()
+        public async Task ThrowsCorrectExcepetionWhenErrorProcessingMessage()
         {
+            var sut = new MessageBusReceiver(_mockMessageBusHandlerResolver.Object,
+                _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object);
 
+            const string errorMessage = "Unable to process message";
+            var errorMessageEventArgs = new ErrorMessageReceivedEventArgs(new ApplicationException(
+                errorMessage));
+
+            var exception = await Assert.ThrowsAsync<MessageReceivedException>(async () 
+                => await sut.OnErrorMessageReceived(errorMessageEventArgs));
+
+            Assert.Equal(errorMessage, exception.InnerException.Message);
         }
     }
 }

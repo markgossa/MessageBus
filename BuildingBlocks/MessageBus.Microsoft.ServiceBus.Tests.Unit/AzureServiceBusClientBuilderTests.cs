@@ -6,7 +6,7 @@ namespace MessageBus.Abstractions.Tests.Unit
 {
     public class AzureServiceBusClientBuilderTests
     {
-        private const string _connectionString = "Endpoint=sb://testsb.servicebus.windows.net/;" +
+        protected const string _connectionString = "Endpoint=sb://testsb.servicebus.windows.net/;" +
             "SharedAccessKeyName=Manage;SharedAccessKey=testsharedaccesskey;";
         private const string _hostname = "testsb.servicebus.windows.net";
         protected const string _topic = "topic1";

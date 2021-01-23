@@ -2,14 +2,17 @@
 using MessageBus.Abstractions;
 using MessageBus.Microsoft.ServiceBus.Utilities;
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+
+[assembly: InternalsVisibleTo("MessageBus.microsoft.ServiceBus.Tests.Unit")]
 
 namespace MessageBus.Microsoft.ServiceBus
 {
     public class AzureServiceBusClient : IMessageBusClient
     {
         private readonly ServiceBusProcessor _serviceBusProcessor;
-        private Func<EventArgs, Task> _errorMessageHandler;
+        private Func<ErrorMessageReceivedEventArgs, Task> _errorMessageHandler;
         private Func<MessageReceivedEventArgs, Task> _messageHandler;
 
         public AzureServiceBusClient(string connectionString, string topic, string subscription)
@@ -29,7 +32,7 @@ namespace MessageBus.Microsoft.ServiceBus
         public void AddMessageHandler(Func<MessageReceivedEventArgs, Task> messageHandler)
             => _messageHandler = messageHandler;
 
-        public void AddErrorMessageHandler(Func<EventArgs, Task> errorMessageHandler)
+        public void AddErrorMessageHandler(Func<ErrorMessageReceivedEventArgs, Task> errorMessageHandler)
             => _errorMessageHandler = errorMessageHandler;
 
         public async Task StartAsync() => await _serviceBusProcessor.StartProcessingAsync();
@@ -37,7 +40,7 @@ namespace MessageBus.Microsoft.ServiceBus
         private void AddMessageHandlers()
         {
             _serviceBusProcessor.ProcessMessageAsync += CallMessageHandlerAsync;
-            _serviceBusProcessor.ProcessErrorAsync += ThrowException;
+            _serviceBusProcessor.ProcessErrorAsync += CallErrorMessageHandlerAsync;
         }
 
         private async Task CallMessageHandlerAsync(ProcessMessageEventArgs args)
@@ -46,6 +49,7 @@ namespace MessageBus.Microsoft.ServiceBus
             await _messageHandler(messageReceivedEventArgs);
         }
 
-        private async Task ThrowException(ProcessErrorEventArgs args) => Console.WriteLine("Some error!");
+        internal async Task CallErrorMessageHandlerAsync(ProcessErrorEventArgs args)
+            => await _errorMessageHandler(new ErrorMessageReceivedEventArgs(args.Exception));
     }
 }

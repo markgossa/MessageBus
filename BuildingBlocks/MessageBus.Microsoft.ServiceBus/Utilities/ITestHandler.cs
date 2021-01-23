@@ -1,7 +1,7 @@
 ﻿using MessageBus.Abstractions;
 using System.Threading.Tasks;
 
-namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers
+namespace MessageBus.Microsoft.ServiceBus.Utilities
 {
     public interface ITestHandler
     {
