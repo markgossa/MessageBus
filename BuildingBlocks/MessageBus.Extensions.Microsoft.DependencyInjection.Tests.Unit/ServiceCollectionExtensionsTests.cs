@@ -10,7 +10,7 @@ using Xunit;
 
 namespace ServiceBus1.Tests.Unit
 {
-    public class ServiceProviderExtensionsTests
+    public class ServiceCollectionExtensionsTests
     {
         [Fact]
         public void SubscribesToMessage()
@@ -28,12 +28,12 @@ namespace ServiceBus1.Tests.Unit
         public void SubscribesToMessageUsingGenerics()
         {
             var services = new ServiceCollection();
-            services.SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
+            services.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>();
 
-            var service = services.BuildServiceProvider().GetRequiredService<IHandleMessages<AircraftTakenOff>>();
+            var service = services.BuildServiceProvider().GetRequiredService<IHandleMessages<AircraftLanded>>();
 
             Assert.NotNull(service);
-            Assert.IsType<AircraftTakenOffHandler>(service);
+            Assert.IsType<AircraftLandedHandler>(service);
         }
         
         [Fact]
@@ -76,13 +76,12 @@ namespace ServiceBus1.Tests.Unit
             Assert.Equal(services, actualServices);
         }
 
-        private static ServiceCollection CreateServiceCollection()
+        private static IServiceCollection CreateServiceCollection()
         {
-            var services = new ServiceCollection();
-            services.SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>()
+            IServiceCollection services = new ServiceCollection();
+            return services.SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>()
                 .SubscribeToMessage<AircraftLanded, AircraftLandedHandler>()
                 .AddSingleton<IService1, Service1>();
-            return services;
         }
     }
 }

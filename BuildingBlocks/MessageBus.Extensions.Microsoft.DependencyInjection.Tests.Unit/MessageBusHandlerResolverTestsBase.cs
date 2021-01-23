@@ -6,7 +6,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
 {
     public class MessageBusHandlerResolverTestsBase
     {
-        protected static ServiceCollection BuildServiceCollection()
+        protected static IServiceCollection BuildServiceCollection()
             => new ServiceCollection().SubscribeToMessage<AircraftLanded, AircraftLandedHandler>()
                         .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
     }

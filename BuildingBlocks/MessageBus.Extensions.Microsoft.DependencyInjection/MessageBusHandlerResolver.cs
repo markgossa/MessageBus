@@ -11,7 +11,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
         private readonly ServiceProvider _serviceProvider;
         public Dictionary<Type, ServiceDescriptor> _handlerMap;
 
-        public MessageBusHandlerResolver(ServiceCollection services)
+        public MessageBusHandlerResolver(IServiceCollection services)
         {
             _serviceProvider = services.BuildServiceProvider();
             _handlerMap = GetMessageBusHandlerServiceDescriptors(services).ToDictionary(h => 
@@ -33,7 +33,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
                 .First(i => i.Name.Contains(typeof(IHandleMessages<>).Name))
                 .GenericTypeArguments.First();
 
-        private static IEnumerable<ServiceDescriptor> GetMessageBusHandlerServiceDescriptors(ServiceCollection services)
+        private static IEnumerable<ServiceDescriptor> GetMessageBusHandlerServiceDescriptors(IServiceCollection services)
             => services.AsEnumerable()
                 .Where(s => s.ServiceType.FullName.Contains(typeof(IHandleMessages<>).FullName)
                     && s.ServiceType.Assembly.FullName.Contains(typeof(IHandleMessages<>).Assembly.FullName));
