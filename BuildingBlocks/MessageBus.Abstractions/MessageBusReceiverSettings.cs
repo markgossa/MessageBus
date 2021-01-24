@@ -1,6 +1,6 @@
 ﻿namespace MessageBus.Abstractions
 {
-    public class MessageBusSettings
+    public class MessageBusReceiverSettings
     {
         public string MessageTypeProperty { get; set; }
     }

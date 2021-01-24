@@ -18,7 +18,7 @@ namespace MessageBus.Abstractions
 
         public MessageBusReceiver(IMessageBusHandlerResolver messageBusHandlerResolver,
             IMessageBusAdminClient messageBusAdmin, IMessageBusClient messageBusClient, 
-            MessageBusSettings messageBusSettings = null)
+            MessageBusReceiverSettings messageBusSettings = null)
         {
             _messageBusHandlerResolver = messageBusHandlerResolver;
             _messageBusAdminClient = messageBusAdmin;
@@ -41,7 +41,8 @@ namespace MessageBus.Abstractions
             => await Task.Run(() => throw new MessageReceivedException(context.Exception));
 
         internal async Task OnMessageReceived(MessageReceivedEventArgs context)
-            => await HandleMessageAsync(Encoding.UTF8.GetString(context.Message), context.MessageProperties[_messageTypeProperty]);
+            => await HandleMessageAsync(Encoding.UTF8.GetString(context.Message), 
+                context.MessageProperties[_messageTypeProperty]);
 
         private async Task HandleMessageAsync(string messageContents, string messageType)
         {

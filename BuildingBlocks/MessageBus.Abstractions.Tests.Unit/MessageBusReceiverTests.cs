@@ -80,7 +80,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             _mockMessageBusHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded)))
                 .Returns(mockAircraftTakenOffHandler);
             var sut = new MessageBusReceiver(_mockMessageBusHandlerResolver.Object,
-                _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object, new MessageBusSettings
+                _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object, new MessageBusReceiverSettings
                 { MessageTypeProperty = "MessageTypeIdentifier" });
 
             var aircraftId = Guid.NewGuid().ToString();
