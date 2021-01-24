@@ -13,8 +13,8 @@ namespace MessageBus.Microsoft.ServiceBus
     public class AzureServiceBusClient : IMessageBusClient
     {
         private readonly ServiceBusProcessor _serviceBusProcessor;
-        private Func<MessageErrorContext, Task> _errorMessageHandler;
-        private Func<MessageContext, Task> _messageHandler;
+        private Func<MessageErrorReceivedEventArgs, Task> _errorMessageHandler;
+        private Func<MessageReceivedEventArgs, Task> _messageHandler;
 
         public AzureServiceBusClient(string connectionString, string topic, string subscription)
         {
@@ -30,10 +30,10 @@ namespace MessageBus.Microsoft.ServiceBus
             AddMessageHandlers();
         }
 
-        public void AddMessageHandler(Func<MessageContext, Task> messageHandler)
+        public void AddMessageHandler(Func<MessageReceivedEventArgs, Task> messageHandler)
             => _messageHandler = messageHandler;
 
-        public void AddErrorMessageHandler(Func<MessageErrorContext, Task> errorMessageHandler)
+        public void AddErrorMessageHandler(Func<MessageErrorReceivedEventArgs, Task> errorMessageHandler)
             => _errorMessageHandler = errorMessageHandler;
 
         public async Task StartAsync() => await _serviceBusProcessor.StartProcessingAsync();
@@ -46,13 +46,13 @@ namespace MessageBus.Microsoft.ServiceBus
 
         private async Task CallMessageHandlerAsync(ProcessMessageEventArgs args)
         {
-            var messageReceivedEventArgs = new MessageContext(args.Message.Body,
+            var messageReceivedEventArgs = new MessageReceivedEventArgs(args.Message.Body,
                 MapToMessageProperties(args.Message.ApplicationProperties));
             await _messageHandler(messageReceivedEventArgs);
         }
 
         internal async Task CallErrorMessageHandlerAsync(ProcessErrorEventArgs args)
-            => await _errorMessageHandler(new MessageErrorContext(args.Exception));
+            => await _errorMessageHandler(new MessageErrorReceivedEventArgs(args.Exception));
 
         private static Dictionary<string, string> MapToMessageProperties(IReadOnlyDictionary<string, object>
             applicationProperties)

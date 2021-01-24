@@ -37,10 +37,10 @@ namespace MessageBus.Abstractions
             _messageBusClient.AddErrorMessageHandler(OnErrorMessageReceived);
         }
 
-        internal async Task OnErrorMessageReceived(MessageErrorContext context) 
+        internal async Task OnErrorMessageReceived(MessageErrorReceivedEventArgs context) 
             => await Task.Run(() => throw new MessageReceivedException(context.Exception));
 
-        internal async Task OnMessageReceived(MessageContext context)
+        internal async Task OnMessageReceived(MessageReceivedEventArgs context)
             => await HandleMessageAsync(Encoding.UTF8.GetString(context.Message), context.MessageProperties[_messageTypeProperty]);
 
         private async Task HandleMessageAsync(string messageContents, string messageType)
