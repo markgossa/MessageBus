@@ -23,7 +23,9 @@ namespace MessageBus.Abstractions
             _messageBusHandlerResolver = messageBusHandlerResolver;
             _messageBusAdminClient = messageBusAdmin;
             _messageBusClient = messageBusClient;
-            _messageTypeProperty = messageBusSettings?.MessageTypeProperty ?? "MessageType";
+            _messageTypeProperty = string.IsNullOrWhiteSpace(messageBusSettings?.MessageTypeProperty)
+                ? "MessageType"
+                : messageBusSettings.MessageTypeProperty;
         }
 
         public async Task StartAsync() => await _messageBusClient.StartAsync();

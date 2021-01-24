@@ -2,6 +2,7 @@
 using MessageBus.Abstractions;
 using MessageBus.Microsoft.ServiceBus.Utilities;
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
@@ -45,11 +46,24 @@ namespace MessageBus.Microsoft.ServiceBus
 
         private async Task CallMessageHandlerAsync(ProcessMessageEventArgs args)
         {
-            var messageReceivedEventArgs = new MessageReceivedEventArgs(args.Message.Body);
+            var messageReceivedEventArgs = new MessageReceivedEventArgs(args.Message.Body,
+                MapToMessageProperties(args.Message.ApplicationProperties));
             await _messageHandler(messageReceivedEventArgs);
         }
 
         internal async Task CallErrorMessageHandlerAsync(ProcessErrorEventArgs args)
             => await _errorMessageHandler(new ErrorMessageReceivedEventArgs(args.Exception));
+
+        private static Dictionary<string, string> MapToMessageProperties(IReadOnlyDictionary<string, object>
+            applicationProperties)
+        {
+            var messageProperties = new Dictionary<string, string>();
+            foreach (var item in applicationProperties)
+            {
+                messageProperties.Add(item.Key, item.Value.ToString());
+            }
+
+            return messageProperties;
+        }
     }
 }

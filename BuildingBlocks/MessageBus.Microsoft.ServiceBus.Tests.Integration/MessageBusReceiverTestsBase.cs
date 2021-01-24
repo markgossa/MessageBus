@@ -1,6 +1,7 @@
 ﻿using Azure;
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
+using MessageBus.Abstractions;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
 using Moq;
@@ -38,11 +39,11 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 Timestamp = DateTime.Now
             };
 
-        protected async Task SendAircraftTakenOffEvent(AircraftTakenOff aircraftTakenOffEvent)
+        protected async Task SendEvent(IMessage message)
         {
-            var message = new ServiceBusMessage(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(aircraftTakenOffEvent)));
-            message.ApplicationProperties.Add("MessageType", nameof(AircraftTakenOff));
-            await _serviceBusSender.SendMessageAsync(message);
+            var messageBody = new ServiceBusMessage(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, message.GetType())));
+            messageBody.ApplicationProperties.Add("MessageType", message.GetType().Name);
+            await _serviceBusSender.SendMessageAsync(messageBody);
         }
 
         protected async Task CreateSubscriptionAsync(string subscription)
@@ -66,11 +67,20 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             return JsonSerializer.Deserialize<AircraftTakenOff>(contents).AircraftId;
         }
 
-        protected async Task<AircraftTakenOff> CreateSubscriptionAndSendMessage(string subscriptionName)
+        protected async Task<AircraftTakenOff> CreateSubscriptionAndSendAircraftTakenOffEvent(string subscriptionName)
         {
             await CreateSubscriptionAsync(subscriptionName);
             var aircraftTakenOffEvent = BuildAircraftTakenOffEvent();
-            await SendAircraftTakenOffEvent(aircraftTakenOffEvent);
+            await SendEvent(aircraftTakenOffEvent);
+
+            return aircraftTakenOffEvent;
+        }
+        
+        protected async Task<AircraftLanded> CreateSubscriptionAndSendAircraftLandedEvent(string subscriptionName)
+        {
+            await CreateSubscriptionAsync(subscriptionName);
+            var aircraftTakenOffEvent = new AircraftLanded { AircraftId = Guid.NewGuid().ToString() };
+            await SendEvent(aircraftTakenOffEvent);
 
             return aircraftTakenOffEvent;
         }
