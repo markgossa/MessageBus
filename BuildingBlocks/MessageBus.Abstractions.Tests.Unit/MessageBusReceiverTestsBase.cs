@@ -20,9 +20,15 @@ namespace MessageBus.Abstractions.Tests.Unit
             _mockMessageBusHandlerResolver.Setup(m => m.GetMessageHandlers()).Returns(_handlers);
         }
 
-        protected static BinaryData BuildMessageBinaryData(string aircraftId)
+        protected static BinaryData BuildAircraftTakenOffMessage(string aircraftId)
         {
-            var messageBody = JsonSerializer.Serialize(new AircraftTakenOff { AicraftId = aircraftId });
+            var messageBody = JsonSerializer.Serialize(new AircraftTakenOff { AircraftId = aircraftId });
+            return new BinaryData(Encoding.UTF8.GetBytes(messageBody));
+        }
+
+        protected static BinaryData BuildAircraftLandedMessage(string aircraftId)
+        {
+            var messageBody = JsonSerializer.Serialize(new AircraftLanded { AircraftId = aircraftId });
             return new BinaryData(Encoding.UTF8.GetBytes(messageBody));
         }
     }

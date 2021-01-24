@@ -2,6 +2,6 @@
 {
     public class AircraftTakenOff : IMessage
     {
-        public string AicraftId { get; set; }
+        public string AircraftId { get; set; }
     }
 }

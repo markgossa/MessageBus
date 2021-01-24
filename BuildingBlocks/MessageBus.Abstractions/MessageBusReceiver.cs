@@ -14,13 +14,16 @@ namespace MessageBus.Abstractions
         private readonly IMessageBusHandlerResolver _messageBusHandlerResolver;
         private readonly IMessageBusAdminClient _messageBusAdminClient;
         private readonly IMessageBusClient _messageBusClient;
+        private readonly string _messageTypeProperty;
 
         public MessageBusReceiver(IMessageBusHandlerResolver messageBusHandlerResolver,
-            IMessageBusAdminClient messageBusAdmin, IMessageBusClient messageBusClient)
+            IMessageBusAdminClient messageBusAdmin, IMessageBusClient messageBusClient, 
+            MessageBusSettings messageBusSettings = null)
         {
             _messageBusHandlerResolver = messageBusHandlerResolver;
             _messageBusAdminClient = messageBusAdmin;
             _messageBusClient = messageBusClient;
+            _messageTypeProperty = messageBusSettings?.MessageTypeProperty ?? "MessageType";
         }
 
         public async Task StartAsync() => await _messageBusClient.StartAsync();
@@ -35,8 +38,8 @@ namespace MessageBus.Abstractions
         internal async Task OnErrorMessageReceived(ErrorMessageReceivedEventArgs args) 
             => await Task.Run(() => throw new MessageReceivedException(args.Exception));
 
-        internal async Task OnMessageReceived(MessageReceivedEventArgs args) => await HandleMessageAsync(Encoding.UTF8.GetString(args.Message)
-            , "AircraftTakenOff");
+        internal async Task OnMessageReceived(MessageReceivedEventArgs args) 
+            => await HandleMessageAsync(Encoding.UTF8.GetString(args.Message), args.MessageProperties[_messageTypeProperty]);
 
         private async Task HandleMessageAsync(string messageContents, string messageType)
         {

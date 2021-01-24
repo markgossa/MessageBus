@@ -12,7 +12,7 @@ namespace MessageBus.Abstractions.Tests.Unit.Handlers
         public async Task HandleAsync(AircraftTakenOff message)
         {
             await Task.Delay(TimeSpan.FromSeconds(4));
-            AircraftId = message.AicraftId;
+            AircraftId = message.AircraftId;
             MessageCount++;
         }
     }
