@@ -19,7 +19,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             await sut.ConfigureAsync();
 
             _mockMessageBusAdminClient.Verify(m => m.ConfigureAsync(_handlers), Times.Once);
-            _mockMessageBusClient.Verify(m => m.AddMessageHandler(It.IsAny<Func<MessageReceivedEventArgs, Task>>()), Times.Once);
+            _mockMessageBusClient.Verify(m => m.AddMessageHandler(It.IsAny<Func<MessageContext, Task>>()), Times.Once);
         }
         
         [Fact]
@@ -43,7 +43,7 @@ namespace MessageBus.Abstractions.Tests.Unit
                 _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object);
 
             var aircraftId = Guid.NewGuid().ToString();
-            var args = new MessageReceivedEventArgs(BuildAircraftTakenOffMessage(aircraftId),
+            var args = new MessageContext(BuildAircraftTakenOffMessage(aircraftId),
                 new Dictionary<string, string> { { "MessageType", nameof(AircraftTakenOff) } });
 
             await sut.OnMessageReceived(args);
@@ -63,7 +63,7 @@ namespace MessageBus.Abstractions.Tests.Unit
                 _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object);
 
             var aircraftId = Guid.NewGuid().ToString();
-            var args = new MessageReceivedEventArgs(BuildAircraftLandedMessage(aircraftId),
+            var args = new MessageContext(BuildAircraftLandedMessage(aircraftId),
                 new Dictionary<string, string> { { "MessageType", nameof(AircraftLanded) } });
 
             await sut.OnMessageReceived(args);
@@ -84,7 +84,7 @@ namespace MessageBus.Abstractions.Tests.Unit
                 { MessageTypeProperty = "MessageTypeIdentifier" });
 
             var aircraftId = Guid.NewGuid().ToString();
-            var args = new MessageReceivedEventArgs(BuildAircraftLandedMessage(aircraftId),
+            var args = new MessageContext(BuildAircraftLandedMessage(aircraftId),
                 new Dictionary<string, string> { { "MessageTypeIdentifier", nameof(AircraftLanded) } });
 
             await sut.OnMessageReceived(args);
@@ -101,7 +101,7 @@ namespace MessageBus.Abstractions.Tests.Unit
                 _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object);
 
             const string errorMessage = "Unable to process message";
-            var errorMessageEventArgs = new ErrorMessageReceivedEventArgs(new ApplicationException(
+            var errorMessageEventArgs = new MessageErrorContext(new ApplicationException(
                 errorMessage));
 
             var exception = await Assert.ThrowsAsync<MessageReceivedException>(async () 

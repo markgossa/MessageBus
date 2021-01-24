@@ -6,6 +6,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Handler
 {
     public class AircraftLandedHandler : IHandleMessages<AircraftLanded>
     {
-        public async Task HandleAsync(AircraftLanded message) => System.Console.WriteLine("Welcome!");
+        public async Task HandleAsync(AircraftLanded message) 
+            => await Task.Run(() => System.Console.WriteLine("Welcome!"));
     }
 }

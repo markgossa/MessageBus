@@ -6,7 +6,7 @@ namespace MessageBus.Abstractions
     public interface IMessageBusClient
     {
         Task StartAsync();
-        void AddMessageHandler(Func<MessageReceivedEventArgs, Task> messageHandler);
-        void AddErrorMessageHandler(Func<ErrorMessageReceivedEventArgs, Task> errorMessageHandler);
+        void AddMessageHandler(Func<MessageContext, Task> messageHandler);
+        void AddErrorMessageHandler(Func<MessageErrorContext, Task> errorMessageHandler);
     }
 }

@@ -23,7 +23,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Unit
 
             await sut.CallErrorMessageHandlerAsync(args);
 
-            mockTestHandler.Verify(m => m.ErrorMessageHandler(It.Is<ErrorMessageReceivedEventArgs>(e =>
+            mockTestHandler.Verify(m => m.ErrorMessageHandler(It.Is<MessageErrorContext>(e =>
                 e.Exception.GetType() == typeof(ServiceBusException))), Times.Once);
         }
     }

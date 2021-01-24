@@ -5,7 +5,7 @@ namespace MessageBus.Microsoft.ServiceBus.Utilities
 {
     public interface ITestHandler
     {
-        Task MessageHandler(MessageReceivedEventArgs args);
-        Task ErrorMessageHandler(ErrorMessageReceivedEventArgs arg);
+        Task MessageHandler(MessageContext args);
+        Task ErrorMessageHandler(MessageErrorContext arg);
     }
 }
