@@ -1,5 +1,4 @@
-﻿using Azure;
-using Azure.Messaging.ServiceBus;
+﻿using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 using MessageBus.Abstractions;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers;
@@ -53,7 +52,6 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 await _serviceBusAdminClient.DeleteSubscriptionAsync(_topic, subscription);
             }
             catch { }
-            
             
             await _serviceBusAdminClient.CreateSubscriptionAsync(_topic, subscription);
         }

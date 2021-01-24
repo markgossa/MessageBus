@@ -9,7 +9,7 @@ namespace ServiceBus1.Handlers
     {
         public async Task HandleAsync(AircraftTakenOff aircraftTakenOff)
         {
-            //await Task.Delay(TimeSpan.FromMilliseconds(5));
+            await Task.Delay(TimeSpan.FromMilliseconds(5));
             Console.WriteLine($"{nameof(AircraftTakenOff)} message received with AircraftId: {aircraftTakenOff.AircraftId}");
         }
     }

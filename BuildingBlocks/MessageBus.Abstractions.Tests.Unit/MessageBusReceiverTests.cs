@@ -2,6 +2,7 @@ using MessageBus.Abstractions.Tests.Unit.Handlers;
 using MessageBus.Abstractions.Tests.Unit.Models.Events;
 using Moq;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -42,8 +43,8 @@ namespace MessageBus.Abstractions.Tests.Unit
                 _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object);
 
             var aircraftId = Guid.NewGuid().ToString();
-            var args = new MessageReceivedEventArgs(BuildAircraftTakenOffMessage(aircraftId));
-            args.MessageProperties.Add("MessageType", nameof(AircraftTakenOff));
+            var args = new MessageReceivedEventArgs(BuildAircraftTakenOffMessage(aircraftId),
+                new Dictionary<string, string> { { "MessageType", nameof(AircraftTakenOff) } });
 
             await sut.OnMessageReceived(args);
 
@@ -62,8 +63,8 @@ namespace MessageBus.Abstractions.Tests.Unit
                 _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object);
 
             var aircraftId = Guid.NewGuid().ToString();
-            var args = new MessageReceivedEventArgs(BuildAircraftLandedMessage(aircraftId));
-            args.MessageProperties.Add("MessageType", nameof(AircraftLanded));
+            var args = new MessageReceivedEventArgs(BuildAircraftLandedMessage(aircraftId),
+                new Dictionary<string, string> { { "MessageType", nameof(AircraftLanded) } });
 
             await sut.OnMessageReceived(args);
 
@@ -83,8 +84,8 @@ namespace MessageBus.Abstractions.Tests.Unit
                 { MessageTypeProperty = "MessageTypeIdentifier" });
 
             var aircraftId = Guid.NewGuid().ToString();
-            var args = new MessageReceivedEventArgs(BuildAircraftLandedMessage(aircraftId));
-            args.MessageProperties.Add("MessageTypeIdentifier", nameof(AircraftLanded));
+            var args = new MessageReceivedEventArgs(BuildAircraftLandedMessage(aircraftId),
+                new Dictionary<string, string> { { "MessageTypeIdentifier", nameof(AircraftLanded) } });
 
             await sut.OnMessageReceived(args);
 

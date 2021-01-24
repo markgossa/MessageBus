@@ -2,7 +2,7 @@
 
 namespace MessageBus.Abstractions
 {
-    public class ErrorMessageReceivedEventArgs : EventArgs
+    public class ErrorMessageReceivedEventArgs
     {
         public Exception Exception { get; }
 
