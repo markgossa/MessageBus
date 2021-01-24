@@ -33,7 +33,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             var mockTestHandler = new Mock<ITestHandler>();
             var subscription = nameof(CallsCorrectMessageHandlerUsingManagedIdentity);
-            var aircraftTakenOffEvent = await CreateSubscriptionAndSendAircraftTakenOffEvent(subscription);
+            var aircraftlandedEvent = await CreateSubscriptionAndSendAircraftLandedEvent(subscription);
 
             var sut = new AzureServiceBusClient(_hostname, _topic, subscription, _tenantId);
             AddHandlers(mockTestHandler, sut);
@@ -41,7 +41,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             
             await Task.Delay(TimeSpan.FromSeconds(5));
             mockTestHandler.Verify(m => m.MessageHandler(It.Is<MessageReceivedEventArgs>(m =>
-                GetAircraftIdFromMessage(m.Message) == aircraftTakenOffEvent.AircraftId)),
+                GetAircraftIdFromMessage(m.Message) == aircraftlandedEvent.AircraftId)),
                 Times.Once);
         }
     }
