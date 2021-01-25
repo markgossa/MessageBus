@@ -12,10 +12,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         [Fact]
         public void ReturnsMessageAsString()
         {
-            var sut = new MessageContext<AircraftLanded>
-            {
-                Body = new BinaryData(_messageAsString)
-            };
+            var sut = new MessageContext<AircraftLanded>(new BinaryData(_messageAsString));
 
             Assert.Equal(_messageAsString, sut.Body.ToString());
         }
@@ -23,15 +20,21 @@ namespace MessageBus.Abstractions.Tests.Unit
         [Fact]
         public void ReturnsDeserializedMessage()
         {
-            var sut = new MessageContext<AircraftLanded>
-            {
-                Body = new BinaryData(_messageAsString)
-            };
-
-            var result = sut.Body.ToObjectFromJson<AircraftLanded>();
+            var sut = new MessageContext<AircraftTakenOff>(new BinaryData(_messageAsString));
+            var result = sut.Body.ToObjectFromJson<AircraftTakenOff>();
 
             Assert.Equal(_aircraftId, result.AircraftId);
             Assert.Equal(_aircraftId, sut.Message.AircraftId);
+        }
+
+        [Fact]
+        public void CanCreateInstanceOfMessageContext()
+        {
+            var typeArg = typeof(AircraftTakenOff);
+            var messageContextType = typeof(MessageContext<>).MakeGenericType(typeArg);
+            var messageContext = Activator.CreateInstance(messageContextType, new BinaryData(_messageAsString));
+
+            Assert.Equal(typeof(MessageContext<AircraftTakenOff>), messageContext.GetType());
         }
     }
 }

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 [assembly: InternalsVisibleTo("MessageBus.Abstractions.Tests.Unit")]
@@ -23,9 +21,7 @@ namespace MessageBus.Abstractions
             _messageBusHandlerResolver = messageBusHandlerResolver;
             _messageBusAdminClient = messageBusAdmin;
             _messageBusClient = messageBusClient;
-            _messageTypeProperty = string.IsNullOrWhiteSpace(messageBusSettings?.MessageTypeProperty)
-                ? "MessageType"
-                : messageBusSettings.MessageTypeProperty;
+            _messageTypeProperty = GetMessageTypeProperty(messageBusSettings);
         }
 
         public async Task StartAsync() => await _messageBusClient.StartAsync();
@@ -37,31 +33,27 @@ namespace MessageBus.Abstractions
             _messageBusClient.AddErrorMessageHandler(OnErrorMessageReceived);
         }
 
-        internal async Task OnErrorMessageReceived(MessageErrorReceivedEventArgs context) 
-            => await Task.Run(() => throw new MessageReceivedException(context.Exception));
-
-        internal async Task OnMessageReceived(MessageReceivedEventArgs context)
-            => await HandleMessageAsync(Encoding.UTF8.GetString(context.Message), 
-                context.MessageProperties[_messageTypeProperty]);
-
-        private async Task HandleMessageAsync(string messageContents, string messageType)
-        {
-            var handler = _messageBusHandlerResolver.Resolve(messageType);
-            await InvokeHandler(messageContents, handler);
-        }
-
-        private static async Task InvokeHandler(string messageContents, object handler)
+        internal async Task OnMessageReceived(MessageReceivedEventArgs args)
         {
             const string handlerHandleMethodName = "HandleAsync";
 
-            var message = DeserializeMessage(messageContents, GetMessageTypeFromHandler(handler));
-            var handlerTask = handler.GetType().GetMethod(handlerHandleMethodName).Invoke(handler, new object[] { message });
+            var handler = _messageBusHandlerResolver.Resolve(args.MessageProperties[_messageTypeProperty]);
 
+            var messageTypeType = GetMessageTypeFromHandler(handler);
+            var messageContextType = typeof(MessageContext<>).MakeGenericType(messageTypeType);
+            var messageContext = Activator.CreateInstance(messageContextType, new object[] { args.Message });
+
+            var handlerTask = handler.GetType().GetMethod(handlerHandleMethodName).Invoke(handler, new object[] { messageContext });
             await (handlerTask as Task);
         }
 
-        private static object DeserializeMessage(string messageContents, Type messageTypeType) 
-            => JsonSerializer.Deserialize(messageContents, messageTypeType);
+        internal async Task OnErrorMessageReceived(MessageErrorReceivedEventArgs args)
+            => await Task.Run(() => throw new MessageReceivedException(args.Exception));
+
+        private static string GetMessageTypeProperty(MessageBusReceiverSettings messageBusSettings)
+            => string.IsNullOrWhiteSpace(messageBusSettings?.MessageTypeProperty)
+                ? "MessageType"
+                : messageBusSettings.MessageTypeProperty;
 
         private static Type GetMessageTypeFromHandler(object handler) 
             => handler.GetType().GetInterfaces()
@@ -69,4 +61,3 @@ namespace MessageBus.Abstractions
                 .GenericTypeArguments.First();
     }
 }
-    

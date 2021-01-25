@@ -7,10 +7,10 @@ namespace ServiceBus1.Handlers
 {
     public class AircraftTakenOffHandler : IHandleMessages<AircraftTakenOff>
     {
-        public async Task HandleAsync(AircraftTakenOff aircraftTakenOff)
+        public async Task HandleAsync(MessageContext<AircraftTakenOff> context)
         {
             await Task.Delay(TimeSpan.FromMilliseconds(5));
-            Console.WriteLine($"{nameof(AircraftTakenOff)} message received with AircraftId: {aircraftTakenOff.AircraftId}");
+            Console.WriteLine($"{nameof(AircraftTakenOff)} message received with AircraftId: {context.Message.AircraftId}");
         }
     }
 }

@@ -8,11 +8,14 @@ namespace MessageBus.Abstractions.Tests.Unit.Handlers
     {
         public string AircraftId { get; private set; }
         public int MessageCount { get; private set; }
+        public string MessageAsJson { get; private set; }
 
-        public async Task HandleAsync(AircraftTakenOff message)
+        public async Task HandleAsync(MessageContext<AircraftTakenOff> context)
         {
             await Task.Delay(TimeSpan.FromSeconds(4));
-            AircraftId = message.AircraftId;
+            AircraftId = context.Message.AircraftId;
+            MessageAsJson = context.Body.ToString();
+
             MessageCount++;
         }
     }
