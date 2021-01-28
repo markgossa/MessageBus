@@ -47,7 +47,11 @@ namespace MessageBus.Microsoft.ServiceBus
         private async Task CallMessageHandlerAsync(ProcessMessageEventArgs args)
         {
             var messageReceivedEventArgs = new MessageReceivedEventArgs(args.Message.Body,
-                MapToMessageProperties(args.Message.ApplicationProperties));
+                MapToMessageProperties(args.Message.ApplicationProperties))
+            {
+                MessageId = args.Message.MessageId
+            };
+
             await _messageHandler(messageReceivedEventArgs);
         }
 

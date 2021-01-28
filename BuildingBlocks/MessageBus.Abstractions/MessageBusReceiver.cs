@@ -38,13 +38,15 @@ namespace MessageBus.Abstractions
             const string handlerHandleMethodName = "HandleAsync";
 
             var handler = _messageBusHandlerResolver.Resolve(args.MessageProperties[_messageTypeProperty]);
+            var handlerTask = handler.GetType().GetMethod(handlerHandleMethodName).Invoke(handler, new object[] { BuildMessageContext(args, handler) });
+            await (handlerTask as Task);
+        }
 
+        private static object BuildMessageContext(MessageReceivedEventArgs args, object handler)
+        {
             var messageTypeType = GetMessageTypeFromHandler(handler);
             var messageContextType = typeof(MessageContext<>).MakeGenericType(messageTypeType);
-            var messageContext = Activator.CreateInstance(messageContextType, new object[] { args.Message });
-
-            var handlerTask = handler.GetType().GetMethod(handlerHandleMethodName).Invoke(handler, new object[] { messageContext });
-            await (handlerTask as Task);
+            return Activator.CreateInstance(messageContextType, new object[] { args.Message, args.MessageId });
         }
 
         internal async Task OnErrorMessageReceived(MessageErrorReceivedEventArgs args)

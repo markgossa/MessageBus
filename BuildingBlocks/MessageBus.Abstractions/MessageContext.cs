@@ -8,9 +8,12 @@ namespace MessageBus.Abstractions
         public BinaryData Body { get; private set; }
         public TMessage Message => JsonSerializer.Deserialize<TMessage>(Body.ToString());
 
-        public MessageContext(BinaryData body)
+        public string MessageId { get; internal set; }
+
+        public MessageContext(BinaryData body, string messageId)
         {
             Body = body;
+            MessageId = messageId;
         }
     }
 }

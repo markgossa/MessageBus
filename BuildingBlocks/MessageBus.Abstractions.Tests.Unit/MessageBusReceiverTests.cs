@@ -72,6 +72,31 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.Equal(aircraftId, mockAircraftTakenOffHandler.AircraftId);
             Assert.Equal(1, mockAircraftTakenOffHandler.MessageCount);
         }
+        
+        [Fact]
+        public async Task MessageContextPropertiesAvailableToMessageHandler()
+        {
+            var mockAircraftTakenOffHandler = new AircraftLandedHandler();
+            _mockMessageBusHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded)))
+                .Returns(mockAircraftTakenOffHandler);
+            var sut = new MessageBusReceiver(_mockMessageBusHandlerResolver.Object,
+                _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object);
+
+            var aircraftId = Guid.NewGuid().ToString();
+            var messageId = Guid.NewGuid().ToString();
+            var args = new MessageReceivedEventArgs(BuildAircraftLandedMessage(aircraftId),
+                new Dictionary<string, string> { { "MessageType", nameof(AircraftLanded) } })
+            {
+                MessageId = messageId
+            };
+
+            await sut.OnMessageReceived(args);
+
+            _mockMessageBusHandlerResolver.Verify(m => m.Resolve(nameof(AircraftLanded)), Times.Once);
+            Assert.Equal(aircraftId, mockAircraftTakenOffHandler.MessageContext.Message.AircraftId);
+            Assert.Equal(1, mockAircraftTakenOffHandler.MessageCount);
+            Assert.Equal(messageId, mockAircraftTakenOffHandler.MessageContext.MessageId);
+        }
 
         [Fact]
         public async Task CallsCorrectMessageHandlerWithCustomMessageTypePropertyName()

@@ -18,7 +18,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
             Assert.NotNull(handler);
             Assert.IsType<AircraftLandedHandler>(handler);
 
-            var messageContext = new MessageContext<AircraftLanded>(new BinaryData("Hello world!"));
+            var messageContext = new MessageContext<AircraftLanded>(new BinaryData("Hello world!"), Guid.NewGuid().ToString());
             typeof(AircraftLandedHandler).GetMethod("HandleAsync").Invoke(handler, new object[] { messageContext });
         }
         
