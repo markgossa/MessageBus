@@ -11,6 +11,7 @@ namespace MessageBus.Abstractions
         public string MessageId { get; internal set; }
         public string CorrelationId { get; internal set; }
         public Dictionary<string, string> Properties { get; internal set; }
+        public int DeliveryCount { get; internal set; }
 
         public MessageContext(BinaryData body)
         {

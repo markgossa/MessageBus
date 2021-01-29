@@ -44,11 +44,11 @@ namespace MessageBus.Abstractions
 
         private static object BuildMessageContext(MessageReceivedEventArgs args, object handler)
         {
-            var messageContextObject = Activator.CreateInstance(GetMessageContextType(handler), new object[] { args.Message });
-            dynamic messageContext = Convert.ChangeType(messageContextObject, GetMessageContextType(handler));
+            dynamic messageContext = Activator.CreateInstance(GetMessageContextType(handler), new object[] { args.Message });
             messageContext.MessageId = args.MessageId;
             messageContext.CorrelationId = args.CorrelationId;
             messageContext.Properties = args.MessageProperties;
+            messageContext.DeliveryCount = args.DeliveryCount;
 
             return messageContext;
         }

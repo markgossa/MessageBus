@@ -95,7 +95,8 @@ namespace MessageBus.Abstractions.Tests.Unit
                 messageProperties)
             {
                 MessageId = messageId,
-                CorrelationId = correlationId
+                CorrelationId = correlationId,
+                DeliveryCount = 2
             };
 
             await sut.OnMessageReceived(args);
@@ -106,6 +107,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.Equal(messageId, mockAircraftTakenOffHandler.MessageContext.MessageId);
             Assert.Equal(correlationId, mockAircraftTakenOffHandler.MessageContext.CorrelationId);
             Assert.Equal(nameof(AircraftLanded), mockAircraftTakenOffHandler.MessageContext.Properties["MessageType"]);
+            Assert.Equal(2, mockAircraftTakenOffHandler.MessageContext.DeliveryCount);
         }
 
         [Fact]

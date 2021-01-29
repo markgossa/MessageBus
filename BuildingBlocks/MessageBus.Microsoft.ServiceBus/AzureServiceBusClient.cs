@@ -50,7 +50,8 @@ namespace MessageBus.Microsoft.ServiceBus
                 MapToMessageProperties(args.Message.ApplicationProperties))
             {
                 MessageId = args.Message.MessageId,
-                CorrelationId = args.Message.CorrelationId
+                CorrelationId = args.Message.CorrelationId,
+                DeliveryCount = args.Message.DeliveryCount
             };
 
             await _messageHandler(messageReceivedEventArgs);

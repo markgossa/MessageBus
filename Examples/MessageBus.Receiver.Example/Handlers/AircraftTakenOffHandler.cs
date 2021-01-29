@@ -11,15 +11,18 @@ namespace ServiceBus1.Handlers
         public async Task HandleAsync(MessageContext<AircraftTakenOff> context)
         {
             await Task.Delay(TimeSpan.FromMilliseconds(5));
-            Console.WriteLine($"{nameof(AircraftTakenOff)} message received with AircraftId: {context.Message.AircraftId}");
 
-            var rawMessageText = context.Body.ToString();
-            Console.WriteLine($"Raw message as text: {rawMessageText}");
+            Console.WriteLine();
+            Console.WriteLine($"{nameof(AircraftTakenOff)} message received");
+            Console.WriteLine($"MessageId: {context.MessageId}");
+            Console.WriteLine($"CorrelationId: {context.CorrelationId}");
+            Console.WriteLine($"DeliveryCount: {context.DeliveryCount}");
+            Console.WriteLine($"AircraftId: {context.Message.AircraftId}");
+
+            Console.WriteLine($"Raw message as text: {context.Body}");
 
             var jsonOptions = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
             Console.WriteLine($"AircraftId using JSON serializer options: {context.Body.ToObjectFromJson<AircraftTakenOff>(jsonOptions).AircraftId}");
-
-            Console.WriteLine($"MessageId for message: {context.MessageId}");
         }
     }
 }
