@@ -84,8 +84,14 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             var aircraftId = Guid.NewGuid().ToString();
             var messageId = Guid.NewGuid().ToString();
+            var messageProperties = new Dictionary<string, string> 
+            { 
+                { "MessageType", nameof(AircraftLanded) },
+                { "MessageVersion", "1" }
+            };
+
             var args = new MessageReceivedEventArgs(BuildAircraftLandedMessage(aircraftId),
-                new Dictionary<string, string> { { "MessageType", nameof(AircraftLanded) } })
+                messageProperties)
             {
                 MessageId = messageId
             };
@@ -96,6 +102,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.Equal(aircraftId, mockAircraftTakenOffHandler.MessageContext.Message.AircraftId);
             Assert.Equal(1, mockAircraftTakenOffHandler.MessageCount);
             Assert.Equal(messageId, mockAircraftTakenOffHandler.MessageContext.MessageId);
+            //Assert.Equal(messageId, mockAircraftTakenOffHandler.MessageContext);
         }
 
         [Fact]

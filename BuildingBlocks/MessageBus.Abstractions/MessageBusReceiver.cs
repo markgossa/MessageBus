@@ -44,9 +44,18 @@ namespace MessageBus.Abstractions
 
         private static object BuildMessageContext(MessageReceivedEventArgs args, object handler)
         {
+            var messageContextObject = Activator.CreateInstance(GetMessageContextType(handler), new object[] { args.Message });
+            dynamic messageContext = Convert.ChangeType(messageContextObject, GetMessageContextType(handler));
+            messageContext.MessageId = args.MessageId;
+            
+            return messageContext;
+        }
+
+        private static Type GetMessageContextType(object handler)
+        {
             var messageTypeType = GetMessageTypeFromHandler(handler);
             var messageContextType = typeof(MessageContext<>).MakeGenericType(messageTypeType);
-            return Activator.CreateInstance(messageContextType, new object[] { args.Message, args.MessageId });
+            return messageContextType;
         }
 
         internal async Task OnErrorMessageReceived(MessageErrorReceivedEventArgs args)

@@ -12,7 +12,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         [Fact]
         public void ReturnsMessageAsString()
         {
-            var sut = new MessageContext<AircraftLanded>(new BinaryData(_messageAsString), Guid.NewGuid().ToString());
+            var sut = new MessageContext<AircraftLanded>(new BinaryData(_messageAsString));
 
             Assert.Equal(_messageAsString, sut.Body.ToString());
         }
@@ -20,7 +20,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         [Fact]
         public void ReturnsDeserializedMessage()
         {
-            var sut = new MessageContext<AircraftTakenOff>(new BinaryData(_messageAsString), Guid.NewGuid().ToString());
+            var sut = new MessageContext<AircraftTakenOff>(new BinaryData(_messageAsString));
             var result = sut.Body.ToObjectFromJson<AircraftTakenOff>();
 
             Assert.Equal(_aircraftId, result.AircraftId);
@@ -32,7 +32,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         {
             var typeArg = typeof(AircraftTakenOff);
             var messageContextType = typeof(MessageContext<>).MakeGenericType(typeArg);
-            var messageContext = Activator.CreateInstance(messageContextType, new BinaryData(_messageAsString));
+            var messageContext = Activator.CreateInstance(messageContextType, new object[] { new BinaryData(_messageAsString) });
 
             Assert.Equal(typeof(MessageContext<AircraftTakenOff>), messageContext.GetType());
         }

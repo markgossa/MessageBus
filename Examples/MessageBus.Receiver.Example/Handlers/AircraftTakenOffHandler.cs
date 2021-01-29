@@ -18,6 +18,8 @@ namespace ServiceBus1.Handlers
 
             var jsonOptions = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
             Console.WriteLine($"AircraftId using JSON serializer options: {context.Body.ToObjectFromJson<AircraftTakenOff>(jsonOptions).AircraftId}");
+
+            Console.WriteLine($"MessageId for message: {context.MessageId}");
         }
     }
 }
