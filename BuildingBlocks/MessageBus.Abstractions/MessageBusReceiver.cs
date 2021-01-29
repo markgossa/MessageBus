@@ -47,7 +47,9 @@ namespace MessageBus.Abstractions
             var messageContextObject = Activator.CreateInstance(GetMessageContextType(handler), new object[] { args.Message });
             dynamic messageContext = Convert.ChangeType(messageContextObject, GetMessageContextType(handler));
             messageContext.MessageId = args.MessageId;
-            
+            messageContext.CorrelationId = args.CorrelationId;
+            messageContext.Properties = args.MessageProperties;
+
             return messageContext;
         }
 

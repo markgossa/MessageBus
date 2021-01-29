@@ -49,7 +49,8 @@ namespace MessageBus.Microsoft.ServiceBus
             var messageReceivedEventArgs = new MessageReceivedEventArgs(args.Message.Body,
                 MapToMessageProperties(args.Message.ApplicationProperties))
             {
-                MessageId = args.Message.MessageId
+                MessageId = args.Message.MessageId,
+                CorrelationId = args.Message.CorrelationId
             };
 
             await _messageHandler(messageReceivedEventArgs);

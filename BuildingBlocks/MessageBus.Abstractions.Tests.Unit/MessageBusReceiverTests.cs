@@ -84,6 +84,7 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             var aircraftId = Guid.NewGuid().ToString();
             var messageId = Guid.NewGuid().ToString();
+            var correlationId = Guid.NewGuid().ToString();
             var messageProperties = new Dictionary<string, string> 
             { 
                 { "MessageType", nameof(AircraftLanded) },
@@ -93,7 +94,8 @@ namespace MessageBus.Abstractions.Tests.Unit
             var args = new MessageReceivedEventArgs(BuildAircraftLandedMessage(aircraftId),
                 messageProperties)
             {
-                MessageId = messageId
+                MessageId = messageId,
+                CorrelationId = correlationId
             };
 
             await sut.OnMessageReceived(args);
@@ -102,7 +104,8 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.Equal(aircraftId, mockAircraftTakenOffHandler.MessageContext.Message.AircraftId);
             Assert.Equal(1, mockAircraftTakenOffHandler.MessageCount);
             Assert.Equal(messageId, mockAircraftTakenOffHandler.MessageContext.MessageId);
-            //Assert.Equal(messageId, mockAircraftTakenOffHandler.MessageContext);
+            Assert.Equal(correlationId, mockAircraftTakenOffHandler.MessageContext.CorrelationId);
+            Assert.Equal(nameof(AircraftLanded), mockAircraftTakenOffHandler.MessageContext.Properties["MessageType"]);
         }
 
         [Fact]
