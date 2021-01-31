@@ -38,5 +38,13 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             _mockMessageBusReceiver.Verify(m => m.DeadLetterAsync(_messageObject), Times.Once);
         }
+
+        [Fact]
+        public async Task DeadLetterAsyncAvailableToInterface()
+        {
+            await (_sut as IMessageContext<AircraftLanded>).DeadLetterAsync();
+
+            _mockMessageBusReceiver.Verify(m => m.DeadLetterAsync(_messageObject), Times.Once);
+        }
     }
 }

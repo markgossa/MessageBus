@@ -16,7 +16,6 @@ namespace MessageBus.Abstractions.Tests.Unit
             await _sut.ConfigureAsync();
 
             _mockMessageBusAdminClient.Verify(m => m.ConfigureAsync(_handlers), Times.Once);
-            _mockMessageBusClient.Verify(m => m.AddMessageHandler(It.IsAny<Func<MessageReceivedEventArgs, Task>>()), Times.Once);
         }
         
         [Fact]
@@ -25,8 +24,10 @@ namespace MessageBus.Abstractions.Tests.Unit
             await _sut.StartAsync();
 
             _mockMessageBusClient.Verify(m => m.StartAsync(), Times.Once);
+            _mockMessageBusClient.Verify(m => m.AddMessageHandler(It.IsAny<Func<MessageReceivedEventArgs, Task>>()), Times.Once);
+            _mockMessageBusClient.Verify(m => m.AddErrorMessageHandler(It.IsAny<Func<MessageErrorReceivedEventArgs, Task>>()), Times.Once);
         }
-        
+
         [Fact]
         public async Task CallsCorrectMessageHandler1()
         {
@@ -35,7 +36,7 @@ namespace MessageBus.Abstractions.Tests.Unit
                 .Returns(mockAircraftTakenOffHandler);
             var aircraftId = Guid.NewGuid().ToString();
             var args = new MessageReceivedEventArgs(BuildAircraftTakenOffMessage(aircraftId),
-                new Dictionary<string, string> { { "MessageType", nameof(AircraftTakenOff) } });
+                new object(), new Dictionary<string, string> { { "MessageType", nameof(AircraftTakenOff) } });
 
             await _sut.OnMessageReceived(args);
 
@@ -53,7 +54,7 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             var aircraftId = Guid.NewGuid().ToString();
             var args = new MessageReceivedEventArgs(BuildAircraftLandedMessage(aircraftId),
-                new Dictionary<string, string> { { "MessageType", nameof(AircraftLanded) } });
+                new object(), new Dictionary<string, string> { { "MessageType", nameof(AircraftLanded) } });
 
             await _sut.OnMessageReceived(args);
 
@@ -78,7 +79,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             };
 
             var args = new MessageReceivedEventArgs(BuildAircraftLandedMessage(aircraftId),
-                messageProperties)
+                new object(), messageProperties)
             {
                 MessageId = messageId,
                 CorrelationId = correlationId,
@@ -108,7 +109,7 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             var aircraftId = Guid.NewGuid().ToString();
             var args = new MessageReceivedEventArgs(BuildAircraftLandedMessage(aircraftId),
-                new Dictionary<string, string> { { "MessageTypeIdentifier", nameof(AircraftLanded) } });
+                new object(), new Dictionary<string, string> { { "MessageTypeIdentifier", nameof(AircraftLanded) } });
 
             await sut.OnMessageReceived(args);
 

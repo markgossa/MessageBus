@@ -12,6 +12,7 @@ namespace MessageBus.Microsoft.ServiceBus
 {
     public class AzureServiceBusClient : IMessageBusClient
     {
+        private readonly ServiceBusReceiver _serviceBusReceiver;
         private readonly ServiceBusProcessor _serviceBusProcessor;
         private Func<MessageErrorReceivedEventArgs, Task> _errorMessageHandler;
         private Func<MessageReceivedEventArgs, Task> _messageHandler;
@@ -19,7 +20,7 @@ namespace MessageBus.Microsoft.ServiceBus
         public AzureServiceBusClient(string connectionString, string topic, string subscription)
         {
             var serviceBusClient = new ServiceBusClient(connectionString);
-            
+            _serviceBusReceiver = serviceBusClient.CreateReceiver(topic, subscription);
             _serviceBusProcessor = serviceBusClient.CreateProcessor(topic, subscription);
             AddMessageHandlers();
         }
@@ -27,8 +28,9 @@ namespace MessageBus.Microsoft.ServiceBus
         public AzureServiceBusClient(string hostname, string topic, string subscription,
             string tenantId = null)
         {
-            _serviceBusProcessor = new ServiceBusClient(hostname, new ServiceBusTokenProvider(tenantId))
-                .CreateProcessor(topic, subscription);
+            var serviceBusClient = new ServiceBusClient(hostname, new ServiceBusTokenProvider(tenantId));
+            _serviceBusReceiver = serviceBusClient.CreateReceiver(topic, subscription);
+            _serviceBusProcessor = serviceBusClient.CreateProcessor(topic, subscription);
             AddMessageHandlers();
         }
 
@@ -49,7 +51,7 @@ namespace MessageBus.Microsoft.ServiceBus
         private async Task CallMessageHandlerAsync(ProcessMessageEventArgs args)
         {
             var messageReceivedEventArgs = new MessageReceivedEventArgs(args.Message.Body,
-                MapToMessageProperties(args.Message.ApplicationProperties))
+                args.Message, MapToMessageProperties(args.Message.ApplicationProperties))
             {
                 MessageId = args.Message.MessageId,
                 CorrelationId = args.Message.CorrelationId,
@@ -74,6 +76,7 @@ namespace MessageBus.Microsoft.ServiceBus
             return messageProperties;
         }
 
-        public Task DeadLetterAsync(object message) => throw new NotImplementedException();
+        public async Task DeadLetterAsync(object message) 
+            => await _serviceBusReceiver.DeadLetterMessageAsync((ServiceBusReceivedMessage)message);
     }
 }

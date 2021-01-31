@@ -83,8 +83,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             return aircraftTakenOffEvent;
         }
 
-        protected async Task SendCustomMessage(string messageText)
+        protected async Task CreateSubscriptionAndSendCustomMessage(string messageText, string subscriptionName)
         {
+            await CreateSubscriptionAsync(subscriptionName); 
             var message = new ServiceBusMessage(Encoding.UTF8.GetBytes(messageText));
             await _serviceBusSender.SendMessageAsync(message);
         }

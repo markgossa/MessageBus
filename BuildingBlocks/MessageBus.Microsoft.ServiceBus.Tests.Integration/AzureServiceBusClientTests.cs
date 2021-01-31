@@ -1,5 +1,6 @@
 ﻿using MessageBus.Abstractions;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers;
+using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
 using Moq;
 using System;
 using System.Threading.Tasks;
@@ -43,6 +44,25 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             mockTestHandler.Verify(m => m.MessageHandler(It.Is<MessageReceivedEventArgs>(m =>
                 GetAircraftIdFromMessage(m.Message) == aircraftlandedEvent.AircraftId)),
                 Times.Once);
+        }
+
+        [Fact]
+        public async Task DeadLettersMessageAsync()
+        {
+            var aircraftlandedEvent = await CreateSubscriptionAndSendAircraftLandedEvent(nameof(DeadLettersMessageAsync));
+            var aircraftLandedHandler = new AircraftLandedHandler();
+            var mockMessageBusHandlerResolver = new Mock<IMessageBusHandlerResolver>();
+            mockMessageBusHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded))).Returns(aircraftLandedHandler);
+
+            var sut = new AzureServiceBusClient(_hostname, _topic, nameof(DeadLettersMessageAsync), _tenantId);
+            var messageBusReceiver = new MessageBusReceiver(mockMessageBusHandlerResolver.Object, new Mock<IMessageBusAdminClient>().Object,
+                sut);
+
+            await messageBusReceiver.StartAsync();
+
+            await Task.Delay(TimeSpan.FromSeconds(60));
+
+            Assert.Equal(1, aircraftLandedHandler.MessageCount);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace MessageBus.Abstractions
 {
@@ -11,5 +12,7 @@ namespace MessageBus.Abstractions
         string CorrelationId { get; }
         Dictionary<string, string> Properties { get; }
         int DeliveryCount { get; }
+
+        Task DeadLetterAsync();
     }
 }

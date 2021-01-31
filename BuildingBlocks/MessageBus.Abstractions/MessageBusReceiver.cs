@@ -24,14 +24,15 @@ namespace MessageBus.Abstractions
             _messageTypeProperty = GetMessageTypeProperty(messageBusSettings);
         }
 
-        public async Task StartAsync() => await _messageBusClient.StartAsync();
-
-        public async Task ConfigureAsync()
+        public async Task StartAsync()
         {
-            await _messageBusAdminClient.ConfigureAsync(_messageBusHandlerResolver.GetMessageHandlers());
+            await _messageBusClient.StartAsync();
             _messageBusClient.AddMessageHandler(OnMessageReceived);
             _messageBusClient.AddErrorMessageHandler(OnErrorMessageReceived);
         }
+
+        public async Task ConfigureAsync() 
+            => await _messageBusAdminClient.ConfigureAsync(_messageBusHandlerResolver.GetMessageHandlers());
 
         internal async Task OnMessageReceived(MessageReceivedEventArgs args)
         {
@@ -44,7 +45,7 @@ namespace MessageBus.Abstractions
 
         private object BuildMessageContext(MessageReceivedEventArgs args, object handler)
         {
-            dynamic messageContext = Activator.CreateInstance(GetMessageContextType(handler), new object[] { args.Message, new object(), this });
+            dynamic messageContext = Activator.CreateInstance(GetMessageContextType(handler), new object[] { args.Message, args.MessageObject, this });
             messageContext.MessageId = args.MessageId;
             messageContext.CorrelationId = args.CorrelationId;
             messageContext.Properties = args.MessageProperties;

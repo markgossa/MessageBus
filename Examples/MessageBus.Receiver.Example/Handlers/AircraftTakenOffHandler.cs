@@ -10,19 +10,33 @@ namespace ServiceBus1.Handlers
     {
         public async Task HandleAsync(IMessageContext<AircraftTakenOff> context)
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(5));
-
             Console.WriteLine();
             Console.WriteLine($"{nameof(AircraftTakenOff)} message received");
+
+            // Get message context properties
             Console.WriteLine($"MessageId: {context.MessageId}");
             Console.WriteLine($"CorrelationId: {context.CorrelationId}");
             Console.WriteLine($"DeliveryCount: {context.DeliveryCount}");
-            Console.WriteLine($"AircraftId: {context.Message.AircraftId}");
-
             Console.WriteLine($"Raw message as text: {context.Body}");
 
-            var jsonOptions = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
-            Console.WriteLine($"AircraftId using JSON serializer options: {context.Body.ToObjectFromJson<AircraftTakenOff>(jsonOptions).AircraftId}");
+            // Get message properties
+            Console.WriteLine($"MessageType: {context.Properties["MessageType"]}");
+
+            try
+            {
+                // Deserialize message using default deserializer and return AircraftId
+                Console.WriteLine($"AircraftId: {context.Message.AircraftId}");
+
+                // Deserialize message using custom
+                var jsonOptions = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
+                Console.WriteLine($"AircraftId using JSON serializer options: {context.Body.ToObjectFromJson<AircraftTakenOff>(jsonOptions).AircraftId}");
+            }
+            catch (Exception)
+            {
+                // Dead letter the received message
+                await context.DeadLetterAsync();
+                //throw;
+            }
         }
     }
 }

@@ -23,6 +23,6 @@ namespace MessageBus.Abstractions
             _messageBusReceiver = messageBusReceiver;
         }
 
-        internal async Task DeadLetterAsync() => await _messageBusReceiver.DeadLetterAsync(_messageObject);
+        public async Task DeadLetterAsync() => await _messageBusReceiver.DeadLetterAsync(_messageObject);
     }
 }
