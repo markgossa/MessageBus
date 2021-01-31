@@ -14,10 +14,13 @@ namespace MessageBus.Abstractions.Tests.Unit
         protected readonly List<Type> _handlers = new List<Type> { typeof(AircraftLandedHandler), typeof(AircraftTakenOffHandler) };
         protected readonly Mock<IMessageBusAdminClient> _mockMessageBusAdminClient = new Mock<IMessageBusAdminClient>();
         protected readonly Mock<IMessageBusClient> _mockMessageBusClient = new Mock<IMessageBusClient>();
+        protected MessageBusReceiver _sut;
 
         protected MessageBusReceiverTestsBase()
         {
             _mockMessageBusHandlerResolver.Setup(m => m.GetMessageHandlers()).Returns(_handlers);
+            _sut = new MessageBusReceiver(_mockMessageBusHandlerResolver.Object,
+                _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object);
         }
 
         protected static BinaryData BuildAircraftTakenOffMessage(string aircraftId)

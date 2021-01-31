@@ -8,5 +8,6 @@ namespace MessageBus.Abstractions
         Task StartAsync();
         void AddMessageHandler(Func<MessageReceivedEventArgs, Task> messageHandler);
         void AddErrorMessageHandler(Func<MessageErrorReceivedEventArgs, Task> errorMessageHandler);
+        Task DeadLetterAsync(object message);
     }
 }

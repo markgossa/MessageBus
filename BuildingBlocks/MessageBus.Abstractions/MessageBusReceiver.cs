@@ -72,5 +72,7 @@ namespace MessageBus.Abstractions
             => handler.GetType().GetInterfaces()
                 .First(i => i.Name.Contains(typeof(IMessageHandler<>).Name))
                 .GenericTypeArguments.First();
+
+        internal async Task DeadLetterAsync(object message) => await _messageBusClient.DeadLetterAsync(message);
     }
 }

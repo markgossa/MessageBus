@@ -12,13 +12,16 @@ namespace MessageBus.Microsoft.ServiceBus
 {
     public class AzureServiceBusClient : IMessageBusClient
     {
+        private readonly ServiceBusReceiver _receiver;
         private readonly ServiceBusProcessor _serviceBusProcessor;
         private Func<MessageErrorReceivedEventArgs, Task> _errorMessageHandler;
         private Func<MessageReceivedEventArgs, Task> _messageHandler;
 
         public AzureServiceBusClient(string connectionString, string topic, string subscription)
         {
-            _serviceBusProcessor = new ServiceBusClient(connectionString).CreateProcessor(topic, subscription);
+            var serviceBusClient = new ServiceBusClient(connectionString);
+            
+            _serviceBusProcessor = serviceBusClient.CreateProcessor(topic, subscription);
             AddMessageHandlers();
         }
 
@@ -71,5 +74,7 @@ namespace MessageBus.Microsoft.ServiceBus
 
             return messageProperties;
         }
+
+        public Task DeadLetterAsync(object message) => _receiver.DeadLetterMessageAsync((ServiceBusReceivedMessage)message);
     }
 }
