@@ -30,13 +30,13 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
 
         private static Type GetMessageTypeFromHandler(Type handler)
             => handler.GetInterfaces()
-                .First(i => i.Name.Contains(typeof(IHandleMessages<>).Name))
+                .First(i => i.Name.Contains(typeof(IMessageHandler<>).Name))
                 .GenericTypeArguments.First();
 
         private static IEnumerable<ServiceDescriptor> GetMessageBusHandlerServiceDescriptors(IServiceCollection services)
             => services.AsEnumerable()
-                .Where(s => s.ServiceType.FullName.Contains(typeof(IHandleMessages<>).FullName)
-                    && s.ServiceType.Assembly.FullName.Contains(typeof(IHandleMessages<>).Assembly.FullName));
+                .Where(s => s.ServiceType.FullName.Contains(typeof(IMessageHandler<>).FullName)
+                    && s.ServiceType.Assembly.FullName.Contains(typeof(IMessageHandler<>).Assembly.FullName));
 
         private static void ThrowIfMessageHandlerNotFound(string messageType, Type handlerServiceType)
         {

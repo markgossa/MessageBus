@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Handlers
 {
-    public class AircraftTakenOffHandler : IHandleMessages<AircraftTakenOff>
+    public class AircraftTakenOffHandler : IMessageHandler<AircraftTakenOff>
     {
         public async Task HandleAsync(MessageContext<AircraftTakenOff> context) 
             => await Task.Run(() => System.Console.WriteLine("Jeronimo!"));

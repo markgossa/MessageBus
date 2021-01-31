@@ -70,7 +70,7 @@ namespace MessageBus.Abstractions
 
         private static Type GetMessageTypeFromHandler(object handler) 
             => handler.GetType().GetInterfaces()
-                .First(i => i.Name.Contains(typeof(IHandleMessages<>).Name))
+                .First(i => i.Name.Contains(typeof(IMessageHandler<>).Name))
                 .GenericTypeArguments.First();
     }
 }

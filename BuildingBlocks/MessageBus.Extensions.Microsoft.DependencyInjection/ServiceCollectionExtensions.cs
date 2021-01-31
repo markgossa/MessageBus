@@ -10,15 +10,15 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
         public static IServiceCollection SubscribeToMessage(this IServiceCollection services, Type eventType,
             Type handlerType)
         {
-            services.AddScoped(typeof(IHandleMessages<>).MakeGenericType(eventType), handlerType);
+            services.AddScoped(typeof(IMessageHandler<>).MakeGenericType(eventType), handlerType);
             return services;
         }
 
         public static IServiceCollection SubscribeToMessage<TMessage, TMessageHandler>(this IServiceCollection services)
             where TMessage : IMessage
-            where TMessageHandler : IHandleMessages<TMessage>
+            where TMessageHandler : IMessageHandler<TMessage>
         {
-            services.AddScoped(typeof(IHandleMessages<>).MakeGenericType(typeof(TMessage)), typeof(TMessageHandler));
+            services.AddScoped(typeof(IMessageHandler<>).MakeGenericType(typeof(TMessage)), typeof(TMessageHandler));
             return services;
         }
 

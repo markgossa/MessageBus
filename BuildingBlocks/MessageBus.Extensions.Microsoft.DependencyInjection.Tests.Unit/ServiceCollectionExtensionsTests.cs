@@ -18,7 +18,7 @@ namespace ServiceBus1.Tests.Unit
             var services = new ServiceCollection();
             services.SubscribeToMessage(typeof(AircraftTakenOff), typeof(AircraftTakenOffHandler));
 
-            var service = services.BuildServiceProvider().GetRequiredService<IHandleMessages<AircraftTakenOff>>();
+            var service = services.BuildServiceProvider().GetRequiredService<IMessageHandler<AircraftTakenOff>>();
 
             Assert.NotNull(service);
             Assert.IsType<AircraftTakenOffHandler>(service);
@@ -30,7 +30,7 @@ namespace ServiceBus1.Tests.Unit
             var services = new ServiceCollection();
             services.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>();
 
-            var service = services.BuildServiceProvider().GetRequiredService<IHandleMessages<AircraftLanded>>();
+            var service = services.BuildServiceProvider().GetRequiredService<IMessageHandler<AircraftLanded>>();
 
             Assert.NotNull(service);
             Assert.IsType<AircraftLandedHandler>(service);

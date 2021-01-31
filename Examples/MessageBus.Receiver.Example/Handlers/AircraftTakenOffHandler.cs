@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ServiceBus1.Handlers
 {
-    public class AircraftTakenOffHandler : IHandleMessages<AircraftTakenOff>
+    public class AircraftTakenOffHandler : IMessageHandler<AircraftTakenOff>
     {
         public async Task HandleAsync(MessageContext<AircraftTakenOff> context)
         {
