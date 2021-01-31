@@ -9,7 +9,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
     public class MessageBusHandlerResolver : IMessageBusHandlerResolver
     {
         private readonly ServiceProvider _serviceProvider;
-        public Dictionary<Type, ServiceDescriptor> _handlerMap;
+        private readonly Dictionary<Type, ServiceDescriptor> _handlerMap;
 
         public MessageBusHandlerResolver(IServiceCollection services)
         {
