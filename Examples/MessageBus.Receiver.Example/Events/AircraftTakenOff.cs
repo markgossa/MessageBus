@@ -2,7 +2,7 @@
 
 namespace ServiceBus1.Events
 {
-    public class AircraftTakenOff : IMessage
+    public class AircraftTakenOff : IEvent
     {
         public string AircraftId { get; set; }
     }
