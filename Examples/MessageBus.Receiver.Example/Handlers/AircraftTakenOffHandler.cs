@@ -35,7 +35,7 @@ namespace ServiceBus1.Handlers
             {
                 // Dead letter the received message
                 await context.DeadLetterAsync();
-                //throw;
+                throw;
             }
         }
     }

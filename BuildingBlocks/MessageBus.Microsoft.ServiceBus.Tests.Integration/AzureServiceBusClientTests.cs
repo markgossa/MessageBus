@@ -60,7 +60,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
             await messageBusReceiver.StartAsync();
 
-            await Task.Delay(TimeSpan.FromSeconds(60));
+            await Task.Delay(TimeSpan.FromSeconds(5));
 
             Assert.Equal(1, aircraftLandedHandler.MessageCount);
         }

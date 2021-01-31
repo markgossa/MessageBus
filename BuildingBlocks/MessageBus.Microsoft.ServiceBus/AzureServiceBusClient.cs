@@ -51,7 +51,7 @@ namespace MessageBus.Microsoft.ServiceBus
         private async Task CallMessageHandlerAsync(ProcessMessageEventArgs args)
         {
             var messageReceivedEventArgs = new MessageReceivedEventArgs(args.Message.Body,
-                args.Message, MapToMessageProperties(args.Message.ApplicationProperties))
+                args, MapToMessageProperties(args.Message.ApplicationProperties))
             {
                 MessageId = args.Message.MessageId,
                 CorrelationId = args.Message.CorrelationId,
@@ -77,6 +77,6 @@ namespace MessageBus.Microsoft.ServiceBus
         }
 
         public async Task DeadLetterAsync(object message) 
-            => await _serviceBusReceiver.DeadLetterMessageAsync((ServiceBusReceivedMessage)message);
+            => await ((ProcessMessageEventArgs)message).DeadLetterMessageAsync(((ProcessMessageEventArgs)message).Message);
     }
 }
