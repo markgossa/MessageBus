@@ -6,6 +6,6 @@ namespace MessageBus.Abstractions
     {
         Task ConfigureAsync();
         Task StartAsync();
-        Task DeadLetterAsync(object message);
+        Task DeadLetterMessageAsync(object message);
     }
 }

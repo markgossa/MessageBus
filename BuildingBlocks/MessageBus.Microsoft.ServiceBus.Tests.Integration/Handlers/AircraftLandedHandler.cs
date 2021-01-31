@@ -15,7 +15,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers
 
             if (string.IsNullOrWhiteSpace(context.Message.FlightNumber))
             {
-                await context.DeadLetterAsync();
+                await context.DeadLetterMessageAsync();
                 return;
             }
             

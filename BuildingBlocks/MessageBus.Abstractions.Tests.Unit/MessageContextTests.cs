@@ -34,17 +34,17 @@ namespace MessageBus.Abstractions.Tests.Unit
         [Fact]
         public async Task DeadLettersMessageAsync()
         {
-            await _sut.DeadLetterAsync();
+            await _sut.DeadLetterMessageAsync();
 
-            _mockMessageBusReceiver.Verify(m => m.DeadLetterAsync(_messageObject), Times.Once);
+            _mockMessageBusReceiver.Verify(m => m.DeadLetterMessageAsync(_messageObject), Times.Once);
         }
 
         [Fact]
         public async Task DeadLetterAsyncAvailableToInterface()
         {
-            await (_sut as IMessageContext<AircraftLanded>).DeadLetterAsync();
+            await (_sut as IMessageContext<AircraftLanded>).DeadLetterMessageAsync();
 
-            _mockMessageBusReceiver.Verify(m => m.DeadLetterAsync(_messageObject), Times.Once);
+            _mockMessageBusReceiver.Verify(m => m.DeadLetterMessageAsync(_messageObject), Times.Once);
         }
     }
 }

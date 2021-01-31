@@ -135,9 +135,9 @@ namespace MessageBus.Abstractions.Tests.Unit
         public async Task DeadletterAsyncCallsMessageBusClient()
         {
             var message = Guid.NewGuid();
-            await _sut.DeadLetterAsync(message);
+            await _sut.DeadLetterMessageAsync(message);
 
-            _mockMessageBusClient.Verify(m => m.DeadLetterAsync(message), Times.Once);
+            _mockMessageBusClient.Verify(m => m.DeadLetterMessageAsync(message), Times.Once);
         }
     }
 }
