@@ -4,6 +4,6 @@ namespace MessageBus.Abstractions
 {
     public interface IMessageHandler<T> where T : IMessage
     {
-        Task HandleAsync(MessageContext<T> context);
+        Task HandleAsync(IMessageContext<T> context);
     }
 }

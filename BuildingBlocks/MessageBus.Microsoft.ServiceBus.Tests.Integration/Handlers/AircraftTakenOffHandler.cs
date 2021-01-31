@@ -6,7 +6,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers
 {
     public class AircraftTakenOffHandler : IMessageHandler<AircraftTakenOff>
     {
-        public async Task HandleAsync(MessageContext<AircraftTakenOff> context) 
+        public async Task HandleAsync(IMessageContext<AircraftTakenOff> context) 
             => await Task.Run(() => System.Console.WriteLine("Jeronimo!"));
     }
 }

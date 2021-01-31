@@ -5,7 +5,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Unit.Models
 {
     public class AircraftLandedHandler : IMessageHandler<AircraftLanded>
     {
-        public async Task HandleAsync(MessageContext<AircraftLanded> context) 
+        public async Task HandleAsync(IMessageContext<AircraftLanded> context) 
             => await Task.Run(() => System.Console.WriteLine("Welcome!"));
     }
 }
