@@ -12,7 +12,6 @@ namespace MessageBus.Microsoft.ServiceBus
 {
     public class AzureServiceBusClient : IMessageBusClient
     {
-        private readonly ServiceBusReceiver _serviceBusReceiver;
         private readonly ServiceBusProcessor _serviceBusProcessor;
         private Func<MessageErrorReceivedEventArgs, Task> _errorMessageHandler;
         private Func<MessageReceivedEventArgs, Task> _messageHandler;
@@ -20,7 +19,6 @@ namespace MessageBus.Microsoft.ServiceBus
         public AzureServiceBusClient(string connectionString, string topic, string subscription)
         {
             var serviceBusClient = new ServiceBusClient(connectionString);
-            _serviceBusReceiver = serviceBusClient.CreateReceiver(topic, subscription);
             _serviceBusProcessor = serviceBusClient.CreateProcessor(topic, subscription);
             AddMessageHandlers();
         }
@@ -29,7 +27,6 @@ namespace MessageBus.Microsoft.ServiceBus
             string tenantId = null)
         {
             var serviceBusClient = new ServiceBusClient(hostname, new ServiceBusTokenProvider(tenantId));
-            _serviceBusReceiver = serviceBusClient.CreateReceiver(topic, subscription);
             _serviceBusProcessor = serviceBusClient.CreateProcessor(topic, subscription);
             AddMessageHandlers();
         }
