@@ -12,7 +12,6 @@ namespace MessageBus.Microsoft.ServiceBus
 {
     public class AzureServiceBusClient : IMessageBusClient
     {
-        private readonly ServiceBusReceiver _receiver;
         private readonly ServiceBusProcessor _serviceBusProcessor;
         private Func<MessageErrorReceivedEventArgs, Task> _errorMessageHandler;
         private Func<MessageReceivedEventArgs, Task> _messageHandler;
@@ -75,6 +74,6 @@ namespace MessageBus.Microsoft.ServiceBus
             return messageProperties;
         }
 
-        public Task DeadLetterAsync(object message) => _receiver.DeadLetterMessageAsync((ServiceBusReceivedMessage)message);
+        public Task DeadLetterAsync(object message) => throw new NotImplementedException();
     }
 }

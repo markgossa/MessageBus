@@ -1,6 +1,7 @@
 ﻿using MessageBus.Abstractions;
 using MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Handlers;
 using MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Models.Events;
+using Moq;
 using System;
 using System.Linq;
 using Xunit;
@@ -18,7 +19,8 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
             Assert.NotNull(handler);
             Assert.IsType<AircraftLandedHandler>(handler);
 
-            var messageContext = new MessageContext<AircraftLanded>(new BinaryData("Hello world!"));
+            var messageContext = new MessageContext<AircraftLanded>(new BinaryData("Hello world!"), new object(), 
+                new Mock<IMessageBusReceiver>().Object);
             typeof(AircraftLandedHandler).GetMethod("HandleAsync").Invoke(handler, new object[] { messageContext });
         }
         

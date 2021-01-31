@@ -42,9 +42,9 @@ namespace MessageBus.Abstractions
             await (handlerTask as Task);
         }
 
-        private static object BuildMessageContext(MessageReceivedEventArgs args, object handler)
+        private object BuildMessageContext(MessageReceivedEventArgs args, object handler)
         {
-            dynamic messageContext = Activator.CreateInstance(GetMessageContextType(handler), new object[] { args.Message });
+            dynamic messageContext = Activator.CreateInstance(GetMessageContextType(handler), new object[] { args.Message, new object(), this });
             messageContext.MessageId = args.MessageId;
             messageContext.CorrelationId = args.CorrelationId;
             messageContext.Properties = args.MessageProperties;
@@ -53,12 +53,8 @@ namespace MessageBus.Abstractions
             return messageContext;
         }
 
-        private static Type GetMessageContextType(object handler)
-        {
-            var messageTypeType = GetMessageTypeFromHandler(handler);
-            var messageContextType = typeof(MessageContext<>).MakeGenericType(messageTypeType);
-            return messageContextType;
-        }
+        private static Type GetMessageContextType(object handler) 
+            => typeof(MessageContext<>).MakeGenericType((Type)GetMessageTypeFromHandler(handler));
 
         internal async Task OnErrorMessageReceived(MessageErrorReceivedEventArgs args)
             => await Task.Run(() => throw new MessageReceivedException(args.Exception));
@@ -73,6 +69,6 @@ namespace MessageBus.Abstractions
                 .First(i => i.Name.Contains(typeof(IMessageHandler<>).Name))
                 .GenericTypeArguments.First();
 
-        internal async Task DeadLetterAsync(object message) => await _messageBusClient.DeadLetterAsync(message);
+        public async Task DeadLetterAsync(object message) => await _messageBusClient.DeadLetterAsync(message);
     }
 }
