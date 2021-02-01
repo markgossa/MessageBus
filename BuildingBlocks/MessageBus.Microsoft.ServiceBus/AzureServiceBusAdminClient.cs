@@ -36,8 +36,24 @@ namespace MessageBus.Microsoft.ServiceBus
 
         public async Task ConfigureAsync(IEnumerable<Type> messageHandlers)
         {
-            await RemoveAllRulesAsync(_serviceBusAdminClient);
+            await CreateSubscriptionAsync();
+            await RemoveAllRulesAsync();
             await AddRulesAsync(messageHandlers);
+        }
+
+        private async Task CreateSubscriptionAsync()
+        {
+            SubscriptionProperties subscription = null;
+            try
+            {
+                subscription = (await _serviceBusAdminClient.GetSubscriptionAsync(_topic, _subscription)).Value;
+            }
+            catch (Exception) {}
+
+            if (subscription is null)
+            {
+                await _serviceBusAdminClient.CreateSubscriptionAsync(_topic, _subscription);
+            }
         }
 
         private async Task AddRulesAsync(IEnumerable<Type> messageHandlers)
@@ -49,12 +65,12 @@ namespace MessageBus.Microsoft.ServiceBus
             }
         }
 
-        private async Task RemoveAllRulesAsync(ServiceBusAdministrationClient client)
+        private async Task RemoveAllRulesAsync()
         {
-            var rules = client.GetRulesAsync(_topic, _subscription);
+            var rules = _serviceBusAdminClient.GetRulesAsync(_topic, _subscription);
             await foreach (var rule in rules)
             {
-                await client.DeleteRuleAsync(_topic, _subscription, rule.Name);
+                await _serviceBusAdminClient.DeleteRuleAsync(_topic, _subscription, rule.Name);
             }
         }
 
