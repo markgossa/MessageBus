@@ -47,14 +47,34 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         }
 
         [Fact]
-        public async Task DeadLettersMessageAsync()
+        public async Task DeadLettersMessageWithoutReasonAsync()
         {
-            var aircraftlandedEvent = await CreateSubscriptionAndSendAircraftLandedEvent(nameof(DeadLettersMessageAsync));
+            var aircraftlandedEvent = await CreateSubscriptionAndSendAircraftLandedEvent(nameof(DeadLettersMessageWithoutReasonAsync));
             var aircraftLandedHandler = new AircraftLandedHandler();
             var mockMessageBusHandlerResolver = new Mock<IMessageBusHandlerResolver>();
             mockMessageBusHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded))).Returns(aircraftLandedHandler);
 
-            var sut = new AzureServiceBusClient(_hostname, _topic, nameof(DeadLettersMessageAsync), _tenantId);
+            var sut = new AzureServiceBusClient(_hostname, _topic, nameof(DeadLettersMessageWithoutReasonAsync), _tenantId);
+            var messageBusReceiver = new MessageBusReceiver(mockMessageBusHandlerResolver.Object, new Mock<IMessageBusAdminClient>().Object,
+                sut);
+
+            await messageBusReceiver.StartAsync();
+
+            await Task.Delay(TimeSpan.FromSeconds(5));
+
+            Assert.Equal(1, aircraftLandedHandler.MessageCount);
+        }
+        
+        [Fact]
+        public async Task DeadLettersMessageWithReasonAsync()
+        {
+            const string deadLetterReason = "Json Serliazation issue";
+            var aircraftlandedEvent = await CreateSubscriptionAndSendAircraftLandedEvent(nameof(DeadLettersMessageWithReasonAsync));
+            var aircraftLandedHandler = new AircraftLandedHandler(deadLetterReason);
+            var mockMessageBusHandlerResolver = new Mock<IMessageBusHandlerResolver>();
+            mockMessageBusHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded))).Returns(aircraftLandedHandler);
+
+            var sut = new AzureServiceBusClient(_hostname, _topic, nameof(DeadLettersMessageWithReasonAsync), _tenantId);
             var messageBusReceiver = new MessageBusReceiver(mockMessageBusHandlerResolver.Object, new Mock<IMessageBusAdminClient>().Object,
                 sut);
 

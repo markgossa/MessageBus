@@ -13,6 +13,6 @@ namespace MessageBus.Abstractions
         Dictionary<string, string> Properties { get; }
         int DeliveryCount { get; }
 
-        Task DeadLetterMessageAsync();
+        Task DeadLetterMessageAsync(string? reason = null);
     }
 }

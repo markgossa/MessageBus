@@ -131,13 +131,15 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.Equal(errorMessage, exception.InnerException.Message);
         }
 
-        [Fact]
-        public async Task DeadletterAsyncCallsMessageBusClient()
+        [Theory]
+        [InlineData(null)]
+        [InlineData("Invalid message")]
+        public async Task DeadLetterAsyncCallsMessageBusClient(string reason)
         {
             var message = Guid.NewGuid();
-            await _sut.DeadLetterMessageAsync(message);
+            await _sut.DeadLetterMessageAsync(message, reason);
 
-            _mockMessageBusClient.Verify(m => m.DeadLetterMessageAsync(message), Times.Once);
+            _mockMessageBusClient.Verify(m => m.DeadLetterMessageAsync(message, reason), Times.Once);
         }
     }
 }

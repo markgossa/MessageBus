@@ -9,6 +9,7 @@ namespace MessageBus.Abstractions
 {
     public class MessageBusReceiver : IMessageBusReceiver
     {
+        private const string _defaultMessageTypeProperty = "MessageType";
         private readonly IMessageBusHandlerResolver _messageBusHandlerResolver;
         private readonly IMessageBusAdminClient _messageBusAdminClient;
         private readonly IMessageBusClient _messageBusClient;
@@ -16,12 +17,12 @@ namespace MessageBus.Abstractions
 
         public MessageBusReceiver(IMessageBusHandlerResolver messageBusHandlerResolver,
             IMessageBusAdminClient messageBusAdmin, IMessageBusClient messageBusClient, 
-            MessageBusReceiverSettings messageBusSettings = null)
+            MessageBusReceiverSettings? messageBusSettings = null)
         {
             _messageBusHandlerResolver = messageBusHandlerResolver;
             _messageBusAdminClient = messageBusAdmin;
             _messageBusClient = messageBusClient;
-            _messageTypeProperty = GetMessageTypeProperty(messageBusSettings);
+            _messageTypeProperty = GetMessageTypeProperty(messageBusSettings!);
         }
 
         public async Task StartAsync()
@@ -39,13 +40,13 @@ namespace MessageBus.Abstractions
             const string handlerHandleMethodName = "HandleAsync";
 
             var handler = _messageBusHandlerResolver.Resolve(args.MessageProperties[_messageTypeProperty]);
-            var handlerTask = handler.GetType().GetMethod(handlerHandleMethodName).Invoke(handler, new object[] { BuildMessageContext(args, handler) });
+            var handlerTask = handler?.GetType()?.GetMethod(handlerHandleMethodName)?.Invoke(handler, new object[] { BuildMessageContext(args, handler) });
             await (handlerTask as Task);
         }
 
         private object BuildMessageContext(MessageReceivedEventArgs args, object handler)
         {
-            dynamic messageContext = Activator.CreateInstance(GetMessageContextType(handler), new object[] { args.Message, args.MessageObject, this });
+            dynamic? messageContext = Activator.CreateInstance(GetMessageContextType(handler), new object[] { args.Message, args.MessageObject, this });
             messageContext.MessageId = args.MessageId;
             messageContext.CorrelationId = args.CorrelationId;
             messageContext.Properties = args.MessageProperties;
@@ -62,7 +63,7 @@ namespace MessageBus.Abstractions
 
         private static string GetMessageTypeProperty(MessageBusReceiverSettings messageBusSettings)
             => string.IsNullOrWhiteSpace(messageBusSettings?.MessageTypeProperty)
-                ? "MessageType"
+                ? _defaultMessageTypeProperty
                 : messageBusSettings.MessageTypeProperty;
 
         private static Type GetMessageTypeFromHandler(object handler) 
@@ -70,6 +71,7 @@ namespace MessageBus.Abstractions
                 .First(i => i.Name.Contains(typeof(IMessageHandler<>).Name))
                 .GenericTypeArguments.First();
 
-        public async Task DeadLetterMessageAsync(object message) => await _messageBusClient.DeadLetterMessageAsync(message);
+        public async Task DeadLetterMessageAsync(object message, string? reason = null) 
+            => await _messageBusClient.DeadLetterMessageAsync(message, reason);
     }
 }

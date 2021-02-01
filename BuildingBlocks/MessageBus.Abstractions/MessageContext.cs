@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 
+#nullable disable
 namespace MessageBus.Abstractions
 {
     public class MessageContext<TMessage> : IMessageContext<TMessage> where TMessage : IMessage
@@ -23,6 +24,7 @@ namespace MessageBus.Abstractions
             _messageBusReceiver = messageBusReceiver;
         }
 
-        public async Task DeadLetterMessageAsync() => await _messageBusReceiver.DeadLetterMessageAsync(_messageObject);
+        public async Task DeadLetterMessageAsync(string reason = null)
+            => await _messageBusReceiver.DeadLetterMessageAsync(_messageObject, reason);
     }
 }

@@ -1,4 +1,5 @@
-﻿namespace MessageBus.Abstractions
+﻿#nullable disable
+namespace MessageBus.Abstractions
 {
     public class MessageBusReceiverSettings
     {

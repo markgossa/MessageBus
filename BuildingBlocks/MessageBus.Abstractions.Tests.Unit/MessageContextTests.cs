@@ -36,7 +36,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         {
             await _sut.DeadLetterMessageAsync();
 
-            _mockMessageBusReceiver.Verify(m => m.DeadLetterMessageAsync(_messageObject), Times.Once);
+            _mockMessageBusReceiver.Verify(m => m.DeadLetterMessageAsync(_messageObject, null), Times.Once);
         }
 
         [Fact]
@@ -44,7 +44,16 @@ namespace MessageBus.Abstractions.Tests.Unit
         {
             await (_sut as IMessageContext<AircraftLanded>).DeadLetterMessageAsync();
 
-            _mockMessageBusReceiver.Verify(m => m.DeadLetterMessageAsync(_messageObject), Times.Once);
+            _mockMessageBusReceiver.Verify(m => m.DeadLetterMessageAsync(_messageObject, null), Times.Once);
+        }
+        
+        [Fact]
+        public async Task DeadLettersMessageWithReasonAsync()
+        {
+            const string deadLetterMessage = "Invalid message";
+            await _sut.DeadLetterMessageAsync(deadLetterMessage);
+
+            _mockMessageBusReceiver.Verify(m => m.DeadLetterMessageAsync(_messageObject, deadLetterMessage), Times.Once);
         }
     }
 }

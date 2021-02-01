@@ -73,7 +73,7 @@ namespace MessageBus.Microsoft.ServiceBus
             return messageProperties;
         }
 
-        public async Task DeadLetterMessageAsync(object message)
-            => await ((ProcessMessageEventArgs)message).DeadLetterMessageAsync(((ProcessMessageEventArgs)message).Message);
+        public async Task DeadLetterMessageAsync(object message, string reason = null)
+            => await ((ProcessMessageEventArgs)message).DeadLetterMessageAsync(((ProcessMessageEventArgs)message).Message, reason);
     }
 }
