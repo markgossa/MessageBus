@@ -61,7 +61,7 @@ namespace MessageBus.Microsoft.ServiceBus
             _handlers = messageHandlers;
             foreach (var handler in _handlers)
             {
-                await AddRuleAsync(_serviceBusAdminClient, GetMessageTypeFromHandler(handler));
+                await AddRuleAsync(GetMessageTypeFromHandler(handler));
             }
         }
 
@@ -80,11 +80,11 @@ namespace MessageBus.Microsoft.ServiceBus
                 .First(i => i.Name.Contains(typeof(IMessageHandler<>).Name))
                 .GenericTypeArguments.First();
 
-        private async Task AddRuleAsync(ServiceBusAdministrationClient client, Type messageType)
+        private async Task AddRuleAsync(Type messageType)
         {
             var filter = new CorrelationRuleFilter();
             filter.ApplicationProperties.Add(_messageTypePropertyName, messageType.Name);
-            await client.CreateRuleAsync(_topic, _subscription, new CreateRuleOptions(messageType.Name, filter));
+            await _serviceBusAdminClient.CreateRuleAsync(_topic, _subscription, new CreateRuleOptions(messageType.Name, filter));
         }
     }
 }
