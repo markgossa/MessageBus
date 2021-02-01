@@ -31,8 +31,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             Assert.Equal(messageTypes.Length, rules.Count);
             foreach (var messageType in messageTypes)
             {
-                var sqlFilter = new SqlRuleFilter($"{messagePropertyName} = '{messageType.Name}'");
-                Assert.Single(rules.Where(r => r.Filter.Equals(sqlFilter)));
+                var filter = new CorrelationRuleFilter();
+                filter.ApplicationProperties.Add(messagePropertyName, messageType.Name);
+                Assert.Single(rules.Where(r => r.Filter.Equals(filter)));
                 Assert.Single(rules.Where(r => r.Name == messageType.Name));
             }
         }

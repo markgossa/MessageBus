@@ -81,7 +81,10 @@ namespace MessageBus.Microsoft.ServiceBus
                 .GenericTypeArguments.First();
 
         private async Task AddRuleAsync(ServiceBusAdministrationClient client, Type messageType)
-            => await client.CreateRuleAsync(_topic, _subscription,
-                new CreateRuleOptions(messageType.Name, new SqlRuleFilter($"{_messageTypePropertyName} = '{messageType.Name}'")));
+        {
+            var filter = new CorrelationRuleFilter();
+            filter.ApplicationProperties.Add(_messageTypePropertyName, messageType.Name);
+            await client.CreateRuleAsync(_topic, _subscription, new CreateRuleOptions(messageType.Name, filter));
+        }
     }
 }
