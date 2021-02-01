@@ -34,7 +34,7 @@ namespace ServiceBus1.Handlers
             catch (Exception)
             {
                 // Dead letter the received message
-                await context.DeadLetterMessageAsync();
+                await context.DeadLetterMessageAsync("Invalid message");
                 throw;
             }
         }
