@@ -16,7 +16,6 @@ namespace MessageBus.Microsoft.ServiceBus
         private readonly string _messageTypePropertyName;
         private readonly ServiceBusAdministrationClient _serviceBusAdminClient;
         private readonly string _tenantId;
-        private IEnumerable<Type> _handlers;
 
         public AzureServiceBusAdminClient(string connectionString, string topic, string subscription,
             string tenantId = null, string messageTypePropertyName = "MessageType")
@@ -37,41 +36,77 @@ namespace MessageBus.Microsoft.ServiceBus
         public async Task ConfigureAsync(IEnumerable<Type> messageHandlers)
         {
             await CreateSubscriptionAsync();
-            await RemoveAllRulesAsync();
-            await AddRulesAsync(messageHandlers);
+            await UpdateRulesAsync(messageHandlers);
         }
 
         private async Task CreateSubscriptionAsync()
+        {
+            if (!await SubscriptionExistsAsync())
+            {
+                await _serviceBusAdminClient.CreateSubscriptionAsync(_topic, _subscription);
+            }
+        }
+
+        private async Task UpdateRulesAsync(IEnumerable<Type> messageHandlers)
+        {
+            var newRules = BuildListOfNewRules(messageHandlers);
+            var existingRules = await GetExistingRulesAsync();
+
+            await DeleteInvalidRulesAsync(newRules, existingRules);
+            await AddNewRulesAsync(newRules, existingRules);
+        }
+
+        private List<CreateRuleOptions> BuildListOfNewRules(IEnumerable<Type> messageHandlers)
+        {
+            var newRules = new List<CreateRuleOptions>();
+            foreach (var messageHandler in messageHandlers)
+            {
+                var messageType = GetMessageTypeFromHandler(messageHandler);
+                var filter = new CorrelationRuleFilter();
+                filter.ApplicationProperties.Add(_messageTypePropertyName, messageType.Name);
+                newRules.Add(new CreateRuleOptions(messageType.Name, filter));
+            }
+
+            return newRules;
+        }
+
+        private async Task<List<RuleProperties>> GetExistingRulesAsync()
+        {
+            var existingRules = new List<RuleProperties>();
+            await foreach (var existingRule in _serviceBusAdminClient.GetRulesAsync(_topic, _subscription))
+            {
+                existingRules.Add(existingRule);
+            }
+
+            return existingRules;
+        }
+
+        private async Task DeleteInvalidRulesAsync(List<CreateRuleOptions> newRules, List<RuleProperties> existingRules)
+        {
+            foreach (var existingRule in existingRules.Where(e => !ExistingRuleIsValid(newRules, e)))
+            {
+                await _serviceBusAdminClient.DeleteRuleAsync(_topic, _subscription, existingRule.Name);
+            }
+        }
+
+        private async Task AddNewRulesAsync(List<CreateRuleOptions> newRules, List<RuleProperties> existingRules)
+        {
+            foreach (var newRule in newRules.Where(n => !NewRuleExists(existingRules, n)))
+            {
+                await _serviceBusAdminClient.CreateRuleAsync(_topic, _subscription, newRule);
+            }
+        }
+
+        private async Task<bool> SubscriptionExistsAsync()
         {
             SubscriptionProperties subscription = null;
             try
             {
                 subscription = (await _serviceBusAdminClient.GetSubscriptionAsync(_topic, _subscription)).Value;
             }
-            catch (Exception) {}
-
-            if (subscription is null)
-            {
-                await _serviceBusAdminClient.CreateSubscriptionAsync(_topic, _subscription);
-            }
-        }
-
-        private async Task AddRulesAsync(IEnumerable<Type> messageHandlers)
-        {
-            _handlers = messageHandlers;
-            foreach (var handler in _handlers)
-            {
-                await AddRuleAsync(GetMessageTypeFromHandler(handler));
-            }
-        }
-
-        private async Task RemoveAllRulesAsync()
-        {
-            var rules = _serviceBusAdminClient.GetRulesAsync(_topic, _subscription);
-            await foreach (var rule in rules)
-            {
-                await _serviceBusAdminClient.DeleteRuleAsync(_topic, _subscription, rule.Name);
-            }
+            catch { }
+            var subscriptionExists = subscription is not null;
+            return subscriptionExists;
         }
 
         private static Type GetMessageTypeFromHandler(Type handler)
@@ -80,11 +115,10 @@ namespace MessageBus.Microsoft.ServiceBus
                 .First(i => i.Name.Contains(typeof(IMessageHandler<>).Name))
                 .GenericTypeArguments.First();
 
-        private async Task AddRuleAsync(Type messageType)
-        {
-            var filter = new CorrelationRuleFilter();
-            filter.ApplicationProperties.Add(_messageTypePropertyName, messageType.Name);
-            await _serviceBusAdminClient.CreateRuleAsync(_topic, _subscription, new CreateRuleOptions(messageType.Name, filter));
-        }
+        private static bool ExistingRuleIsValid(List<CreateRuleOptions> newRules, RuleProperties existingRule) => 
+            newRules.Any(r => r.Name == existingRule.Name && r.Filter == existingRule.Filter);
+
+        private static bool NewRuleExists(List<RuleProperties> existingRules, CreateRuleOptions newRule) 
+            => existingRules.Any(r => r.Name == newRule.Name && r.Filter == newRule.Filter);
     }
 }

@@ -39,7 +39,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         public async Task UpdatesRulesWithMultipleHandlersAsync()
         {
             var messageHandlers = new List<Type> { typeof(AircraftLandedHandler), typeof(AircraftTakenOffHandler) };
-            
+
             var subscription = nameof(UpdatesRulesWithMultipleHandlersAsync);
             await new AzureServiceBusAdminClient(_connectionString, _topic, subscription).ConfigureAsync(messageHandlers);
 
