@@ -7,7 +7,7 @@ using Xunit;
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 {
-    public class AzureServiceBusAdminTests : AzureServiceBusAdminTestsBase
+    public class AzureServiceBusAdminClientTests : AzureServiceBusAdminClientTestsBase
     {
         [Fact]
         public async Task UpdatesSubscriptionRulesAsync()
