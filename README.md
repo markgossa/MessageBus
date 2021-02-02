@@ -4,6 +4,12 @@
 
 Abstraction layer for messaging technologies such as Azure Service Bus and RabbitMQ.
 
+## Initial configuration
+
+### Subscription configuration
+
+When starting up, MessageBus will generate a list of the different message types and message handlers then create the subscription and the subscription filters (correlation filters for performance) if they do not already exist. This is idempotent so that redeployments or rolling deployments do not cause downtime.
+
 ## Handling messages
 
 MessageBus calls the message handler for the message type that is received based on the `MessageType` property on the message. For example, when a message is received with a `MessageType` property set to `AircraftTakenOff`, the `HandleAsync()` method on the handler is called.
