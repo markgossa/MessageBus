@@ -17,7 +17,7 @@ namespace MessageBus.Abstractions
 
         public MessageBusReceiver(IMessageBusHandlerResolver messageBusHandlerResolver,
             IMessageBusAdminClient messageBusAdmin, IMessageBusClient messageBusClient, 
-            MessageBusReceiverSettings? messageBusSettings = null)
+            MessageBusSettings? messageBusSettings = null)
         {
             _messageBusHandlerResolver = messageBusHandlerResolver;
             _messageBusAdminClient = messageBusAdmin;
@@ -61,7 +61,7 @@ namespace MessageBus.Abstractions
         internal async Task OnErrorMessageReceived(MessageErrorReceivedEventArgs args)
             => await Task.Run(() => throw new MessageReceivedException(args.Exception));
 
-        private static string GetMessageTypeProperty(MessageBusReceiverSettings messageBusSettings)
+        private static string GetMessageTypeProperty(MessageBusSettings messageBusSettings)
             => string.IsNullOrWhiteSpace(messageBusSettings?.MessageTypeProperty)
                 ? _defaultMessageTypeProperty
                 : messageBusSettings.MessageTypeProperty;

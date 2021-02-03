@@ -1,7 +1,7 @@
 ﻿#nullable disable
 namespace MessageBus.Abstractions
 {
-    public class MessageBusReceiverSettings
+    public class MessageBusSettings
     {
         public string MessageTypeProperty { get; set; }
     }
