@@ -1,4 +1,5 @@
-﻿using Azure.Messaging.ServiceBus.Administration;
+﻿using Azure.Identity;
+using Azure.Messaging.ServiceBus.Administration;
 using MessageBus.Abstractions;
 using MessageBus.Microsoft.ServiceBus.Utilities;
 using System;
@@ -10,7 +11,9 @@ namespace MessageBus.Microsoft.ServiceBus
 {
     public class AzureServiceBusAdminClient : IMessageBusAdminClient
     {
+        private const string _defaultMessageTypePropertyName = "MessageType";
         private readonly string _connectionString;
+        private readonly string _hostName;
         private readonly string _topic;
         private readonly string _subscription;
         private readonly string _messageTypePropertyName;
@@ -18,20 +21,37 @@ namespace MessageBus.Microsoft.ServiceBus
         private readonly string _tenantId;
 
         public AzureServiceBusAdminClient(string connectionString, string topic, string subscription,
-            string tenantId = null, string messageTypePropertyName = "MessageType")
+            AzureServiceBusAdminClientOptions options = null)
         {
             _connectionString = connectionString;
             _topic = topic;
             _subscription = subscription;
+            _messageTypePropertyName = options?.MessageTypePropertyName ?? _defaultMessageTypePropertyName;
+            _serviceBusAdminClient = BuildServiceBusAdminClient();
+        }
+        
+        public AzureServiceBusAdminClient(string hostName, string topic, string subscription,
+            string tenantId, AzureServiceBusAdminClientOptions options = null)
+        {
+            _hostName = hostName;
+            _topic = topic;
+            _subscription = subscription;
             _tenantId = tenantId;
-            _messageTypePropertyName = messageTypePropertyName;
+            _messageTypePropertyName = options?.MessageTypePropertyName ?? _defaultMessageTypePropertyName;
             _serviceBusAdminClient = BuildServiceBusAdminClient();
         }
 
         private ServiceBusAdministrationClient BuildServiceBusAdminClient()
-            => string.IsNullOrEmpty(_tenantId)
+        {
+            var options = new DefaultAzureCredentialOptions
+            {
+                SharedTokenCacheTenantId = _tenantId
+            };
+
+            return string.IsNullOrEmpty(_tenantId)
                 ? new ServiceBusAdministrationClient(_connectionString)
-                : new ServiceBusAdministrationClient(_connectionString, new ServiceBusTokenProvider(_tenantId));
+                : new ServiceBusAdministrationClient(_hostName, new DefaultAzureCredential(options));
+        }
 
         public async Task ConfigureAsync(IEnumerable<Type> messageHandlers)
         {

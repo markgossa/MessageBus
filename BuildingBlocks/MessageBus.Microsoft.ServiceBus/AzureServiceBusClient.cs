@@ -1,6 +1,6 @@
-﻿using Azure.Messaging.ServiceBus;
+﻿using Azure.Identity;
+using Azure.Messaging.ServiceBus;
 using MessageBus.Abstractions;
-using MessageBus.Microsoft.ServiceBus.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -24,9 +24,14 @@ namespace MessageBus.Microsoft.ServiceBus
         }
 
         public AzureServiceBusClient(string hostname, string topic, string subscription,
-            string tenantId = null)
+            string tenantId)
         {
-            var serviceBusClient = new ServiceBusClient(hostname, new ServiceBusTokenProvider(tenantId));
+            var options = new DefaultAzureCredentialOptions
+            {
+                SharedTokenCacheTenantId = tenantId
+            };
+
+            var serviceBusClient = new ServiceBusClient(hostname, new DefaultAzureCredential(options));
             _serviceBusProcessor = serviceBusClient.CreateProcessor(topic, subscription);
             AddMessageHandlers();
         }

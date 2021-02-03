@@ -12,6 +12,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
     {
         protected const string _connectionString = "Endpoint=sb://sb43719.servicebus.windows.net/;" +
             "SharedAccessKeyName=Manage;SharedAccessKey=FqCICJRc9BFQbXNaiXDRSmUe1sGLwVpGP1OdcAFdkhQ=;";
+        protected const string _hostname = "sb43719.servicebus.windows.net";
+        protected const string _tenantId = "7d4a98d2-9ed7-41f7-abd3-0884effe0ad4";
         protected const string _topic = "topic1";
         protected readonly string _subscription = nameof(AzureServiceBusAdminClientTestsBase);
         protected readonly ServiceBusClient _serviceBusClient = new ServiceBusClient(_connectionString);

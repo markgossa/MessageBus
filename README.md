@@ -10,6 +10,8 @@ Abstraction layer for messaging technologies such as Azure Service Bus and Rabbi
 
 When starting up, MessageBus will generate a list of the different message types and message handlers then create the subscription and the subscription filters (correlation filters for performance) if they do not already exist. This is idempotent so that redeployments or rolling deployments do not cause downtime.
 
+If using Azure Service Bus, the `AzureServiceBusAdminClient` is used to create and configure the subscription. By default, the message property that determines the message type is called `MessageType` however this can be configured by using the `AzureServiceBusAdminClient` constructor which takes `AzureServiceBusAdminClientOptions` as an optional parameter.
+
 ## Handling messages
 
 MessageBus calls the message handler for the message type that is received based on the `MessageType` property on the message. For example, when a message is received with a `MessageType` property set to `AircraftTakenOff`, the `HandleAsync()` method on the handler is called.
