@@ -20,7 +20,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
             Assert.IsType<AircraftLandedHandler>(handler);
 
             var messageContext = new MessageContext<AircraftLanded>(new BinaryData("Hello world!"), new object(), 
-                new Mock<IMessageBusReceiver>().Object);
+                new Mock<IMessageBus>().Object);
             typeof(AircraftLandedHandler).GetMethod("HandleAsync").Invoke(handler, new object[] { messageContext });
         }
         

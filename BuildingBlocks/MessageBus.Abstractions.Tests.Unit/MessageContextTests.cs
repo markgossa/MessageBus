@@ -26,7 +26,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             var typeArg = typeof(AircraftTakenOff);
             var messageContextType = typeof(MessageContext<>).MakeGenericType(typeArg);
             var messageContext = Activator.CreateInstance(messageContextType, new object[] { new BinaryData(_messageAsString), 
-                new object(), _mockMessageBusReceiver.Object });
+                new object(), _mockMessageBus.Object });
 
             Assert.Equal(typeof(MessageContext<AircraftTakenOff>), messageContext.GetType());
         }
@@ -36,7 +36,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         {
             await _sut.DeadLetterMessageAsync();
 
-            _mockMessageBusReceiver.Verify(m => m.DeadLetterMessageAsync(_messageObject, null), Times.Once);
+            _mockMessageBus.Verify(m => m.DeadLetterMessageAsync(_messageObject, null), Times.Once);
         }
 
         [Fact]
@@ -44,7 +44,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         {
             await (_sut as IMessageContext<AircraftLanded>).DeadLetterMessageAsync();
 
-            _mockMessageBusReceiver.Verify(m => m.DeadLetterMessageAsync(_messageObject, null), Times.Once);
+            _mockMessageBus.Verify(m => m.DeadLetterMessageAsync(_messageObject, null), Times.Once);
         }
         
         [Fact]
@@ -53,7 +53,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             const string deadLetterMessage = "Invalid message";
             await _sut.DeadLetterMessageAsync(deadLetterMessage);
 
-            _mockMessageBusReceiver.Verify(m => m.DeadLetterMessageAsync(_messageObject, deadLetterMessage), Times.Once);
+            _mockMessageBus.Verify(m => m.DeadLetterMessageAsync(_messageObject, deadLetterMessage), Times.Once);
         }
     }
 }

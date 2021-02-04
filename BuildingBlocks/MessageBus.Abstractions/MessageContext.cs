@@ -15,16 +15,16 @@ namespace MessageBus.Abstractions
         public Dictionary<string, string> Properties { get; internal set; }
         public int DeliveryCount { get; internal set; }
         private readonly object _messageObject;
-        private readonly IMessageBusReceiver _messageBusReceiver;
+        private readonly IMessageBus _messageBus;
 
-        public MessageContext(BinaryData body, object messageObject, IMessageBusReceiver messageBusReceiver)
+        public MessageContext(BinaryData body, object messageObject, IMessageBus messageBus)
         {
             Body = body;
             _messageObject = messageObject;
-            _messageBusReceiver = messageBusReceiver;
+            _messageBus = messageBus;
         }
 
         public async Task DeadLetterMessageAsync(string reason = null)
-            => await _messageBusReceiver.DeadLetterMessageAsync(_messageObject, reason);
+            => await _messageBus.DeadLetterMessageAsync(_messageObject, reason);
     }
 }

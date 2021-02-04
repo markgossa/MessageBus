@@ -8,7 +8,7 @@ using Xunit;
 
 namespace MessageBus.Abstractions.Tests.Unit
 {
-    public class MessageBusReceiverTests : MessageBusReceiverTestsBase
+    public class MessageBusTests : MessageBusTestsBase
     {
         [Fact]
         public async Task ConfiguresMessageBusAsync()
@@ -103,7 +103,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             var mockAircraftTakenOffHandler = new AircraftLandedHandler();
             _mockMessageBusHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded)))
                 .Returns(mockAircraftTakenOffHandler);
-            var sut = new MessageBusReceiver(_mockMessageBusHandlerResolver.Object,
+            var sut = new MessageBus(_mockMessageBusHandlerResolver.Object,
                 _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object, new MessageBusSettings
                 { MessageTypeProperty = "MessageTypeIdentifier" });
 

@@ -8,18 +8,18 @@ using System.Text.Json;
 
 namespace MessageBus.Abstractions.Tests.Unit
 {
-    public class MessageBusReceiverTestsBase
+    public class MessageBusTestsBase
     {
         protected readonly Mock<IMessageBusHandlerResolver> _mockMessageBusHandlerResolver = new Mock<IMessageBusHandlerResolver>();
         protected readonly List<Type> _handlers = new List<Type> { typeof(AircraftLandedHandler), typeof(AircraftTakenOffHandler) };
         protected readonly Mock<IMessageBusAdminClient> _mockMessageBusAdminClient = new Mock<IMessageBusAdminClient>();
         protected readonly Mock<IMessageBusClient> _mockMessageBusClient = new Mock<IMessageBusClient>();
-        protected MessageBusReceiver _sut;
+        protected MessageBus _sut;
 
-        protected MessageBusReceiverTestsBase()
+        protected MessageBusTestsBase()
         {
             _mockMessageBusHandlerResolver.Setup(m => m.GetMessageHandlers()).Returns(_handlers);
-            _sut = new MessageBusReceiver(_mockMessageBusHandlerResolver.Object,
+            _sut = new MessageBus(_mockMessageBusHandlerResolver.Object,
                 _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object);
         }
 

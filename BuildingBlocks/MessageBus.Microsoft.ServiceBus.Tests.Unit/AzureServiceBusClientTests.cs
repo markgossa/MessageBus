@@ -26,5 +26,17 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Unit
             mockTestHandler.Verify(m => m.ErrorMessageHandler(It.Is<MessageErrorReceivedEventArgs>(e =>
                 e.Exception.GetType() == typeof(ServiceBusException))), Times.Once);
         }
+
+        [Fact]
+        public async Task AcceptsServiceBusClientSettings()
+        {
+            _ = new AzureServiceBusClient("test.servicebus.windows.net", "topic", "subscription", "12345-12345",
+                    new ServiceBusProcessorOptions());
+
+
+            var connectionString = "Endpoint=sb://test.servicebus.windows.net/;" +
+                "SharedAccessKeyName=Manage;SharedAccessKey=12345=;";
+            _ = new AzureServiceBusClient(connectionString, "topic", "subscription", new ServiceBusProcessorOptions());
+        }
     }
 }

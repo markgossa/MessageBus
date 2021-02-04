@@ -10,8 +10,8 @@ namespace ServiceBus1
         static async Task Main()
         {
             var serviceProvider = Startup.Initialize();
-            await serviceProvider.GetRequiredService<IMessageBusReceiver>().ConfigureAsync();
-            await serviceProvider.GetRequiredService<IMessageBusReceiver>().StartAsync();
+            await serviceProvider.GetRequiredService<IMessageBus>().ConfigureAsync();
+            await serviceProvider.GetRequiredService<IMessageBus>().StartAsync();
 
             new HostBuilder().Build().Run();
         }

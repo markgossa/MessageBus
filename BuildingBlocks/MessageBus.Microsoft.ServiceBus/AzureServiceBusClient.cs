@@ -12,29 +12,37 @@ namespace MessageBus.Microsoft.ServiceBus
 {
     public class AzureServiceBusClient : IMessageBusClient
     {
-        private readonly ServiceBusProcessor _serviceBusProcessor;
+        private ServiceBusProcessor _serviceBusProcessor;
         private Func<MessageErrorReceivedEventArgs, Task> _errorMessageHandler;
         private Func<MessageReceivedEventArgs, Task> _messageHandler;
 
-        public AzureServiceBusClient(string connectionString, string topic, string subscription)
+        public AzureServiceBusClient(string connectionString, string topic, string subscription, 
+            ServiceBusProcessorOptions serviceBusProcessorOptions = null)
         {
-            var serviceBusClient = new ServiceBusClient(connectionString);
-            _serviceBusProcessor = serviceBusClient.CreateProcessor(topic, subscription);
+            BuildServiceBusProcessor(new ServiceBusClient(connectionString), topic, subscription,
+                serviceBusProcessorOptions);
             AddMessageHandlers();
         }
 
         public AzureServiceBusClient(string hostname, string topic, string subscription,
-            string tenantId)
+            string tenantId, ServiceBusProcessorOptions serviceBusProcessorOptions = null)
         {
             var options = new DefaultAzureCredentialOptions
             {
                 SharedTokenCacheTenantId = tenantId
             };
 
-            var serviceBusClient = new ServiceBusClient(hostname, new DefaultAzureCredential(options));
-            _serviceBusProcessor = serviceBusClient.CreateProcessor(topic, subscription);
+            BuildServiceBusProcessor(new ServiceBusClient(hostname, new DefaultAzureCredential(options)),
+                topic, subscription, serviceBusProcessorOptions);
             AddMessageHandlers();
         }
+
+        private void BuildServiceBusProcessor(ServiceBusClient serviceBusClient, string topic, 
+            string subscription, ServiceBusProcessorOptions serviceBusProcessorOptions) 
+                => _serviceBusProcessor = serviceBusProcessorOptions is null
+                    ? serviceBusClient.CreateProcessor(topic, subscription)
+                    : serviceBusClient.CreateProcessor(topic, subscription, serviceBusProcessorOptions);
+
 
         public void AddMessageHandler(Func<MessageReceivedEventArgs, Task> messageHandler)
             => _messageHandler = messageHandler;

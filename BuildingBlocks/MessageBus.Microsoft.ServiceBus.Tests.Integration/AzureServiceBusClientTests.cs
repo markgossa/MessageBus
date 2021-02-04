@@ -8,7 +8,7 @@ using Xunit;
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 {
-    public class AzureServiceBusClientTests : MessageBusReceiverTestsBase
+    public class AzureServiceBusClientTests : MessageBusTestsBase
     {
         private readonly Mock<ITestHandler> mockTestHandler = new Mock<ITestHandler>();
 
@@ -55,10 +55,10 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             mockMessageBusHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded))).Returns(aircraftLandedHandler);
 
             var sut = new AzureServiceBusClient(_hostname, _topic, nameof(DeadLettersMessageWithoutReasonAsync), _tenantId);
-            var messageBusReceiver = new MessageBusReceiver(mockMessageBusHandlerResolver.Object, new Mock<IMessageBusAdminClient>().Object,
+            var messageBus = new Abstractions.MessageBus(mockMessageBusHandlerResolver.Object, new Mock<IMessageBusAdminClient>().Object,
                 sut);
 
-            await messageBusReceiver.StartAsync();
+            await messageBus.StartAsync();
 
             await Task.Delay(TimeSpan.FromSeconds(5));
 
@@ -75,10 +75,10 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             mockMessageBusHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded))).Returns(aircraftLandedHandler);
 
             var sut = new AzureServiceBusClient(_hostname, _topic, nameof(DeadLettersMessageWithReasonAsync), _tenantId);
-            var messageBusReceiver = new MessageBusReceiver(mockMessageBusHandlerResolver.Object, new Mock<IMessageBusAdminClient>().Object,
+            var messageBus = new Abstractions.MessageBus(mockMessageBusHandlerResolver.Object, new Mock<IMessageBusAdminClient>().Object,
                 sut);
 
-            await messageBusReceiver.StartAsync();
+            await messageBus.StartAsync();
 
             await Task.Delay(TimeSpan.FromSeconds(5));
 

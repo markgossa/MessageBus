@@ -22,26 +22,26 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
             return services;
         }
 
-        public static IServiceCollection AddMessageBusReceiver(this IServiceCollection services, IMessageBusAdminClient messageBusAdmin,
+        public static IServiceCollection AddMessageBus(this IServiceCollection services, IMessageBusAdminClient messageBusAdmin,
             IMessageBusClient messageBusClient)
         {
-            services.AddSingleton<IMessageBusReceiver>(new MessageBusReceiver(new MessageBusHandlerResolver(services),
+            services.AddSingleton((IMessageBus)new Abstractions.MessageBus(new MessageBusHandlerResolver(services),
                 messageBusAdmin, messageBusClient));
 
             return services;
         }
         
-        public static async Task<IServiceCollection> AddMessageBusReceiverAsync(this IServiceCollection services, IMessageBusClientBuilder messageBusClientBuilder)
+        public static async Task<IServiceCollection> AddMessageBusAsync(this IServiceCollection services, IMessageBusClientBuilder messageBusClientBuilder)
         {
-            AddMessageBusReceiver(services, await messageBusClientBuilder.BuildMessageBusAdminClientAsync(), 
+            AddMessageBus(services, await messageBusClientBuilder.BuildMessageBusAdminClientAsync(), 
                 await messageBusClientBuilder.BuildMessageBusClientAsync());
 
             return services;
         }
         
-        public static IServiceCollection AddMessageBusReceiver(this IServiceCollection services, IMessageBusClientBuilder messageBusClientBuilder)
+        public static IServiceCollection AddMessageBus(this IServiceCollection services, IMessageBusClientBuilder messageBusClientBuilder)
         {
-            AddMessageBusReceiver(services, messageBusClientBuilder.BuildMessageBusAdminClientAsync().Result, 
+            AddMessageBus(services, messageBusClientBuilder.BuildMessageBusAdminClientAsync().Result, 
                 messageBusClientBuilder.BuildMessageBusClientAsync().Result);
 
             return services;

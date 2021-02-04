@@ -27,7 +27,7 @@ namespace ServiceBus1.Handlers
                 // Deserialize message using default deserializer and return AircraftId
                 Console.WriteLine($"AircraftId: {context.Message.AircraftId}");
 
-                // Deserialize message using custom
+                // Deserialize message using custom JSON Serializer Options
                 var jsonOptions = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
                 Console.WriteLine($"AircraftId using JSON serializer options: {context.Body.ToObjectFromJson<AircraftTakenOff>(jsonOptions).AircraftId}");
             }

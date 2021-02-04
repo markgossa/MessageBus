@@ -23,11 +23,11 @@ namespace ServiceBus1
                 .AddUserSecrets<Program>()
                 .Build();
 
-        private static ServiceProvider ConfigureServices()
+        private static ServiceProvider ConfigureServices() 
             => new ServiceCollection()
                 .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>()
-                .AddMessageBusReceiver(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"], 
-                    Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"], 
+                .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
+                    Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
                     Configuration["ServiceBus:TenantId"]))
                 .BuildServiceProvider();
     }

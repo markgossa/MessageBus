@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MessageBus.Abstractions
 {
-    public class MessageBusReceiver : IMessageBusReceiver
+    public class MessageBus : IMessageBus
     {
         private const string _defaultMessageTypeProperty = "MessageType";
         private readonly IMessageBusHandlerResolver _messageBusHandlerResolver;
@@ -15,7 +15,7 @@ namespace MessageBus.Abstractions
         private readonly IMessageBusClient _messageBusClient;
         private readonly string _messageTypeProperty;
 
-        public MessageBusReceiver(IMessageBusHandlerResolver messageBusHandlerResolver,
+        public MessageBus(IMessageBusHandlerResolver messageBusHandlerResolver,
             IMessageBusAdminClient messageBusAdmin, IMessageBusClient messageBusClient, 
             MessageBusSettings? messageBusSettings = null)
         {
