@@ -216,7 +216,6 @@ namespace MessageBusWithHealthCheck.Example
                     Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
                     Configuration["ServiceBus:TenantId"]))
                 .AddHostedService<MessageBusHostedService>();
-                .AddHostedService<MessageBusHostedService>()
                 .AddHealthChecks().AddCheck<MessageBusHealthCheck>("MessageBus");
         }
 
