@@ -182,7 +182,9 @@ namespace MessageBusWithHealthCheck.Example
 
 ### Add health checks
 
-This is done by using the ASP.NET `AddHealthChecks()` and `AddCheck<T>()`  methods and passing `MessageBusHealthCheck` as a parameter:
+This is done by using the ASP.NET `AddHealthChecks()` and `AddCheck<T>()`  methods and passing `MessageBusHealthCheck` as a parameter. In the case of Azure Service Bus, the health check will check networking and permissions by attempting to get details about the topic.
+
+In the example below, the health status can be checked using http://myservice/health.
 
 ```csharp
 using MessageBus.Extensions.Microsoft.DependencyInjection;
