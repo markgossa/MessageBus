@@ -3,6 +3,7 @@ using Azure.Messaging.ServiceBus.Administration;
 using MessageBus.Abstractions;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using System;
 using System.Text;
@@ -13,18 +14,24 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 {
     public class MessageBusTestsBase
     {
-        protected const string _connectionString = "Endpoint=sb://sb43719.servicebus.windows.net/;" +
-            "SharedAccessKeyName=Manage;SharedAccessKey=FqCICJRc9BFQbXNaiXDRSmUe1sGLwVpGP1OdcAFdkhQ=;";
-        protected const string _hostname = "sb43719.servicebus.windows.net";
-        protected const string _topic = "topic1";
-        protected const string _tenantId = "7d4a98d2-9ed7-41f7-abd3-0884effe0ad4";
+        protected readonly IConfiguration Configuration = new Settings().Configuration;
+        protected readonly string _tenantId;
+        protected readonly string _hostname;
+        protected readonly string _connectionString;
+        protected readonly string _topic;
         protected readonly string _subscription = nameof(MessageBusTestsBase);
-        private readonly ServiceBusClient _serviceBusClient = new ServiceBusClient(_connectionString);
-        protected readonly ServiceBusAdministrationClient _serviceBusAdminClient = new ServiceBusAdministrationClient(_connectionString);
+        protected readonly ServiceBusClient _serviceBusClient;
+        protected readonly ServiceBusAdministrationClient _serviceBusAdminClient;
         private readonly ServiceBusSender _serviceBusSender;
-
+        
         public MessageBusTestsBase()
         {
+            _serviceBusClient = new ServiceBusClient(Configuration["ConnectionString"]);
+            _serviceBusAdminClient = new ServiceBusAdministrationClient(Configuration["ConnectionString"]);
+            _tenantId = Configuration["TenantId"];
+            _topic = Configuration["Topic"];
+            _hostname = Configuration["Hostname"];
+            _connectionString = Configuration["ConnectionString"];
             _serviceBusSender = _serviceBusClient.CreateSender(_topic);
             var serviceBusAdminClient = new ServiceBusAdministrationClient(_connectionString);
             serviceBusAdminClient.CreateSubscriptionAsync(new(_topic, _subscription));

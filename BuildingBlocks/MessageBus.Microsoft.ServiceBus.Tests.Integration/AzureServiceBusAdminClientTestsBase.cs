@@ -1,5 +1,7 @@
 ﻿using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
+using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,14 +12,24 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 {
     public class AzureServiceBusAdminClientTestsBase
     {
-        protected const string _connectionString = "Endpoint=sb://sb43719.servicebus.windows.net/;" +
-            "SharedAccessKeyName=Manage;SharedAccessKey=FqCICJRc9BFQbXNaiXDRSmUe1sGLwVpGP1OdcAFdkhQ=;";
-        protected const string _hostname = "sb43719.servicebus.windows.net";
-        protected const string _tenantId = "7d4a98d2-9ed7-41f7-abd3-0884effe0ad4";
-        protected const string _topic = "topic1";
+        protected readonly IConfiguration Configuration = new Settings().Configuration;
+        protected readonly string _tenantId;
+        protected readonly string _hostname;
+        protected readonly string _connectionString;
+        protected readonly string _topic;
         protected readonly string _subscription = nameof(AzureServiceBusAdminClientTestsBase);
-        protected readonly ServiceBusClient _serviceBusClient = new ServiceBusClient(_connectionString);
-        protected readonly ServiceBusAdministrationClient _serviceBusAdminClient = new ServiceBusAdministrationClient(_connectionString);
+        protected readonly ServiceBusClient _serviceBusClient;
+        protected readonly ServiceBusAdministrationClient _serviceBusAdminClient;
+
+        public AzureServiceBusAdminClientTestsBase()
+        {
+            _serviceBusClient = new ServiceBusClient(Configuration["ConnectionString"]);
+            _serviceBusAdminClient = new ServiceBusAdministrationClient(Configuration["ConnectionString"]);
+            _tenantId = Configuration["TenantId"];
+            _topic = Configuration["Topic"];
+            _hostname = Configuration["Hostname"];
+            _connectionString = Configuration["ConnectionString"];
+        }
 
         protected async Task AssertSubscriptionRules(Type[] messageTypes, string subscription, 
             string messagePropertyName = "MessageType")
