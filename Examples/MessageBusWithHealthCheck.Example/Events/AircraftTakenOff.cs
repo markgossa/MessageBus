@@ -1,6 +1,6 @@
 ﻿using MessageBus.Abstractions;
 
-namespace MessageBus.Example.Events
+namespace MessageBusWithHealthCheck.Example.Events
 {
     public class AircraftTakenOff : IEvent
     {

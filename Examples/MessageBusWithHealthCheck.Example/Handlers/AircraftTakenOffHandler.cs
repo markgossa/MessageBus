@@ -1,10 +1,10 @@
 ﻿using MessageBus.Abstractions;
-using MessageBus.Example.Events;
+using MessageBusWithHealthCheck.Example.Events;
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace MessageBus.Example.Handlers
+namespace MessageBusWithHealthCheck.Example.Handlers
 {
     public class AircraftTakenOffHandler : IMessageHandler<AircraftTakenOff>
     {

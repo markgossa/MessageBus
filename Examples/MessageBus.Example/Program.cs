@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Threading.Tasks;
 
-namespace ServiceBus1
+namespace MessageBus.Example
 {
     class Program
     {

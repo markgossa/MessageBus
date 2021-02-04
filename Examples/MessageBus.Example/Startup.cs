@@ -1,11 +1,11 @@
-﻿using MessageBus.Extensions.Microsoft.DependencyInjection;
+﻿using MessageBus.Example.Events;
+using MessageBus.Example.Handlers;
+using MessageBus.Extensions.Microsoft.DependencyInjection;
 using MessageBus.Microsoft.ServiceBus;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using ServiceBus1.Events;
-using ServiceBus1.Handlers;
 
-namespace ServiceBus1
+namespace MessageBus.Example
 {
     public class Startup
     {
@@ -17,13 +17,13 @@ namespace ServiceBus1
             return ConfigureServices();
         }
 
-        private static void BuildConfiguration() 
+        private static void BuildConfiguration()
             => Configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddUserSecrets<Program>()
                 .Build();
 
-        private static ServiceProvider ConfigureServices() 
+        private static ServiceProvider ConfigureServices()
             => new ServiceCollection()
                 .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>()
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
