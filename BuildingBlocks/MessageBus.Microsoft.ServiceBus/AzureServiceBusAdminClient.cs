@@ -76,6 +76,19 @@ namespace MessageBus.Microsoft.ServiceBus
             await AddNewRulesAsync(newRules, existingRules);
         }
 
+        public async Task<bool> CheckHealthAsync()
+        {
+            try
+            {
+                var subscription = await _serviceBusAdminClient.GetSubscriptionAsync(_topic, _subscription);
+                return subscription.Value is not null;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         private List<CreateRuleOptions> BuildListOfNewRules(IEnumerable<Type> messageHandlers)
         {
             var newRules = new List<CreateRuleOptions>();

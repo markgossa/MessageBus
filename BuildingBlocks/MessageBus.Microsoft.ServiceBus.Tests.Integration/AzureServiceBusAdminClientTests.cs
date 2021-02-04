@@ -51,5 +51,35 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             await AssertSubscriptionRules(new Type[] { typeof(AircraftLanded), typeof(AircraftTakenOff) }, subscription);
             DeleteSubscriptionAsync(nameof(UpdatesRulesWithMultipleHandlersAsync)).Wait();
         }
+        
+        [Fact]
+        public async Task HealthCheckReturnsFalseIfInvalidTopic()
+        {
+            var subscription = nameof(HealthCheckReturnsFalseIfInvalidTopic);
+            await CreateSubscriptionAsync(subscription);
+            var isHealthy = await new AzureServiceBusAdminClient(_hostname, "invalidTopic", subscription, _tenantId).CheckHealthAsync();
+
+            Assert.False(isHealthy);
+            await DeleteSubscriptionAsync(subscription);
+        }
+        
+        [Fact]
+        public async Task HealthCheckReturnsTrueIfValidSettings()
+        {
+            var subscription = nameof(HealthCheckReturnsTrueIfValidSettings);
+            await CreateSubscriptionAsync(subscription);
+            var isHealthy = await new AzureServiceBusAdminClient(_hostname, _topic, subscription, _tenantId).CheckHealthAsync();
+
+            Assert.True(isHealthy);
+            await DeleteSubscriptionAsync(subscription);
+        }
+        
+        [Fact]
+        public async Task HealthCheckReturnsFalseIfInvalidSubscription()
+        {
+            var isHealthy = await new AzureServiceBusAdminClient(_hostname, _topic, "invalidSubscription", _tenantId).CheckHealthAsync();
+
+            Assert.False(isHealthy);
+        }
     }
 }

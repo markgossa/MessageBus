@@ -26,12 +26,19 @@ namespace MessageBusWithHealthCheck.Example
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
                     Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
                     Configuration["ServiceBus:TenantId"]))
-                .AddHostedService<MessageBusHostedService>();
+                .AddHostedService<MessageBusHostedService>()
+                .AddHealthChecks().AddCheck<MessageBusHealthCheck>("MessageBus");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseRouting();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHealthChecks("/health");
+            });
         }
     }
 }

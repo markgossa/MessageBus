@@ -54,8 +54,15 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
         protected async Task CreateSubscriptionAsync(string subscription)
         {
-            var existingSubscription = await _serviceBusAdminClient.GetSubscriptionAsync(_topic, subscription);
-            if (existingSubscription.Value is null)
+            SubscriptionProperties existingSubscription = null;
+
+            try
+            {
+                existingSubscription = await _serviceBusAdminClient.GetSubscriptionAsync(_topic, subscription);
+            }
+            catch {}
+
+            if (existingSubscription is null)
             {
                 await _serviceBusAdminClient.CreateSubscriptionAsync(_topic, subscription);
             }

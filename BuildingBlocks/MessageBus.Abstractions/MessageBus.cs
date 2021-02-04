@@ -73,5 +73,7 @@ namespace MessageBus.Abstractions
 
         public async Task DeadLetterMessageAsync(object message, string? reason = null) 
             => await _messageBusClient.DeadLetterMessageAsync(message, reason);
+
+        public async Task<bool> CheckHealthAsync() => await _messageBusAdminClient.CheckHealthAsync();
     }
 }

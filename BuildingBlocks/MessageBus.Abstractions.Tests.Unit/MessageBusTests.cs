@@ -141,5 +141,18 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             _mockMessageBusClient.Verify(m => m.DeadLetterMessageAsync(message, reason), Times.Once);
         }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task CheckHealthAsyncCallsServiceBusAdminClient(bool healthCheckResponse)
+        {
+            _mockMessageBusAdminClient.Setup(m => m.CheckHealthAsync()).ReturnsAsync(healthCheckResponse);
+
+            var isHealthy = await _sut.CheckHealthAsync();
+
+            _mockMessageBusAdminClient.Verify(m => m.CheckHealthAsync(), Times.Once);
+            Assert.Equal(healthCheckResponse, isHealthy);
+        }
     }
 }
