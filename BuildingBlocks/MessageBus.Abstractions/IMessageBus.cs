@@ -6,6 +6,7 @@ namespace MessageBus.Abstractions
     {
         Task ConfigureAsync();
         Task StartAsync();
+        Task StopAsync();
         Task DeadLetterMessageAsync(object message, string? reason = null);
         Task<bool> CheckHealthAsync();
     }

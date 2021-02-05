@@ -51,6 +51,8 @@ namespace MessageBus.Microsoft.ServiceBus
             => _errorMessageHandler = errorMessageHandler;
 
         public async Task StartAsync() => await _serviceBusProcessor.StartProcessingAsync();
+        
+        public async Task StopAsync() => await _serviceBusProcessor.StopProcessingAsync();
 
         private void AddMessageHandlers()
         {

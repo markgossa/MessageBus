@@ -21,7 +21,8 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
             await _serviceProvider.GetRequiredService<IMessageBus>().ConfigureAsync();
             await _serviceProvider.GetRequiredService<IMessageBus>().StartAsync();
         }
-        
-        public Task StopAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
+
+        public async Task StopAsync(CancellationToken cancellationToken)
+            => await _serviceProvider.GetRequiredService<IMessageBus>().StopAsync();
     }
 }
