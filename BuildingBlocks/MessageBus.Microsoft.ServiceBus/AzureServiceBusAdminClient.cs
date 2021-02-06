@@ -5,6 +5,7 @@ using MessageBus.Microsoft.ServiceBus.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace MessageBus.Microsoft.ServiceBus
@@ -12,11 +13,13 @@ namespace MessageBus.Microsoft.ServiceBus
     public class AzureServiceBusAdminClient : IMessageBusAdminClient
     {
         private const string _defaultMessageTypePropertyName = "MessageType";
+        private const string _defaultMessageVersionPropertyName = "MessageVersion";
         private readonly string _connectionString;
         private readonly string _hostName;
         private readonly string _topic;
         private readonly string _subscription;
         private readonly string _messageTypePropertyName;
+        private readonly string _messageVersionPropertyName;
         private readonly ServiceBusAdministrationClient _serviceBusAdminClient;
         private readonly string _tenantId;
 
@@ -27,6 +30,7 @@ namespace MessageBus.Microsoft.ServiceBus
             _topic = topic;
             _subscription = subscription;
             _messageTypePropertyName = options?.MessageTypePropertyName ?? _defaultMessageTypePropertyName;
+            _messageVersionPropertyName = options?.MessageVersionPropertyName ?? _defaultMessageVersionPropertyName;
             _serviceBusAdminClient = BuildServiceBusAdminClient();
         }
         
@@ -38,6 +42,7 @@ namespace MessageBus.Microsoft.ServiceBus
             _subscription = subscription;
             _tenantId = tenantId;
             _messageTypePropertyName = options?.MessageTypePropertyName ?? _defaultMessageTypePropertyName;
+            _messageVersionPropertyName = options?.MessageVersionPropertyName ?? _defaultMessageVersionPropertyName;
             _serviceBusAdminClient = BuildServiceBusAdminClient();
         }
 
@@ -96,11 +101,26 @@ namespace MessageBus.Microsoft.ServiceBus
             {
                 var messageType = GetMessageTypeFromHandler(messageHandler);
                 var filter = new CorrelationRuleFilter();
-                filter.ApplicationProperties.Add(_messageTypePropertyName, messageType.Name);
+
+                AddMessageTypeProperty(messageType, filter);
+                AddMessageVersionProperty(messageType, filter);
+
                 newRules.Add(new CreateRuleOptions(messageType.Name, filter));
             }
 
             return newRules;
+        }
+
+        private void AddMessageTypeProperty(Type messageType, CorrelationRuleFilter filter) 
+            => filter.ApplicationProperties.Add(_messageTypePropertyName, messageType.Name);
+
+        private void AddMessageVersionProperty(Type messageType, CorrelationRuleFilter filter)
+        {
+            var messageVersion = messageType.GetCustomAttribute<MessageVersionAttribute>();
+            if (messageVersion is not null)
+            {
+                filter.ApplicationProperties.Add(_messageVersionPropertyName, messageVersion.Version);
+            }
         }
 
         private async Task<List<RuleProperties>> GetExistingRulesAsync()

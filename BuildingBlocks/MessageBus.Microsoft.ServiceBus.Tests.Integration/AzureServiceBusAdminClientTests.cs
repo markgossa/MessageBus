@@ -53,6 +53,37 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         }
         
         [Fact]
+        public async Task UpdatesRulesWithMessageVersionDefaultPropertyAsync()
+        {
+            var messageHandlers = new List<Type> { typeof(AircraftLandedHandlerV2), typeof(AircraftTakenOffHandler) };
+            var subscription = nameof(UpdatesRulesWithMessageVersionDefaultPropertyAsync);
+
+            await new AzureServiceBusAdminClient(_hostname, _topic, subscription, _tenantId).ConfigureAsync(messageHandlers);
+
+            await AssertSubscriptionRules(new Type[] { typeof(Models.V2.AircraftLanded), typeof(AircraftTakenOff) }, subscription);
+            DeleteSubscriptionAsync(nameof(UpdatesRulesWithMessageVersionDefaultPropertyAsync)).Wait();
+        }
+        
+        [Theory]
+        [InlineData("Version")]
+        [InlineData("MyMessageVersion")]
+        public async Task UpdatesRulesWithMessageVersionCustomPropertyAsync(string messageVersionPropertyName)
+        {
+            var messageHandlers = new List<Type> { typeof(AircraftLandedHandlerV2), typeof(AircraftTakenOffHandler) };
+            var subscription = nameof(UpdatesRulesWithMessageVersionCustomPropertyAsync);
+            var options = new AzureServiceBusAdminClientOptions
+            {
+                MessageVersionPropertyName = messageVersionPropertyName
+            };
+            
+            await new AzureServiceBusAdminClient(_hostname, _topic, subscription, _tenantId, options).ConfigureAsync(messageHandlers);
+
+            await AssertSubscriptionRules(new Type[] { typeof(Models.V2.AircraftLanded), typeof(AircraftTakenOff) }, subscription,
+                "MessageType", messageVersionPropertyName);
+            DeleteSubscriptionAsync(nameof(UpdatesRulesWithMessageVersionCustomPropertyAsync)).Wait();
+        }
+        
+        [Fact]
         public async Task HealthCheckReturnsFalseIfInvalidTopic()
         {
             var subscription = nameof(HealthCheckReturnsFalseIfInvalidTopic);

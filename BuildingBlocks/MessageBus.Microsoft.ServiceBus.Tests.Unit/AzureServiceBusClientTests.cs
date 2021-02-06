@@ -28,7 +28,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Unit
         }
 
         [Fact]
-        public async Task AcceptsServiceBusClientSettings()
+        public void AcceptsServiceBusClientSettings()
         {
             _ = new AzureServiceBusClient("test.servicebus.windows.net", "topic", "subscription", "12345-12345",
                     new ServiceBusProcessorOptions());

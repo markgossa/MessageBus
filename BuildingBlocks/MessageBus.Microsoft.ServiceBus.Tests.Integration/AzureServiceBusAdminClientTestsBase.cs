@@ -1,10 +1,12 @@
 ﻿using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
+using MessageBus.Abstractions;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -32,24 +34,41 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         }
 
         protected async Task AssertSubscriptionRules(Type[] messageTypes, string subscription, 
-            string messagePropertyName = "MessageType")
+            string messageTypePropertyName = "MessageType", string messageVersionPropertyName = "MessageVersion")
         {
             var asyncRules = _serviceBusAdminClient.GetRulesAsync(_topic, subscription);
 
-            var rules = new List<RuleProperties>();
+            var actualRules = new List<RuleProperties>();
             await foreach (var rule in asyncRules)
             {
-                rules.Add(rule);
+                actualRules.Add(rule);
             }
 
-            Assert.Equal(messageTypes.Length, rules.Count);
+            Assert.Equal(messageTypes.Length, actualRules.Count);
             foreach (var messageType in messageTypes)
             {
-                var filter = new CorrelationRuleFilter();
-                filter.ApplicationProperties.Add(messagePropertyName, messageType.Name);
-                Assert.Single(rules.Where(r => r.Filter.Equals(filter)));
-                Assert.Single(rules.Where(r => r.Name == messageType.Name));
+                var expectedCorrelationRuleFilter = BuildCorrelationRuleFilter(messageTypePropertyName, messageVersionPropertyName, 
+                    messageType);
+                var actualRulesForMessageType = actualRules.Where(r => r.Name == messageType.Name);
+
+                Assert.Single(actualRulesForMessageType);
+                Assert.Equal(expectedCorrelationRuleFilter, actualRulesForMessageType.First().Filter);
             }
+        }
+
+        private static CorrelationRuleFilter BuildCorrelationRuleFilter(string messageTypePropertyName, 
+            string messageVersionPropertyName, Type messageType)
+        {
+            var filter = new CorrelationRuleFilter();
+            filter.ApplicationProperties.Add(messageTypePropertyName, messageType.Name);
+            
+            var messageVersion = messageType.GetCustomAttribute<MessageVersionAttribute>();
+            if (messageVersion is not null)
+            {
+                filter.ApplicationProperties.Add(messageVersionPropertyName, messageVersion.Version);
+            }
+            
+            return filter;
         }
 
         protected async Task CreateSubscriptionAsync(string subscription)

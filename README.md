@@ -180,6 +180,26 @@ namespace MessageBusWithHealthCheck.Example
 }
 ```
 
+### Message Versioning
+
+When making breaking changes to messages, you may want to pin message receivers to a particular message version so you don't need to update all receivers when your sender sends a new message version with a breaking change. To do this, you can use the `MessageVersion` attribute on the message and this will be added as a `MessageVersion` property on the message.
+
+```csharp
+using MessageBus.Abstractions;
+using System;
+
+namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Models.V2
+{
+    [MessageVersion(2)]
+    public class AircraftLanded : IEvent
+    {
+        public string AircraftId { get; init; }
+        public string FlightNumber { get; init; }
+        public DateTime Timestamp { get; init; }
+    }
+}
+```
+
 ### Add health checks
 
 This is done by using the ASP.NET `AddHealthChecks()` and `AddCheck<T>()`  methods and passing `MessageBusHealthCheck` as a parameter. In the case of Azure Service Bus, the health check will check networking and permissions by attempting to get details about the topic.
@@ -261,9 +281,9 @@ private static ServiceProvider ConfigureServices()
 }
 ```
 
-### Change the MessageType property name
+### Change the default property names (MessageType and MessageVersion)
 
-If using Azure Service Bus, the `AzureServiceBusAdminClient` is used to create and configure the subscription. By default, the message property that determines the message type is called `MessageType` however this can be configured by using the `AzureServiceBusAdminClient` constructor which takes `AzureServiceBusAdminClientOptions` as an optional parameter.
+If using Azure Service Bus, the `AzureServiceBusAdminClient` is used to create and configure the subscription. By default, the message property that determines the message type is called `MessageType` and the property that determines the message version is called `MessageVersion` however these can be configured by using the `AzureServiceBusAdminClient` constructor which takes `AzureServiceBusAdminClientOptions` as an optional parameter.
 
 ## Programming model
 
