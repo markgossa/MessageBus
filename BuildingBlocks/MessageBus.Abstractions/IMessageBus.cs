@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace MessageBus.Abstractions
 {
@@ -9,7 +10,7 @@ namespace MessageBus.Abstractions
         Task StopAsync();
         Task DeadLetterMessageAsync(object message, string? reason = null);
         Task<bool> CheckHealthAsync();
-        IMessageBus SubscribeToMessage<TMessage, TMessageHandler>()
+        IMessageBus SubscribeToMessage<TMessage, TMessageHandler>(Dictionary<string, string> messageProperties = null)
             where TMessage : IMessage
             where TMessageHandler : IMessageHandler<TMessage>;
     }

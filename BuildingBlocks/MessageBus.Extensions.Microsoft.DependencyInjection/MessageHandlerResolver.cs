@@ -8,7 +8,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
     public class MessageHandlerResolver : IMessageHandlerResolver
     {
         private readonly IServiceCollection _services;
-        private ServiceProvider _serviceProvider;
+        private ServiceProvider? _serviceProvider;
         private readonly Dictionary<string, MessageSubscription> _messageSubscriptions = new Dictionary<string, MessageSubscription>();
 
         public MessageHandlerResolver(IServiceCollection services)
@@ -18,13 +18,13 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
         
         public void Initialize() => _serviceProvider = _services.BuildServiceProvider();
 
-        public object Resolve(string messageType)
+        public object? Resolve(string messageType)
         {
             try
             {
                 var messageTypeType = _messageSubscriptions[messageType].MessageType;
                 var handlerServiceType = typeof(IMessageHandler<>).MakeGenericType(messageTypeType);
-                return _serviceProvider.GetRequiredService(handlerServiceType);
+                return _serviceProvider?.GetRequiredService(handlerServiceType);
             }
             catch (Exception ex)
             {
@@ -34,7 +34,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
 
         public IEnumerable<MessageSubscription> GetMessageSubscriptions() => _messageSubscriptions.Values;
 
-        public void SubcribeToMessage<TMessage, TMessageHandler>(Dictionary<string, string> messageProperties = null)
+        public void SubcribeToMessage<TMessage, TMessageHandler>(Dictionary<string, string>? messageProperties = null)
             where TMessage : IMessage
             where TMessageHandler : IMessageHandler<TMessage>
         {

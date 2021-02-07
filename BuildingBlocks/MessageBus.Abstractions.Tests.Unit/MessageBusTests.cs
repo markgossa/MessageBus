@@ -118,6 +118,26 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.Equal(aircraftId, mockAircraftTakenOffHandler.AircraftId);
             Assert.Equal(1, mockAircraftTakenOffHandler.MessageCount);
         }
+        
+        [Fact]
+        public async Task ThrowsIfMessageHandlerNotFound()
+        {
+            var sut = new MessageBus(_mockMessageHandlerResolver.Object,
+                _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object);
+
+            var aircraftId = Guid.NewGuid().ToString();
+            var messageId = Guid.NewGuid().ToString();
+            var args = new MessageReceivedEventArgs(BuildAircraftLandedMessage(aircraftId),
+                new object(), new Dictionary<string, string> { { "MessageType", nameof(AircraftLanded) } })
+            {
+                MessageId = messageId
+            };
+
+            var ex = await Assert.ThrowsAsync<MessageHandlerNotFoundException>(async () => await sut.OnMessageReceived(args));
+
+            Assert.Contains(messageId, ex.Message);
+            _mockMessageHandlerResolver.Verify(m => m.Resolve(nameof(AircraftLanded)), Times.Once);
+        }
 
         [Fact]
         public async Task ThrowsCorrectExcepetionWhenErrorProcessingMessage()
@@ -170,6 +190,16 @@ namespace MessageBus.Abstractions.Tests.Unit
             _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>();
 
             _mockMessageHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(null), Times.Once);
+        }
+        
+        [Fact]
+        public void SubscribesToMessagesWithCustomProperties()
+        {
+            var messageProperties = new Dictionary<string, string>();
+            _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(messageProperties);
+
+            _mockMessageHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(messageProperties), 
+                Times.Once);
         }
     }
 }
