@@ -261,7 +261,55 @@ namespace MessageBusWithHealthCheck.Example
 
 ### Change the default property names (MessageType and MessageVersion)
 
-If using Azure Service Bus, the `AzureServiceBusAdminClient` is used to create and configure the subscription. By default, the message property that determines the message type is called `MessageType` and the property that determines the message version is called `MessageVersion` however these can be configured by using the `AzureServiceBusAdminClient` constructor which takes `AzureServiceBusAdminClientOptions` as an optional parameter.
+If using Azure Service Bus, the `AzureServiceBusAdminClient` is used to create and configure the subscription. By default, the message property that determines the message type is called `MessageType` and the property that determines the message version is called `MessageVersion` however these can be configured by passing `MessageBusOptions` into `AddMessageBus()`.
+
+```csharp
+using MessageBus.Abstractions;
+using MessageBus.Example.Events;
+using MessageBus.Example.Handlers;
+using MessageBus.Extensions.Microsoft.DependencyInjection;
+using MessageBus.Microsoft.ServiceBus;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace MessageBus.Example
+{
+    public class Startup
+    {
+        public static IConfiguration Configuration { get; private set; }
+
+        public static ServiceProvider Initialize()
+        {
+            BuildConfiguration();
+            return ConfigureServices();
+        }
+
+        private static void BuildConfiguration()
+            => Configuration = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddUserSecrets<Program>()
+                .Build();
+
+        private static ServiceProvider ConfigureServices()
+        {
+            var options = new MessageBusOptions
+            {
+                MessageTypePropertyName = "MyMessageType",
+                MessageVersionPropertyName = "MyMessageVersion"
+            };
+
+            var services = new ServiceCollection();
+            services.AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
+                            Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
+                            Configuration["ServiceBus:TenantId"]))
+                            Configuration["ServiceBus:TenantId"]), options)
+                        .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
+            
+            return services.BuildServiceProvider();
+        }
+    }
+}
+```
 
 ### Using custom message properties for subscription filters
 

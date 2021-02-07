@@ -1,7 +1,6 @@
 using MessageBus.Abstractions;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
@@ -35,13 +34,13 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             };
 
             var subscription = nameof(UpdatesRulesCustomMessageIdentifierAsync);
-            var options = new AzureServiceBusAdminClientOptions
+            var options = new MessageBusOptions
             {
                 MessageTypePropertyName = messagePropertyName
             };
 
-            await new AzureServiceBusAdminClient(_connectionString, _topic, subscription, options)
-                .ConfigureAsync(messageSubscriptions);
+            await new AzureServiceBusAdminClient(_connectionString, _topic, subscription)
+                .ConfigureAsync(messageSubscriptions, options);
 
             await AssertSubscriptionRules(typeof(AircraftLanded), subscription, messagePropertyName);
             DeleteSubscriptionAsync(nameof(UpdatesRulesCustomMessageIdentifierAsync)).Wait();
@@ -94,12 +93,12 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             };
 
             var subscription = nameof(UpdatesRulesWithMessageVersionCustomPropertyAsync);
-            var options = new AzureServiceBusAdminClientOptions
+            var options = new MessageBusOptions
             {
                 MessageVersionPropertyName = messageVersionPropertyName
             };
             
-            await new AzureServiceBusAdminClient(_hostname, _topic, subscription, _tenantId, options).ConfigureAsync(messageSubscriptions);
+            await new AzureServiceBusAdminClient(_hostname, _topic, subscription, _tenantId).ConfigureAsync(messageSubscriptions, options);
 
             await AssertSubscriptionRules(typeof(Models.V2.AircraftLanded), subscription, "MessageType", messageVersionPropertyName);
             await AssertSubscriptionRules(typeof(AircraftTakenOff), subscription, "MessageType", messageVersionPropertyName);

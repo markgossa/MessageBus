@@ -15,15 +15,17 @@ namespace MessageBus.Abstractions
         private readonly IMessageBusAdminClient _messageBusAdminClient;
         private readonly IMessageBusClient _messageBusClient;
         private readonly string _messageTypeProperty;
+        private readonly MessageBusOptions? _messageBusOptions;
 
         public MessageBus(IMessageHandlerResolver messageHandlerResolver,
             IMessageBusAdminClient messageBusAdmin, IMessageBusClient messageBusClient, 
-            MessageBusOptions? messageBusSettings = null)
+            MessageBusOptions? messageBusOptions = null)
         {
             _messageHandlerResolver = messageHandlerResolver;
             _messageBusAdminClient = messageBusAdmin;
             _messageBusClient = messageBusClient;
-            _messageTypeProperty = GetMessageTypeProperty(messageBusSettings!);
+            _messageBusOptions = messageBusOptions;
+            _messageTypeProperty = GetMessageTypeProperty(messageBusOptions!);
         }
 
         public async Task StartAsync()
@@ -36,7 +38,8 @@ namespace MessageBus.Abstractions
         public async Task ConfigureAsync()
         {
             _messageHandlerResolver.Initialize();
-            await _messageBusAdminClient.ConfigureAsync(_messageHandlerResolver.GetMessageSubscriptions());
+            await _messageBusAdminClient.ConfigureAsync(_messageHandlerResolver.GetMessageSubscriptions(),
+                _messageBusOptions);
         }
 
         public async Task DeadLetterMessageAsync(object message, string? reason = null) 
@@ -92,10 +95,10 @@ namespace MessageBus.Abstractions
         internal async Task OnErrorMessageReceived(MessageErrorReceivedEventArgs args)
             => await Task.Run(() => throw new MessageReceivedException(args.Exception));
 
-        private static string GetMessageTypeProperty(MessageBusOptions messageBusSettings)
-            => string.IsNullOrWhiteSpace(messageBusSettings?.MessageTypeProperty)
+        private static string GetMessageTypeProperty(MessageBusOptions messageBusOptions)
+            => string.IsNullOrWhiteSpace(messageBusOptions?.MessageTypePropertyName)
                 ? _defaultMessageTypeProperty
-                : messageBusSettings.MessageTypeProperty;
+                : messageBusOptions.MessageTypePropertyName;
 
         private static Type GetMessageTypeFromHandler(object handler)
             => handler.GetType().GetInterfaces()

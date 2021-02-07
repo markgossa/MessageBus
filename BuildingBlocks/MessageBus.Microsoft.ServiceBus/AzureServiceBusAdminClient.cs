@@ -1,7 +1,6 @@
 ﻿using Azure.Identity;
 using Azure.Messaging.ServiceBus.Administration;
 using MessageBus.Abstractions;
-using Microsoft.Extensions.Azure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,36 +13,53 @@ namespace MessageBus.Microsoft.ServiceBus
     {
         private const string _defaultMessageTypePropertyName = "MessageType";
         private const string _defaultMessageVersionPropertyName = "MessageVersion";
-        private readonly string _connectionString;
-        private readonly string _hostName;
+        private readonly string? _connectionString;
+        private readonly string? _hostName;
         private readonly string _topic;
         private readonly string _subscription;
-        private readonly string _messageTypePropertyName;
-        private readonly string _messageVersionPropertyName;
+        private string? _messageTypePropertyName;
+        private string? _messageVersionPropertyName;
         private readonly ServiceBusAdministrationClient _serviceBusAdminClient;
-        private readonly string _tenantId;
+        private readonly string? _tenantId;
 
-        public AzureServiceBusAdminClient(string connectionString, string topic, string subscription,
-            AzureServiceBusAdminClientOptions options = null)
+        public AzureServiceBusAdminClient(string connectionString, string topic, string subscription)
         {
             _connectionString = connectionString;
             _topic = topic;
             _subscription = subscription;
-            _messageTypePropertyName = options?.MessageTypePropertyName ?? _defaultMessageTypePropertyName;
-            _messageVersionPropertyName = options?.MessageVersionPropertyName ?? _defaultMessageVersionPropertyName;
             _serviceBusAdminClient = BuildServiceBusAdminClient();
         }
         
         public AzureServiceBusAdminClient(string hostName, string topic, string subscription,
-            string tenantId, AzureServiceBusAdminClientOptions options = null)
+            string tenantId)
         {
             _hostName = hostName;
             _topic = topic;
             _subscription = subscription;
             _tenantId = tenantId;
+            _serviceBusAdminClient = BuildServiceBusAdminClient();
+        }
+
+        public async Task ConfigureAsync(IEnumerable<MessageSubscription> messageSubscriptions, 
+            MessageBusOptions? options = null)
+        {
             _messageTypePropertyName = options?.MessageTypePropertyName ?? _defaultMessageTypePropertyName;
             _messageVersionPropertyName = options?.MessageVersionPropertyName ?? _defaultMessageVersionPropertyName;
-            _serviceBusAdminClient = BuildServiceBusAdminClient();
+            await CreateSubscriptionAsync();
+            await UpdateRulesAsync(messageSubscriptions);
+        }
+
+        public async Task<bool> CheckHealthAsync()
+        {
+            try
+            {
+                var subscription = await _serviceBusAdminClient.GetSubscriptionAsync(_topic, _subscription);
+                return subscription.Value is not null;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private ServiceBusAdministrationClient BuildServiceBusAdminClient()
@@ -56,12 +72,6 @@ namespace MessageBus.Microsoft.ServiceBus
             return string.IsNullOrEmpty(_tenantId)
                 ? new ServiceBusAdministrationClient(_connectionString)
                 : new ServiceBusAdministrationClient(_hostName, new DefaultAzureCredential(options));
-        }
-
-        public async Task ConfigureAsync(IEnumerable<MessageSubscription> messageSubscriptions)
-        {
-            await CreateSubscriptionAsync();
-            await UpdateRulesAsync(messageSubscriptions);
         }
 
         private async Task CreateSubscriptionAsync()
@@ -79,19 +89,6 @@ namespace MessageBus.Microsoft.ServiceBus
 
             await DeleteInvalidRulesAsync(newRules, existingRules);
             await AddNewRulesAsync(newRules, existingRules);
-        }
-
-        public async Task<bool> CheckHealthAsync()
-        {
-            try
-            {
-                var subscription = await _serviceBusAdminClient.GetSubscriptionAsync(_topic, _subscription);
-                return subscription.Value is not null;
-            }
-            catch
-            {
-                return false;
-            }
         }
 
         private List<CreateRuleOptions> BuildListOfNewRules(IEnumerable<MessageSubscription> messageSubscriptions)
@@ -171,7 +168,7 @@ namespace MessageBus.Microsoft.ServiceBus
 
         private async Task<bool> SubscriptionExistsAsync()
         {
-            SubscriptionProperties subscription = null;
+            SubscriptionProperties? subscription = null;
             try
             {
                 subscription = (await _serviceBusAdminClient.GetSubscriptionAsync(_topic, _subscription)).Value;

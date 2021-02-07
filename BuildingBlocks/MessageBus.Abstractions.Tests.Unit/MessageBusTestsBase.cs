@@ -11,7 +11,7 @@ namespace MessageBus.Abstractions.Tests.Unit
     public class MessageBusTestsBase
     {
         protected readonly Mock<IMessageHandlerResolver> _mockMessageHandlerResolver = new Mock<IMessageHandlerResolver>();
-        protected readonly List<MessageSubscription> _messasgeSubscriptions = new List<MessageSubscription>
+        protected readonly List<MessageSubscription> _messageSubscriptions = new List<MessageSubscription>
         {
             new MessageSubscription(typeof(AircraftLandedHandler), typeof(AircraftTakenOffHandler))
         };
@@ -22,7 +22,7 @@ namespace MessageBus.Abstractions.Tests.Unit
 
         protected MessageBusTestsBase()
         {
-            _mockMessageHandlerResolver.Setup(m => m.GetMessageSubscriptions()).Returns(_messasgeSubscriptions);
+            _mockMessageHandlerResolver.Setup(m => m.GetMessageSubscriptions()).Returns(_messageSubscriptions);
             _sut = new MessageBus(_mockMessageHandlerResolver.Object, _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object);
         }
 

@@ -16,7 +16,20 @@ namespace MessageBus.Abstractions.Tests.Unit
             await _sut.ConfigureAsync();
 
             _mockMessageHandlerResolver.Verify(m => m.Initialize(), Times.Once);
-            _mockMessageBusAdminClient.Verify(m => m.ConfigureAsync(_messasgeSubscriptions), Times.Once);
+            _mockMessageBusAdminClient.Verify(m => m.ConfigureAsync(_messageSubscriptions, null), Times.Once);
+        }
+        
+        [Fact]
+        public async Task ConfiguresMessageBusWithOptionsAsync()
+        {
+            const string messageTypePropertyName = "MyMessageType";
+            var sut = new MessageBus(_mockMessageHandlerResolver.Object, _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object,
+                new MessageBusOptions { MessageTypePropertyName = messageTypePropertyName });
+            await sut.ConfigureAsync();
+
+            _mockMessageHandlerResolver.Verify(m => m.Initialize(), Times.Once);
+            _mockMessageBusAdminClient.Verify(m => m.ConfigureAsync(_messageSubscriptions, It.Is<MessageBusOptions>(m => 
+                m.MessageTypePropertyName == messageTypePropertyName)), Times.Once);
         }
 
         [Fact]
@@ -106,7 +119,7 @@ namespace MessageBus.Abstractions.Tests.Unit
                 .Returns(mockAircraftTakenOffHandler);
             var sut = new MessageBus(_mockMessageHandlerResolver.Object,
                 _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object, new MessageBusOptions
-                { MessageTypeProperty = "MessageTypeIdentifier" });
+                { MessageTypePropertyName = "MessageTypeIdentifier" });
 
             var aircraftId = Guid.NewGuid().ToString();
             var args = new MessageReceivedEventArgs(BuildAircraftLandedMessage(aircraftId),
