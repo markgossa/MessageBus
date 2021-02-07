@@ -76,20 +76,21 @@ Console.WriteLine($"Raw message as text: {context.Body}");
 
 ### Subscribe to messages and add MessageBus
 
-When starting up, MessageBus will generate a list of the different message types and message handlers then create the subscription and the subscription filters (correlation filters for performance) if they do not already exist. This is idempotent so that redeployments or rolling deployments do not cause downtime.
+When starting up, MessageBus will generate a list of the different message types and message handlers then create the subscription and the subscription filters if they do not already exist. This is idempotent so that redeployments or rolling deployments do not cause downtime.
 
 This can be done using the `IServiceCollection` extension methods in conjunction with .NET Core/.NET 5 Dependency Injection as below:
 
 ```csharp
-private static ServiceProvider ConfigureServices()
-{
-    return new ServiceCollection()
-        .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>()
-        .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
-            Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
-            Configuration["ServiceBus:TenantId"]))
-        .BuildServiceProvider();
-}
+        private static ServiceProvider ConfigureServices()
+        {
+            var services = new ServiceCollection();
+            services.AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
+                            Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
+                            Configuration["ServiceBus:TenantId"]))
+                        .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
+            
+            return services.BuildServiceProvider();
+        }
 ```
 
 ### Start listening for messages
@@ -146,7 +147,6 @@ using MessageBus.Microsoft.ServiceBus;
 using MessageBusWithHealthCheck.Example.Events;
 using MessageBusWithHealthCheck.Example.Handlers;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -165,16 +165,23 @@ namespace MessageBusWithHealthCheck.Example
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>()
+            services.AddHostedService<MessageBusHostedService>()
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
-                    Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
-                    Configuration["ServiceBus:TenantId"]))
-                .AddHostedService<MessageBusHostedService>();
+                        Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
+                        Configuration["ServiceBus:TenantId"]))
+                    .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
+            services.AddHealthChecks().AddCheck<MessageBusHealthCheck>("MessageBus");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app)
         {
+            app.UseRouting();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHealthChecks("/health");
+            });
         }
     }
 }
@@ -212,7 +219,6 @@ using MessageBus.Microsoft.ServiceBus;
 using MessageBusWithHealthCheck.Example.Events;
 using MessageBusWithHealthCheck.Example.Handlers;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -231,16 +237,16 @@ namespace MessageBusWithHealthCheck.Example
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>()
+            services.AddHostedService<MessageBusHostedService>()
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
-                    Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
-                    Configuration["ServiceBus:TenantId"]))
-                .AddHostedService<MessageBusHostedService>();
-                .AddHealthChecks().AddCheck<MessageBusHealthCheck>("MessageBus");
+                        Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
+                        Configuration["ServiceBus:TenantId"]))
+                    .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
+            services.AddHealthChecks().AddCheck<MessageBusHealthCheck>("MessageBus");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app)
         {
             app.UseRouting();
 
@@ -253,9 +259,71 @@ namespace MessageBusWithHealthCheck.Example
 }
 ```
 
+### Change the default property names (MessageType and MessageVersion)
+
+If using Azure Service Bus, the `AzureServiceBusAdminClient` is used to create and configure the subscription. By default, the message property that determines the message type is called `MessageType` and the property that determines the message version is called `MessageVersion` however these can be configured by using the `AzureServiceBusAdminClient` constructor which takes `AzureServiceBusAdminClientOptions` as an optional parameter.
+
+### Using custom message properties for subscription filters
+
+To do this, simply create a `Dictionary<string, string>` to hold the custom message subscription properties and then pass this to the `SubscribeToMessage()` method. Note that specifying custom message properties will mean that the defaults of `MessageType` and `MessageVersion` will not be added so you will need to add these yourself.
+
+```csharp
+private static ServiceProvider ConfigureServices()
+{
+    var services = new ServiceCollection();
+
+    var customMessageSubscriptionProperties = new Dictionary<string, string>
+    {
+        { "AircraftType", "Commercial" },
+        { "MessageType", nameof(AircraftTakenOff) },
+        { "MessageVersion", "1" }
+    };
+
+    services.AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
+                    Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
+                    Configuration["ServiceBus:TenantId"]))
+                .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>(customMessageSubscriptionProperties);
+    
+    return services.BuildServiceProvider();
+}
+```
+
+## Azure Service Bus
+
+To get started with integrating with Azure Service Bus, use the `AzureServiceBusClientBuilder` which will be compatible with either connection string authentication or Managed Identity.
+
+### Getting started (Managed Identity)
+
+```csharp
+        private static ServiceProvider ConfigureServices()
+        {
+            var services = new ServiceCollection();
+            services.AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
+                            Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
+                            Configuration["ServiceBus:TenantId"]))
+                        .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
+            
+            return services.BuildServiceProvider();
+        }
+```
+
+### Getting started (Connection String)
+
+```csharp
+        private static ServiceProvider ConfigureServices()
+        {
+            var services = new ServiceCollection();
+            services.AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:ConnectionString"],
+                            Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"]))
+                        .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
+            
+            return services.BuildServiceProvider();
+        }
+```
+
 ### Configuring Service Bus Processor options
 
-You can configure options such as `PrefetchCount` and `MaxConcurrentCalls` by passing `ServiceBusProcessorOptions` as a parameter when building the `AzureServiceBusClient`:
+You can configure options such as `PrefetchCount` and `MaxConcurrentCalls` by using another override on the `AddMessageBus()` method which takes an `AzureServiceBusAdminClient` and `AzureServiceBusClient`. You then pass `ServiceBusProcessorOptions` as a parameter when building the `AzureServiceBusClient`:
 
 ```csharp
 private static ServiceProvider ConfigureServices()
@@ -280,10 +348,6 @@ private static ServiceProvider ConfigureServices()
         .BuildServiceProvider();
 }
 ```
-
-### Change the default property names (MessageType and MessageVersion)
-
-If using Azure Service Bus, the `AzureServiceBusAdminClient` is used to create and configure the subscription. By default, the message property that determines the message type is called `MessageType` and the property that determines the message version is called `MessageVersion` however these can be configured by using the `AzureServiceBusAdminClient` constructor which takes `AzureServiceBusAdminClientOptions` as an optional parameter.
 
 ## Programming model
 

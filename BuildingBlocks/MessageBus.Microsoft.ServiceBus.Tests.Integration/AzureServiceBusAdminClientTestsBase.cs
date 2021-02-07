@@ -33,8 +33,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             _connectionString = Configuration["ConnectionString"];
         }
 
-        protected async Task AssertSubscriptionRules(Type[] messageTypes, string subscription, 
-            string messageTypePropertyName = "MessageType", string messageVersionPropertyName = "MessageVersion")
+        protected async Task AssertSubscriptionRules(Type messageType, string subscription, 
+            string messageTypePropertyName = "MessageType", string messageVersionPropertyName = "MessageVersion",
+            Dictionary<string, string> customProperties = null)
         {
             var asyncRules = _serviceBusAdminClient.GetRulesAsync(_topic, subscription);
 
@@ -44,19 +45,22 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 actualRules.Add(rule);
             }
 
-            Assert.Equal(messageTypes.Length, actualRules.Count);
-            foreach (var messageType in messageTypes)
-            {
-                var expectedCorrelationRuleFilter = BuildCorrelationRuleFilter(messageTypePropertyName, messageVersionPropertyName, 
-                    messageType);
-                var actualRulesForMessageType = actualRules.Where(r => r.Name == messageType.Name);
+            Assert.Single(actualRules.Where(r => r.Name == messageType.Name));
+            var expectedCorrelationRuleFilter = BuildCorrelationRuleFilter(messageTypePropertyName, messageVersionPropertyName, 
+                messageType, customProperties);
+            var actualRulesForMessageType = actualRules.Where(r => r.Name == messageType.Name);
 
-                Assert.Single(actualRulesForMessageType);
-                Assert.Equal(expectedCorrelationRuleFilter, actualRulesForMessageType.First().Filter);
-            }
+            Assert.Single(actualRulesForMessageType);
+            Assert.Equal(expectedCorrelationRuleFilter, actualRulesForMessageType.First().Filter);
         }
 
-        private static CorrelationRuleFilter BuildCorrelationRuleFilter(string messageTypePropertyName, 
+        private static CorrelationRuleFilter BuildCorrelationRuleFilter(string messageTypePropertyName, string messageVersionPropertyName, Type messageType,
+            Dictionary<string, string> customProperties = null)
+                => customProperties is null || customProperties.Count == 0
+                    ? BuildStandardCorrelationRuleFilter(messageTypePropertyName, messageVersionPropertyName, messageType)
+                    : BuildCustomCorrelationRuleFilter(customProperties);
+
+        private static CorrelationRuleFilter BuildStandardCorrelationRuleFilter(string messageTypePropertyName, 
             string messageVersionPropertyName, Type messageType)
         {
             var filter = new CorrelationRuleFilter();
@@ -68,6 +72,17 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 filter.ApplicationProperties.Add(messageVersionPropertyName, messageVersion.Version);
             }
             
+            return filter;
+        }
+
+        private static CorrelationRuleFilter BuildCustomCorrelationRuleFilter(Dictionary<string, string> customProperties)
+        {
+            var filter = new CorrelationRuleFilter();
+            foreach (var property in customProperties)
+            {
+                filter.ApplicationProperties.Add(property.Key, property.Value);
+            }
+
             return filter;
         }
 

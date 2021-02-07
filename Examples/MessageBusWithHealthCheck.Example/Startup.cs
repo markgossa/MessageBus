@@ -3,7 +3,6 @@ using MessageBus.Microsoft.ServiceBus;
 using MessageBusWithHealthCheck.Example.Events;
 using MessageBusWithHealthCheck.Example.Handlers;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 

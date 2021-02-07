@@ -1,6 +1,7 @@
 ﻿using Azure.Identity;
 using Azure.Messaging.ServiceBus.Administration;
 using MessageBus.Abstractions;
+using Microsoft.Extensions.Azure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -73,7 +74,7 @@ namespace MessageBus.Microsoft.ServiceBus
 
         private async Task UpdateRulesAsync(IEnumerable<MessageSubscription> messageSubscriptions)
         {
-            var newRules = BuildListOfNewRules(messageSubscriptions.Select(m => m.MessageHandlerType));
+            var newRules = BuildListOfNewRules(messageSubscriptions);
             var existingRules = await GetExistingRulesAsync();
 
             await DeleteInvalidRulesAsync(newRules, existingRules);
@@ -93,17 +94,14 @@ namespace MessageBus.Microsoft.ServiceBus
             }
         }
 
-        private List<CreateRuleOptions> BuildListOfNewRules(IEnumerable<Type> messageHandlers)
+        private List<CreateRuleOptions> BuildListOfNewRules(IEnumerable<MessageSubscription> messageSubscriptions)
         {
             var newRules = new List<CreateRuleOptions>();
-            foreach (var messageHandler in messageHandlers)
+            foreach (var messageSubscription in messageSubscriptions)
             {
-                var messageType = GetMessageTypeFromHandler(messageHandler);
+                var messageType = messageSubscription.MessageType;
                 var filter = new CorrelationRuleFilter();
-
-                AddMessageTypeProperty(messageType, filter);
-                AddMessageVersionProperty(messageType, filter);
-
+                AddMessageFilterProperties(messageSubscription, messageType, filter);
                 newRules.Add(new CreateRuleOptions(messageType.Name, filter));
             }
 
@@ -137,6 +135,28 @@ namespace MessageBus.Microsoft.ServiceBus
             }
         }
 
+        private void AddMessageFilterProperties(MessageSubscription messageSubscription, Type messageType,
+            CorrelationRuleFilter filter)
+        {
+            if (messageSubscription.CustomSubscriptionFilterProperties.Count > 0)
+            {
+                AddCustomMessageProperties(messageSubscription, filter);
+            }
+            else
+            {
+                AddMessageTypeProperty(messageType, filter);
+                AddMessageVersionProperty(messageType, filter);
+            }
+        }
+
+        private static void AddCustomMessageProperties(MessageSubscription messageSubscription, CorrelationRuleFilter filter)
+        {
+            foreach (var property in messageSubscription.CustomSubscriptionFilterProperties)
+            {
+                filter.ApplicationProperties.Add(property.Key, property.Value);
+            }
+        }
+
         private void AddMessageTypeProperty(Type messageType, CorrelationRuleFilter filter)
             => filter.ApplicationProperties.Add(_messageTypePropertyName, messageType.Name);
 
@@ -160,12 +180,6 @@ namespace MessageBus.Microsoft.ServiceBus
             var subscriptionExists = subscription is not null;
             return subscriptionExists;
         }
-
-        private static Type GetMessageTypeFromHandler(Type handler)
-            => handler
-                .GetInterfaces()
-                .First(i => i.Name.Contains(typeof(IMessageHandler<>).Name))
-                .GenericTypeArguments.First();
 
         private static bool ExistingRuleIsValid(List<CreateRuleOptions> newRules, RuleProperties existingRule) => 
             newRules.Any(r => r.Name == existingRule.Name && r.Filter == existingRule.Filter);
