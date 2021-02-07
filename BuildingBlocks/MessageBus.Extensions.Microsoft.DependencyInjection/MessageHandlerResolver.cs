@@ -5,13 +5,13 @@ using System.Collections.Generic;
 
 namespace MessageBus.Extensions.Microsoft.DependencyInjection
 {
-    public class MessageBusHandlerResolver : IMessageBusHandlerResolver
+    public class MessageHandlerResolver : IMessageHandlerResolver
     {
         private readonly IServiceCollection _services;
         private ServiceProvider _serviceProvider;
         private readonly Dictionary<string, MessageSubscription> _messageSubscriptions = new Dictionary<string, MessageSubscription>();
 
-        public MessageBusHandlerResolver(IServiceCollection services)
+        public MessageHandlerResolver(IServiceCollection services)
         {
             _services = services;
         }

@@ -10,13 +10,13 @@ using Xunit;
 
 namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
 {
-    public class MessageBusHandlerResolverTests
+    public class MessageHandlerResolverTests
     {
         [Fact]
-        public void MessageBusHandlerResolverReturnsMessageHandlerInstanceForGivenMessageType()
+        public void MessageHandlerResolverReturnsMessageHandlerInstanceForGivenMessageType()
         {
             var services = new ServiceCollection();
-            var sut = new MessageBusHandlerResolver(services);
+            var sut = new MessageHandlerResolver(services);
             sut.SubcribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
             sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>();
             sut.Initialize();
@@ -31,9 +31,9 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
         }
         
         [Fact]
-        public void MessageBusHandlerResolverThrowsIfCannotFindMessageHandler()
+        public void MessageHandlerResolverThrowsIfCannotFindMessageHandler()
         {
-            var sut = new MessageBusHandlerResolver(new ServiceCollection());
+            var sut = new MessageHandlerResolver(new ServiceCollection());
             Assert.Throws<MessageHandlerNotFoundException>(() => sut.Resolve("UnknownMessage"));
         }
 
@@ -45,7 +45,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
                 { "AircraftType", "Commercial" }
             };
 
-            var sut = new MessageBusHandlerResolver(new ServiceCollection());
+            var sut = new MessageHandlerResolver(new ServiceCollection());
             sut.SubcribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
             sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(messageProperties);
             var messageSubscriptions = sut.GetMessageSubscriptions();

@@ -8,7 +8,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
         public static IMessageBus AddMessageBus(this IServiceCollection services, IMessageBusAdminClient messageBusAdmin, 
             IMessageBusClient messageBusClient)
         {
-            var messageBus = (IMessageBus)new Abstractions.MessageBus(new MessageBusHandlerResolver(services),
+            var messageBus = (IMessageBus)new Abstractions.MessageBus(new MessageHandlerResolver(services),
                 messageBusAdmin, messageBusClient);
             services.AddSingleton(messageBus);
 

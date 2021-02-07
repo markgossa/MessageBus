@@ -10,7 +10,7 @@ namespace MessageBus.Abstractions.Tests.Unit
 {
     public class MessageBusTestsBase
     {
-        protected readonly Mock<IMessageBusHandlerResolver> _mockMessageBusHandlerResolver = new Mock<IMessageBusHandlerResolver>();
+        protected readonly Mock<IMessageHandlerResolver> _mockMessageHandlerResolver = new Mock<IMessageHandlerResolver>();
         protected readonly List<MessageSubscription> _messasgeSubscriptions = new List<MessageSubscription>
         {
             new MessageSubscription(typeof(AircraftLandedHandler), typeof(AircraftTakenOffHandler))
@@ -22,8 +22,8 @@ namespace MessageBus.Abstractions.Tests.Unit
 
         protected MessageBusTestsBase()
         {
-            _mockMessageBusHandlerResolver.Setup(m => m.GetMessageSubscriptions()).Returns(_messasgeSubscriptions);
-            _sut = new MessageBus(_mockMessageBusHandlerResolver.Object, _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object);
+            _mockMessageHandlerResolver.Setup(m => m.GetMessageSubscriptions()).Returns(_messasgeSubscriptions);
+            _sut = new MessageBus(_mockMessageHandlerResolver.Object, _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object);
         }
 
         protected static BinaryData BuildAircraftTakenOffMessage(string aircraftId)

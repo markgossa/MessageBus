@@ -10,16 +10,16 @@ namespace MessageBus.Abstractions
     public class MessageBus : IMessageBus
     {
         private const string _defaultMessageTypeProperty = "MessageType";
-        private readonly IMessageBusHandlerResolver _messageBusHandlerResolver;
+        private readonly IMessageHandlerResolver _messageHandlerResolver;
         private readonly IMessageBusAdminClient _messageBusAdminClient;
         private readonly IMessageBusClient _messageBusClient;
         private readonly string _messageTypeProperty;
 
-        public MessageBus(IMessageBusHandlerResolver messageBusHandlerResolver,
+        public MessageBus(IMessageHandlerResolver messageHandlerResolver,
             IMessageBusAdminClient messageBusAdmin, IMessageBusClient messageBusClient, 
             MessageBusSettings? messageBusSettings = null)
         {
-            _messageBusHandlerResolver = messageBusHandlerResolver;
+            _messageHandlerResolver = messageHandlerResolver;
             _messageBusAdminClient = messageBusAdmin;
             _messageBusClient = messageBusClient;
             _messageTypeProperty = GetMessageTypeProperty(messageBusSettings!);
@@ -34,8 +34,8 @@ namespace MessageBus.Abstractions
 
         public async Task ConfigureAsync()
         {
-            _messageBusHandlerResolver.Initialize();
-            await _messageBusAdminClient.ConfigureAsync(_messageBusHandlerResolver.GetMessageSubscriptions());
+            _messageHandlerResolver.Initialize();
+            await _messageBusAdminClient.ConfigureAsync(_messageHandlerResolver.GetMessageSubscriptions());
         }
 
         public async Task DeadLetterMessageAsync(object message, string? reason = null) 
@@ -49,7 +49,7 @@ namespace MessageBus.Abstractions
             where TMessage : IMessage
             where TMessageHandler : IMessageHandler<TMessage>
         {
-            _messageBusHandlerResolver.SubcribeToMessage<TMessage, TMessageHandler>();
+            _messageHandlerResolver.SubcribeToMessage<TMessage, TMessageHandler>();
 
             return this;
         }
@@ -58,7 +58,7 @@ namespace MessageBus.Abstractions
         {
             const string handlerHandleMethodName = "HandleAsync";
 
-            var handler = _messageBusHandlerResolver.Resolve(args.MessageProperties[_messageTypeProperty]);
+            var handler = _messageHandlerResolver.Resolve(args.MessageProperties[_messageTypeProperty]);
             var handlerTask = handler?.GetType()?.GetMethod(handlerHandleMethodName)?.Invoke(handler, new object[] { BuildMessageContext(args, handler) });
             await (handlerTask as Task);
         }

@@ -51,11 +51,11 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             var aircraftlandedEvent = await CreateSubscriptionAndSendAircraftLandedEvent(nameof(DeadLettersMessageWithoutReasonAsync));
             var aircraftLandedHandler = new AircraftLandedHandler();
-            var mockMessageBusHandlerResolver = new Mock<IMessageBusHandlerResolver>();
-            mockMessageBusHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded))).Returns(aircraftLandedHandler);
+            var mockMessageHandlerResolver = new Mock<IMessageHandlerResolver>();
+            mockMessageHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded))).Returns(aircraftLandedHandler);
 
             var sut = new AzureServiceBusClient(_hostname, _topic, nameof(DeadLettersMessageWithoutReasonAsync), _tenantId);
-            var messageBus = new Abstractions.MessageBus(mockMessageBusHandlerResolver.Object, new Mock<IMessageBusAdminClient>().Object,
+            var messageBus = new Abstractions.MessageBus(mockMessageHandlerResolver.Object, new Mock<IMessageBusAdminClient>().Object,
                 sut);
 
             await messageBus.StartAsync();
@@ -71,11 +71,11 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             const string deadLetterReason = "Json Serliazation issue";
             var aircraftlandedEvent = await CreateSubscriptionAndSendAircraftLandedEvent(nameof(DeadLettersMessageWithReasonAsync));
             var aircraftLandedHandler = new AircraftLandedHandler(deadLetterReason);
-            var mockMessageBusHandlerResolver = new Mock<IMessageBusHandlerResolver>();
-            mockMessageBusHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded))).Returns(aircraftLandedHandler);
+            var mockMessageHandlerResolver = new Mock<IMessageHandlerResolver>();
+            mockMessageHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded))).Returns(aircraftLandedHandler);
 
             var sut = new AzureServiceBusClient(_hostname, _topic, nameof(DeadLettersMessageWithReasonAsync), _tenantId);
-            var messageBus = new Abstractions.MessageBus(mockMessageBusHandlerResolver.Object, new Mock<IMessageBusAdminClient>().Object,
+            var messageBus = new Abstractions.MessageBus(mockMessageHandlerResolver.Object, new Mock<IMessageBusAdminClient>().Object,
                 sut);
 
             await messageBus.StartAsync();

@@ -2,7 +2,7 @@
 
 namespace MessageBus.Abstractions
 {
-    public interface IMessageBusHandlerResolver
+    public interface IMessageHandlerResolver
     {
         void SubcribeToMessage<TMessage, TMessageHandler>(Dictionary<string, string> messageProperties = null)
             where TMessage : IMessage
