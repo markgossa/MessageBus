@@ -54,7 +54,7 @@ namespace MessageBus.Microsoft.ServiceBus
             try
             {
                 var subscription = await _serviceBusAdminClient.GetSubscriptionAsync(_topic, _subscription);
-                return subscription.Value is not null;
+                return subscription.Value != null;
             }
             catch
             {
@@ -160,7 +160,7 @@ namespace MessageBus.Microsoft.ServiceBus
         private void AddMessageVersionProperty(Type messageType, CorrelationRuleFilter filter)
         {
             var messageVersion = messageType.GetCustomAttribute<MessageVersionAttribute>();
-            if (messageVersion is not null)
+            if (messageVersion != null)
             {
                 filter.ApplicationProperties.Add(_messageVersionPropertyName, messageVersion.Version);
             }
@@ -174,7 +174,7 @@ namespace MessageBus.Microsoft.ServiceBus
                 subscription = (await _serviceBusAdminClient.GetSubscriptionAsync(_topic, _subscription)).Value;
             }
             catch { }
-            var subscriptionExists = subscription is not null;
+            var subscriptionExists = subscription != null;
             return subscriptionExists;
         }
 
