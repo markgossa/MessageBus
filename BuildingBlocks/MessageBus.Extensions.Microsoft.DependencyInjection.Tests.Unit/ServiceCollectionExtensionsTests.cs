@@ -21,6 +21,20 @@ namespace ServiceBus1.Tests.Unit
             Assert.NotNull(services.BuildServiceProvider().GetService<IMessageBus>());
             Assert.IsAssignableFrom<IMessageBus>(messageBus);
         }
+        
+        [Fact]
+        public void AddMessageBusCreatesAndRegistersIMessageBusWithOptions()
+        {
+            var services = new ServiceCollection().AddSingleton<IService1, Service1>();
+            var mockMessageBusAdmin = new Mock<IMessageBusAdminClient>();
+            var mockMessageBusClient = new Mock<IMessageBusClient>();
+
+            var messageBus = services.AddMessageBus(mockMessageBusAdmin.Object, mockMessageBusClient.Object,
+                new MessageBusOptions());
+
+            Assert.NotNull(services.BuildServiceProvider().GetService<IMessageBus>());
+            Assert.IsAssignableFrom<IMessageBus>(messageBus);
+        }
 
         [Fact]
         public void AddMessageBusCreatesAndRegistersIMessageBusUsingIMessageBusClientBuilder()
@@ -29,6 +43,18 @@ namespace ServiceBus1.Tests.Unit
 
             var services = new ServiceCollection().AddSingleton<IService1, Service1>();
             var messageBus = services.AddMessageBus(mockMessageBusClientBuilder.Object);
+
+            Assert.NotNull(services.BuildServiceProvider().GetService<IMessageBus>());
+            Assert.IsAssignableFrom<IMessageBus>(messageBus);
+        }
+        
+        [Fact]
+        public void AddMessageBusCreatesAndRegistersIMessageBusUsingIMessageBusClientBuilderWithOptions()
+        {
+            var mockMessageBusClientBuilder = new Mock<IMessageBusClientBuilder>();
+
+            var services = new ServiceCollection().AddSingleton<IService1, Service1>();
+            var messageBus = services.AddMessageBus(mockMessageBusClientBuilder.Object, new MessageBusOptions());
 
             Assert.NotNull(services.BuildServiceProvider().GetService<IMessageBus>());
             Assert.IsAssignableFrom<IMessageBus>(messageBus);

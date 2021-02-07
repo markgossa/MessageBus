@@ -105,7 +105,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             _mockMessageHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded)))
                 .Returns(mockAircraftTakenOffHandler);
             var sut = new MessageBus(_mockMessageHandlerResolver.Object,
-                _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object, new MessageBusSettings
+                _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object, new MessageBusOptions
                 { MessageTypeProperty = "MessageTypeIdentifier" });
 
             var aircraftId = Guid.NewGuid().ToString();
