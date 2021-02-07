@@ -110,18 +110,6 @@ namespace MessageBus.Microsoft.ServiceBus
             return newRules;
         }
 
-        private void AddMessageTypeProperty(Type messageType, CorrelationRuleFilter filter) 
-            => filter.ApplicationProperties.Add(_messageTypePropertyName, messageType.Name);
-
-        private void AddMessageVersionProperty(Type messageType, CorrelationRuleFilter filter)
-        {
-            var messageVersion = messageType.GetCustomAttribute<MessageVersionAttribute>();
-            if (messageVersion is not null)
-            {
-                filter.ApplicationProperties.Add(_messageVersionPropertyName, messageVersion.Version);
-            }
-        }
-
         private async Task<List<RuleProperties>> GetExistingRulesAsync()
         {
             var existingRules = new List<RuleProperties>();
@@ -146,6 +134,18 @@ namespace MessageBus.Microsoft.ServiceBus
             foreach (var newRule in newRules.Where(n => !NewRuleExists(existingRules, n)))
             {
                 await _serviceBusAdminClient.CreateRuleAsync(_topic, _subscription, newRule);
+            }
+        }
+
+        private void AddMessageTypeProperty(Type messageType, CorrelationRuleFilter filter)
+            => filter.ApplicationProperties.Add(_messageTypePropertyName, messageType.Name);
+
+        private void AddMessageVersionProperty(Type messageType, CorrelationRuleFilter filter)
+        {
+            var messageVersion = messageType.GetCustomAttribute<MessageVersionAttribute>();
+            if (messageVersion is not null)
+            {
+                filter.ApplicationProperties.Add(_messageVersionPropertyName, messageVersion.Version);
             }
         }
 

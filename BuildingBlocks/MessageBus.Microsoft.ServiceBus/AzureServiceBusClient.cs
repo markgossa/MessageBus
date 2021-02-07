@@ -37,13 +37,6 @@ namespace MessageBus.Microsoft.ServiceBus
             AddMessageHandlers();
         }
 
-        private void BuildServiceBusProcessor(ServiceBusClient serviceBusClient, string topic, 
-            string subscription, ServiceBusProcessorOptions serviceBusProcessorOptions) 
-                => _serviceBusProcessor = serviceBusProcessorOptions is null
-                    ? serviceBusClient.CreateProcessor(topic, subscription)
-                    : serviceBusClient.CreateProcessor(topic, subscription, serviceBusProcessorOptions);
-
-
         public void AddMessageHandler(Func<MessageReceivedEventArgs, Task> messageHandler)
             => _messageHandler = messageHandler;
 
@@ -53,6 +46,12 @@ namespace MessageBus.Microsoft.ServiceBus
         public async Task StartAsync() => await _serviceBusProcessor.StartProcessingAsync();
         
         public async Task StopAsync() => await _serviceBusProcessor.StopProcessingAsync();
+
+        private void BuildServiceBusProcessor(ServiceBusClient serviceBusClient, string topic,
+            string subscription, ServiceBusProcessorOptions serviceBusProcessorOptions)
+                => _serviceBusProcessor = serviceBusProcessorOptions is null
+                    ? serviceBusClient.CreateProcessor(topic, subscription)
+                    : serviceBusClient.CreateProcessor(topic, subscription, serviceBusProcessorOptions);
 
         private void AddMessageHandlers()
         {
