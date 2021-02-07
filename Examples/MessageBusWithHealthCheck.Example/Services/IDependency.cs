@@ -1,9 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System;
 
 namespace MessageBusWithHealthCheck.Example.Services
 {
     public interface IDependency
     {
-        Task WriteLineAfterDelay(string text);
+        void SaveMessageId(Guid messageId);
     }
 }

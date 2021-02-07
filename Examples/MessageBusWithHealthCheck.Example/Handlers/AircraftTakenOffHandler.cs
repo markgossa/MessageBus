@@ -9,11 +9,12 @@ namespace MessageBusWithHealthCheck.Example.Handlers
 {
     public class AircraftTakenOffHandler : IMessageHandler<AircraftTakenOff>
     {
-        private readonly IDependency _service;
+        private readonly IDependency _dependency;
+        private string _messageId;
 
-        public AircraftTakenOffHandler(IDependency service)
+        public AircraftTakenOffHandler(IDependency dependency)
         {
-            _service = service;
+            _dependency = dependency;
         }
 
         public async Task HandleAsync(IMessageContext<AircraftTakenOff> context)
@@ -47,7 +48,9 @@ namespace MessageBusWithHealthCheck.Example.Handlers
             }
 
             // Do stuff
-            await _service.WriteLineAfterDelay(context.MessageId);
+            await Task.Delay(TimeSpan.FromSeconds(3));
+            _messageId = context.MessageId;
+            _dependency.SaveMessageId(Guid.Parse(_messageId));
         }
     }
 }

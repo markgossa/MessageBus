@@ -1,14 +1,16 @@
 ﻿using System;
-using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 namespace MessageBusWithHealthCheck.Example.Services
 {
     public class SomeDependency : IDependency
     {
-        public async Task WriteLineAfterDelay(string text)
+        private readonly ConcurrentDictionary<Guid, Guid> _receivedMessages = new ConcurrentDictionary<Guid, Guid>();
+
+        public void SaveMessageId(Guid messageId)
         {
-            await Task.Delay(TimeSpan.FromSeconds(5));
-            Console.WriteLine(text);
+            Console.WriteLine(messageId);
+            _receivedMessages.TryAdd(messageId, messageId);
         }
     }
 }
