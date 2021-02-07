@@ -1,5 +1,6 @@
 ﻿using MessageBus.Abstractions;
 using MessageBusWithHealthCheck.Example.Events;
+using MessageBusWithHealthCheck.Example.Services;
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -8,6 +9,13 @@ namespace MessageBusWithHealthCheck.Example.Handlers
 {
     public class AircraftTakenOffHandler : IMessageHandler<AircraftTakenOff>
     {
+        private readonly IDependency _service;
+
+        public AircraftTakenOffHandler(IDependency service)
+        {
+            _service = service;
+        }
+
         public async Task HandleAsync(IMessageContext<AircraftTakenOff> context)
         {
             Console.WriteLine();
@@ -37,6 +45,9 @@ namespace MessageBusWithHealthCheck.Example.Handlers
                 await context.DeadLetterMessageAsync("Invalid message");
                 throw;
             }
+
+            // Do stuff
+            await _service.WriteLineAfterDelay(context.MessageId);
         }
     }
 }

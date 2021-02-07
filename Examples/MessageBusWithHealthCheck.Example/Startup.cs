@@ -2,6 +2,7 @@ using MessageBus.Extensions.Microsoft.DependencyInjection;
 using MessageBus.Microsoft.ServiceBus;
 using MessageBusWithHealthCheck.Example.Events;
 using MessageBusWithHealthCheck.Example.Handlers;
+using MessageBusWithHealthCheck.Example.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +23,7 @@ namespace MessageBusWithHealthCheck.Example
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddHostedService<MessageBusHostedService>()
+                .AddSingleton<IDependency, SomeDependency>()
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
                         Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
                         Configuration["ServiceBus:TenantId"]))
