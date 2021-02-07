@@ -32,8 +32,27 @@ namespace MessageBus.Abstractions
             _messageBusClient.AddErrorMessageHandler(OnErrorMessageReceived);
         }
 
-        public async Task ConfigureAsync() 
-            => await _messageBusAdminClient.ConfigureAsync(_messageBusHandlerResolver.GetMessageHandlers());
+        public async Task ConfigureAsync()
+        {
+            _messageBusHandlerResolver.Initialize();
+            await _messageBusAdminClient.ConfigureAsync(_messageBusHandlerResolver.GetMessageSubscriptions());
+        }
+
+        public async Task DeadLetterMessageAsync(object message, string? reason = null) 
+            => await _messageBusClient.DeadLetterMessageAsync(message, reason);
+
+        public async Task<bool> CheckHealthAsync() => await _messageBusAdminClient.CheckHealthAsync();
+
+        public Task StopAsync() => _messageBusClient.StopAsync();
+
+        public IMessageBus SubscribeToMessage<TMessage, TMessageHandler>()
+            where TMessage : IMessage
+            where TMessageHandler : IMessageHandler<TMessage>
+        {
+            _messageBusHandlerResolver.SubcribeToMessage<TMessage, TMessageHandler>();
+
+            return this;
+        }
 
         internal async Task OnMessageReceived(MessageReceivedEventArgs args)
         {
@@ -55,7 +74,7 @@ namespace MessageBus.Abstractions
             return messageContext;
         }
 
-        private static Type GetMessageContextType(object handler) 
+        private static Type GetMessageContextType(object handler)
             => typeof(MessageContext<>).MakeGenericType((Type)GetMessageTypeFromHandler(handler));
 
         internal async Task OnErrorMessageReceived(MessageErrorReceivedEventArgs args)
@@ -66,16 +85,9 @@ namespace MessageBus.Abstractions
                 ? _defaultMessageTypeProperty
                 : messageBusSettings.MessageTypeProperty;
 
-        private static Type GetMessageTypeFromHandler(object handler) 
+        private static Type GetMessageTypeFromHandler(object handler)
             => handler.GetType().GetInterfaces()
                 .First(i => i.Name.Contains(typeof(IMessageHandler<>).Name))
                 .GenericTypeArguments.First();
-
-        public async Task DeadLetterMessageAsync(object message, string? reason = null) 
-            => await _messageBusClient.DeadLetterMessageAsync(message, reason);
-
-        public async Task<bool> CheckHealthAsync() => await _messageBusAdminClient.CheckHealthAsync();
-
-        public Task StopAsync() => _messageBusClient.StopAsync();
     }
 }

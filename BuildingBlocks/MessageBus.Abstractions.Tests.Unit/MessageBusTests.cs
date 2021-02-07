@@ -15,9 +15,10 @@ namespace MessageBus.Abstractions.Tests.Unit
         {
             await _sut.ConfigureAsync();
 
-            _mockMessageBusAdminClient.Verify(m => m.ConfigureAsync(_handlers), Times.Once);
+            _mockMessageBusHandlerResolver.Verify(m => m.Initialize(), Times.Once);
+            _mockMessageBusAdminClient.Verify(m => m.ConfigureAsync(_messasgeSubscriptions), Times.Once);
         }
-        
+
         [Fact]
         public async Task StartsMessageBusClient()
         {
@@ -161,6 +162,14 @@ namespace MessageBus.Abstractions.Tests.Unit
             await _sut.StopAsync();
             
             _mockMessageBusClient.Verify(m => m.StopAsync(), Times.Once);
+        }
+        
+        [Fact]
+        public void SubscribesToMessages()
+        {
+            _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>();
+
+            _mockMessageBusHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(null), Times.Once);
         }
     }
 }

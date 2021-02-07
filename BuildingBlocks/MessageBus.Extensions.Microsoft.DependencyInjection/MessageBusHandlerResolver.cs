@@ -2,48 +2,45 @@
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace MessageBus.Extensions.Microsoft.DependencyInjection
 {
     public class MessageBusHandlerResolver : IMessageBusHandlerResolver
     {
-        private readonly ServiceProvider _serviceProvider;
-        private readonly Dictionary<Type, ServiceDescriptor> _handlerMap;
+        private readonly IServiceCollection _services;
+        private ServiceProvider _serviceProvider;
+        private readonly Dictionary<string, MessageSubscription> _messageSubscriptions = new Dictionary<string, MessageSubscription>();
 
         public MessageBusHandlerResolver(IServiceCollection services)
         {
-            _serviceProvider = services.BuildServiceProvider();
-            _handlerMap = GetMessageBusHandlerServiceDescriptors(services).ToDictionary(h => 
-                GetMessageTypeFromHandler(h.ImplementationType), h => h);
+            _services = services;
         }
+        
+        public void Initialize() => _serviceProvider = _services.BuildServiceProvider();
 
         public object Resolve(string messageType)
         {
-            var handlerServiceType = _handlerMap.FirstOrDefault(h => h.Key.Name == messageType).Value?.ServiceType;
-            ThrowIfMessageHandlerNotFound(messageType, handlerServiceType);
-
-            return _serviceProvider.GetRequiredService(handlerServiceType);
+            try
+            {
+                var messageTypeType = _messageSubscriptions[messageType].MessageType;
+                var handlerServiceType = typeof(IMessageHandler<>).MakeGenericType(messageTypeType);
+                return _serviceProvider.GetRequiredService(handlerServiceType);
+            }
+            catch (Exception ex)
+            {
+                throw new MessageHandlerNotFoundException($"Message handler for message type {messageType} was not found", ex);
+            }
         }
 
-        public IEnumerable<Type> GetMessageHandlers() => _handlerMap.Values.Select(h => h.ImplementationType);
+        public IEnumerable<MessageSubscription> GetMessageSubscriptions() => _messageSubscriptions.Values;
 
-        private static Type GetMessageTypeFromHandler(Type handler)
-            => handler.GetInterfaces()
-                .First(i => i.Name.Contains(typeof(IMessageHandler<>).Name))
-                .GenericTypeArguments.First();
-
-        private static IEnumerable<ServiceDescriptor> GetMessageBusHandlerServiceDescriptors(IServiceCollection services)
-            => services.AsEnumerable()
-                .Where(s => s.ServiceType.FullName.Contains(typeof(IMessageHandler<>).FullName)
-                    && s.ServiceType.Assembly.FullName.Contains(typeof(IMessageHandler<>).Assembly.FullName));
-
-        private static void ThrowIfMessageHandlerNotFound(string messageType, Type handlerServiceType)
+        public void SubcribeToMessage<TMessage, TMessageHandler>(Dictionary<string, string> messageProperties = null)
+            where TMessage : IMessage
+            where TMessageHandler : IMessageHandler<TMessage>
         {
-            if (handlerServiceType is null)
-            {
-                throw new MessageHandlerNotFoundException($"Message handler for message type {messageType} was not found");
-            }
+            _services.AddScoped(typeof(IMessageHandler<>).MakeGenericType(typeof(TMessage)), typeof(TMessageHandler));
+            _messageSubscriptions.Add(typeof(TMessage).Name, new MessageSubscription(typeof(TMessage),typeof(TMessageHandler), 
+                messageProperties));
         }
     }
 }

@@ -1,3 +1,4 @@
+using MessageBus.Abstractions;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
 using System;
@@ -12,10 +13,13 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         [Fact]
         public async Task UpdatesSubscriptionRulesAsync()
         {
-            var messageHandlers = new List<Type> { typeof(AircraftLandedHandler) };
+            var messageSubscriptions = new List<MessageSubscription>
+            {
+                new MessageSubscription(typeof(AircraftLanded), typeof(AircraftLandedHandler)),
+            };
 
             var subscription = nameof(UpdatesSubscriptionRulesAsync);
-            await new AzureServiceBusAdminClient(_connectionString, _topic, subscription).ConfigureAsync(messageHandlers);
+            await new AzureServiceBusAdminClient(_connectionString, _topic, subscription).ConfigureAsync(messageSubscriptions);
 
             await AssertSubscriptionRules(new Type[] { typeof(AircraftLanded) }, subscription);
             DeleteSubscriptionAsync(nameof(UpdatesSubscriptionRulesAsync)).Wait();
@@ -25,7 +29,10 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         public async Task UpdatesRulesCustomMessageIdentifierAsync()
         {
             const string messagePropertyName = "MessageIdentifier";
-            var messageHandlers = new List<Type> { typeof(AircraftLandedHandler) };
+            var messageSubscriptions = new List<MessageSubscription>
+            {
+                new MessageSubscription(typeof(AircraftLanded), typeof(AircraftLandedHandler))
+            };
 
             var subscription = nameof(UpdatesRulesCustomMessageIdentifierAsync);
             var options = new AzureServiceBusAdminClientOptions
@@ -34,7 +41,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             };
 
             await new AzureServiceBusAdminClient(_connectionString, _topic, subscription, options)
-                .ConfigureAsync(messageHandlers);
+                .ConfigureAsync(messageSubscriptions);
 
             await AssertSubscriptionRules(new Type[] { typeof(AircraftLanded) }, subscription, messagePropertyName);
             DeleteSubscriptionAsync(nameof(UpdatesRulesCustomMessageIdentifierAsync)).Wait();
@@ -43,10 +50,14 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         [Fact]
         public async Task UpdatesRulesWithMultipleHandlersAsync()
         {
-            var messageHandlers = new List<Type> { typeof(AircraftLandedHandler), typeof(AircraftTakenOffHandler) };
+            var messageSubscriptions = new List<MessageSubscription>
+            {
+                new MessageSubscription(typeof(AircraftLanded), typeof(AircraftLandedHandler)),
+                new MessageSubscription(typeof(AircraftTakenOff), typeof(AircraftTakenOffHandler))
+            };
 
             var subscription = nameof(UpdatesRulesWithMultipleHandlersAsync);
-            await new AzureServiceBusAdminClient(_hostname, _topic, subscription, _tenantId).ConfigureAsync(messageHandlers);
+            await new AzureServiceBusAdminClient(_hostname, _topic, subscription, _tenantId).ConfigureAsync(messageSubscriptions);
 
             await AssertSubscriptionRules(new Type[] { typeof(AircraftLanded), typeof(AircraftTakenOff) }, subscription);
             DeleteSubscriptionAsync(nameof(UpdatesRulesWithMultipleHandlersAsync)).Wait();
@@ -55,10 +66,15 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         [Fact]
         public async Task UpdatesRulesWithMessageVersionDefaultPropertyAsync()
         {
-            var messageHandlers = new List<Type> { typeof(AircraftLandedHandlerV2), typeof(AircraftTakenOffHandler) };
+            var messageSubscriptions = new List<MessageSubscription>
+            {
+                new MessageSubscription(typeof(Models.V2.AircraftLanded), typeof(AircraftLandedHandlerV2)),
+                new MessageSubscription(typeof(AircraftTakenOff), typeof(AircraftTakenOffHandler))
+            };
+
             var subscription = nameof(UpdatesRulesWithMessageVersionDefaultPropertyAsync);
 
-            await new AzureServiceBusAdminClient(_hostname, _topic, subscription, _tenantId).ConfigureAsync(messageHandlers);
+            await new AzureServiceBusAdminClient(_hostname, _topic, subscription, _tenantId).ConfigureAsync(messageSubscriptions);
 
             await AssertSubscriptionRules(new Type[] { typeof(Models.V2.AircraftLanded), typeof(AircraftTakenOff) }, subscription);
             DeleteSubscriptionAsync(nameof(UpdatesRulesWithMessageVersionDefaultPropertyAsync)).Wait();
@@ -69,14 +85,19 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         [InlineData("MyMessageVersion")]
         public async Task UpdatesRulesWithMessageVersionCustomPropertyAsync(string messageVersionPropertyName)
         {
-            var messageHandlers = new List<Type> { typeof(AircraftLandedHandlerV2), typeof(AircraftTakenOffHandler) };
+            var messageSubscriptions = new List<MessageSubscription>
+            {
+                new MessageSubscription(typeof(Models.V2.AircraftLanded), typeof(AircraftLandedHandlerV2)),
+                new MessageSubscription(typeof(AircraftTakenOff), typeof(AircraftTakenOffHandler))
+            };
+
             var subscription = nameof(UpdatesRulesWithMessageVersionCustomPropertyAsync);
             var options = new AzureServiceBusAdminClientOptions
             {
                 MessageVersionPropertyName = messageVersionPropertyName
             };
             
-            await new AzureServiceBusAdminClient(_hostname, _topic, subscription, _tenantId, options).ConfigureAsync(messageHandlers);
+            await new AzureServiceBusAdminClient(_hostname, _topic, subscription, _tenantId, options).ConfigureAsync(messageSubscriptions);
 
             await AssertSubscriptionRules(new Type[] { typeof(Models.V2.AircraftLanded), typeof(AircraftTakenOff) }, subscription,
                 "MessageType", messageVersionPropertyName);

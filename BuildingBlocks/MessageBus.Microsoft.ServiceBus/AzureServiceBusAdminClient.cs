@@ -1,7 +1,6 @@
 ﻿using Azure.Identity;
 using Azure.Messaging.ServiceBus.Administration;
 using MessageBus.Abstractions;
-using MessageBus.Microsoft.ServiceBus.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -58,10 +57,10 @@ namespace MessageBus.Microsoft.ServiceBus
                 : new ServiceBusAdministrationClient(_hostName, new DefaultAzureCredential(options));
         }
 
-        public async Task ConfigureAsync(IEnumerable<Type> messageHandlers)
+        public async Task ConfigureAsync(IEnumerable<MessageSubscription> messageSubscriptions)
         {
             await CreateSubscriptionAsync();
-            await UpdateRulesAsync(messageHandlers);
+            await UpdateRulesAsync(messageSubscriptions);
         }
 
         private async Task CreateSubscriptionAsync()
@@ -72,9 +71,9 @@ namespace MessageBus.Microsoft.ServiceBus
             }
         }
 
-        private async Task UpdateRulesAsync(IEnumerable<Type> messageHandlers)
+        private async Task UpdateRulesAsync(IEnumerable<MessageSubscription> messageSubscriptions)
         {
-            var newRules = BuildListOfNewRules(messageHandlers);
+            var newRules = BuildListOfNewRules(messageSubscriptions.Select(m => m.MessageHandlerType));
             var existingRules = await GetExistingRulesAsync();
 
             await DeleteInvalidRulesAsync(newRules, existingRules);

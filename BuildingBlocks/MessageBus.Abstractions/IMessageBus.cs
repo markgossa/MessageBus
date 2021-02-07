@@ -9,5 +9,8 @@ namespace MessageBus.Abstractions
         Task StopAsync();
         Task DeadLetterMessageAsync(object message, string? reason = null);
         Task<bool> CheckHealthAsync();
+        IMessageBus SubscribeToMessage<TMessage, TMessageHandler>()
+            where TMessage : IMessage
+            where TMessageHandler : IMessageHandler<TMessage>;
     }
 }

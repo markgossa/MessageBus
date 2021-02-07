@@ -22,12 +22,12 @@ namespace MessageBusWithHealthCheck.Example
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>()
+            services.AddHostedService<MessageBusHostedService>()
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
-                    Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
-                    Configuration["ServiceBus:TenantId"]))
-                .AddHostedService<MessageBusHostedService>()
-                .AddHealthChecks().AddCheck<MessageBusHealthCheck>("MessageBus");
+                        Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
+                        Configuration["ServiceBus:TenantId"]))
+                    .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
+            services.AddHealthChecks().AddCheck<MessageBusHealthCheck>("MessageBus");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

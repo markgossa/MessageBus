@@ -24,11 +24,14 @@ namespace MessageBus.Example
                 .Build();
 
         private static ServiceProvider ConfigureServices()
-            => new ServiceCollection()
-                .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>()
-                .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
-                    Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
-                    Configuration["ServiceBus:TenantId"]))
-                .BuildServiceProvider();
+        {
+            var services = new ServiceCollection();
+            services.AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
+                            Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
+                            Configuration["ServiceBus:TenantId"]))
+                        .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
+            
+            return services.BuildServiceProvider();
+        }
     }
 }

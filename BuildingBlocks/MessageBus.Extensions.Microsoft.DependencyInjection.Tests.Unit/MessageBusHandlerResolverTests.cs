@@ -1,19 +1,25 @@
 ﻿using MessageBus.Abstractions;
 using MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Handlers;
 using MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Models.Events;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
 namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
 {
-    public class MessageBusHandlerResolverTests : MessageBusHandlerResolverTestsBase
+    public class MessageBusHandlerResolverTests
     {
         [Fact]
         public void MessageBusHandlerResolverReturnsMessageHandlerInstanceForGivenMessageType()
         {
-            var sut = new MessageBusHandlerResolver(BuildServiceCollection());
+            var services = new ServiceCollection();
+            var sut = new MessageBusHandlerResolver(services);
+            sut.SubcribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
+            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>();
+            sut.Initialize();
             var handler = sut.Resolve(nameof(AircraftLanded));
 
             Assert.NotNull(handler);
@@ -25,21 +31,29 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
         }
         
         [Fact]
-        public void MessageBusHandlerResolverThrowsIfNoMessageHandlerFound()
+        public void MessageBusHandlerResolverThrowsIfCannotFindMessageHandler()
         {
-            var sut = new MessageBusHandlerResolver(BuildServiceCollection());
+            var sut = new MessageBusHandlerResolver(new ServiceCollection());
             Assert.Throws<MessageHandlerNotFoundException>(() => sut.Resolve("UnknownMessage"));
         }
 
         [Fact]
-        public void MessageBusHandlerResolverReturnsAllRegisteredMessageHandlers()
+        public void AddMessageSubscriptionAddsAMessageSubscription()
         {
-            var sut = new MessageBusHandlerResolver(BuildServiceCollection());
-            var handlers = sut.GetMessageHandlers();
+            var messageProperties = new Dictionary<string, string>
+            {
+                { "AircraftType", "Commercial" }
+            };
 
-            Assert.Equal(2, handlers.Count());
-            Assert.Equal(typeof(AircraftLandedHandler), handlers.ElementAt(0));
-            Assert.Equal(typeof(AircraftTakenOffHandler), handlers.ElementAt(1));
+            var sut = new MessageBusHandlerResolver(new ServiceCollection());
+            sut.SubcribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
+            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(messageProperties);
+            var messageSubscriptions = sut.GetMessageSubscriptions();
+
+            Assert.Equal(2, messageSubscriptions.Count());
+            Assert.Single(messageSubscriptions.Where(m => m.MessageHandlerType == typeof(AircraftLandedHandler)));
+            Assert.Single(messageSubscriptions.Where(m => m.MessageHandlerType == typeof(AircraftTakenOffHandler)));
+            Assert.Equal(messageProperties, messageSubscriptions.First(m => m.MessageHandlerType == typeof(AircraftLandedHandler)).CustomSubscriptionFilterProperties);
         }
     }
 }
