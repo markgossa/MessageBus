@@ -10,7 +10,6 @@ namespace MessageBusWithHealthCheck.Example.Handlers
     public class AircraftTakenOffHandler : IMessageHandler<AircraftTakenOff>
     {
         private readonly IDependency _dependency;
-        private string _messageId;
 
         public AircraftTakenOffHandler(IDependency dependency)
         {
@@ -48,9 +47,7 @@ namespace MessageBusWithHealthCheck.Example.Handlers
             }
 
             // Do stuff
-            await Task.Delay(TimeSpan.FromSeconds(3));
-            _messageId = context.MessageId;
-            _dependency.SaveMessageId(Guid.Parse(_messageId));
+            _dependency.SaveMessageId(Guid.Parse(context.MessageId));
         }
     }
 }
