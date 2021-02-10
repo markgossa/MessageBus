@@ -5,11 +5,11 @@ namespace MessageBus.Microsoft.ServiceBus
 {
     public class AzureServiceBusClientBuilder : IMessageBusClientBuilder
     {
-        private readonly string _connectionString;
-        private readonly string _hostname;
+        private readonly string? _connectionString;
+        private readonly string? _hostname;
         private readonly string _topic;
         private readonly string _subscription;
-        private readonly string _tenantId;
+        private readonly string? _tenantId;
 
         public AzureServiceBusClientBuilder(string connectionString, string topic, string subscription)
         {

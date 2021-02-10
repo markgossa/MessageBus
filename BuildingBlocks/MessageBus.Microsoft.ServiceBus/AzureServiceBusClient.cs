@@ -12,14 +12,15 @@ namespace MessageBus.Microsoft.ServiceBus
 {
     public class AzureServiceBusClient : IMessageBusClient
     {
-        private ServiceBusProcessor _serviceBusProcessor;
+        private readonly ServiceBusProcessor _serviceBusProcessor;
         private Func<MessageErrorReceivedEventArgs, Task> _errorMessageHandler;
         private Func<MessageReceivedEventArgs, Task> _messageHandler;
 
         public AzureServiceBusClient(string connectionString, string topic, string subscription, 
-            ServiceBusProcessorOptions serviceBusProcessorOptions = null)
+            ServiceBusProcessorOptions? serviceBusProcessorOptions = null)
         {
-            BuildServiceBusProcessor(new ServiceBusClient(connectionString), topic, subscription,
+            var serviceBusClient = new ServiceBusClient(connectionString);
+            _serviceBusProcessor = BuildServiceBusProcessor(serviceBusClient, topic, subscription,
                 serviceBusProcessorOptions);
             AddMessageHandlers();
         }
@@ -32,8 +33,8 @@ namespace MessageBus.Microsoft.ServiceBus
                 SharedTokenCacheTenantId = tenantId
             };
 
-            BuildServiceBusProcessor(new ServiceBusClient(hostname, new DefaultAzureCredential(options)),
-                topic, subscription, serviceBusProcessorOptions);
+            _serviceBusProcessor = BuildServiceBusProcessor(new ServiceBusClient(hostname, 
+                new DefaultAzureCredential(options)), topic, subscription, serviceBusProcessorOptions);
             AddMessageHandlers();
         }
 
@@ -47,9 +48,9 @@ namespace MessageBus.Microsoft.ServiceBus
         
         public async Task StopAsync() => await _serviceBusProcessor.StopProcessingAsync();
 
-        private void BuildServiceBusProcessor(ServiceBusClient serviceBusClient, string topic,
-            string subscription, ServiceBusProcessorOptions serviceBusProcessorOptions)
-                => _serviceBusProcessor = serviceBusProcessorOptions is null
+        private ServiceBusProcessor BuildServiceBusProcessor(ServiceBusClient serviceBusClient, string topic,
+            string subscription, ServiceBusProcessorOptions? serviceBusProcessorOptions)
+                => serviceBusProcessorOptions is null
                     ? serviceBusClient.CreateProcessor(topic, subscription)
                     : serviceBusClient.CreateProcessor(topic, subscription, serviceBusProcessorOptions);
 
