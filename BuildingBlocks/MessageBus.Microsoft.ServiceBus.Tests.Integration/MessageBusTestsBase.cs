@@ -6,6 +6,7 @@ using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -101,6 +102,24 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             sut.AddMessageHandler(mockTestHandler.Object.MessageHandler);
             sut.AddErrorMessageHandler(mockTestHandler.Object.ErrorMessageHandler);
+        }
+
+        protected async Task<List<ServiceBusReceivedMessage>> ReceiveMessagesForSubscription(string subscription)
+        {
+            var receiver = _serviceBusClient.CreateReceiver(_topic, subscription);
+            var messages = new List<ServiceBusReceivedMessage>();
+            ServiceBusReceivedMessage message;
+            do
+            {
+                message = await receiver.ReceiveMessageAsync(TimeSpan.FromSeconds(1));
+                if (message is not null)
+                {
+                    await receiver.CompleteMessageAsync(message);
+                    messages.Add(message);
+                }
+            } while (message is not null);
+
+            return messages;
         }
     }
 }

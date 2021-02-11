@@ -214,5 +214,17 @@ namespace MessageBus.Abstractions.Tests.Unit
             _mockMessageHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(messageProperties), 
                 Times.Once);
         }
+
+        [Fact]
+        public async Task PublishMessageAsyncCallsMessageBusClient()
+        {
+            var aircraftId = Guid.NewGuid().ToString();
+            var aircraftLandedEvent = new AircraftLanded { AircraftId = aircraftId };
+            var eventToSend = new Message<IEvent>(aircraftLandedEvent);
+            
+            await _sut.PublishAsync(eventToSend);
+
+            _mockMessageBusClient.Verify(m => m.PublishAsync(eventToSend), Times.Once);
+        }
     }
 }

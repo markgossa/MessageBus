@@ -3,6 +3,8 @@ using MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
 using Moq;
 using System;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -83,6 +85,21 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             await Task.Delay(TimeSpan.FromSeconds(5));
 
             Assert.Equal(1, aircraftLandedHandler.MessageCount);
+        }
+
+        [Fact]
+        public async Task PublishesEventUsingManagedIdentity()
+        {
+            var subscription = nameof(PublishesEventUsingManagedIdentity);
+            await CreateSubscriptionAsync(subscription);
+            var aircraftlandedEvent = new AircraftLanded { AircraftId = Guid.NewGuid().ToString() };
+            var eventObject = new Message<IEvent>(aircraftlandedEvent);
+
+            var sut = new AzureServiceBusClient(_hostname, _topic, subscription, _tenantId);
+            await sut.PublishAsync(eventObject);
+
+            var messages = await ReceiveMessagesForSubscription(subscription);
+            Assert.Single(messages.Where(m => JsonSerializer.Deserialize<AircraftLanded>(m.Body.ToString()).AircraftId == aircraftlandedEvent.AircraftId));
         }
     }
 }

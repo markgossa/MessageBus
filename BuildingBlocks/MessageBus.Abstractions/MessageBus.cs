@@ -104,5 +104,7 @@ namespace MessageBus.Abstractions
             => handler.GetType().GetInterfaces()
                 .First(i => i.Name.Contains(typeof(IMessageHandler<>).Name))
                 .GenericTypeArguments.First();
+
+        internal async Task PublishAsync(Message<IEvent> eventObject) => await _messageBusClient.PublishAsync(eventObject);
     }
 }

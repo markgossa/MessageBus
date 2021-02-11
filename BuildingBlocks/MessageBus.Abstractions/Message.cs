@@ -18,11 +18,11 @@ namespace MessageBus.Abstractions
             Body = body;
         }
 
-        public Message(string bodyAsString, string? correlationId = null, string? messageId = null,
+        public Message(string body, string? correlationId = null, string? messageId = null,
             Dictionary<string, string>? messageProperties = null) : this(correlationId,
                 messageId, messageProperties)
         {
-            BodyAsString = bodyAsString;
+            BodyAsString = body;
         }
 
         private Message(string? correlationId = null, string? messageId = null,

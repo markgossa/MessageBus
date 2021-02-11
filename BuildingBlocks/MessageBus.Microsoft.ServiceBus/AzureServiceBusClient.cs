@@ -4,6 +4,7 @@ using MessageBus.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 [assembly: InternalsVisibleTo("MessageBus.microsoft.ServiceBus.Tests.Unit")]
@@ -13,6 +14,7 @@ namespace MessageBus.Microsoft.ServiceBus
     public class AzureServiceBusClient : IMessageBusClient
     {
         private readonly ServiceBusProcessor _serviceBusProcessor;
+        private readonly ServiceBusSender _serviceBusSender;
         private Func<MessageErrorReceivedEventArgs, Task> _errorMessageHandler;
         private Func<MessageReceivedEventArgs, Task> _messageHandler;
 
@@ -22,6 +24,7 @@ namespace MessageBus.Microsoft.ServiceBus
             var serviceBusClient = new ServiceBusClient(connectionString);
             _serviceBusProcessor = BuildServiceBusProcessor(serviceBusClient, topic, subscription,
                 serviceBusProcessorOptions);
+            
             AddMessageHandlers();
         }
 
@@ -33,8 +36,10 @@ namespace MessageBus.Microsoft.ServiceBus
                 SharedTokenCacheTenantId = tenantId
             };
 
-            _serviceBusProcessor = BuildServiceBusProcessor(new ServiceBusClient(hostname, 
-                new DefaultAzureCredential(options)), topic, subscription, serviceBusProcessorOptions);
+            var serviceBusClient = new ServiceBusClient(hostname,new DefaultAzureCredential(options));
+            _serviceBusProcessor = BuildServiceBusProcessor(serviceBusClient, topic, subscription, serviceBusProcessorOptions);
+            _serviceBusSender = serviceBusClient.CreateSender(topic);
+            
             AddMessageHandlers();
         }
 
@@ -90,5 +95,13 @@ namespace MessageBus.Microsoft.ServiceBus
 
         public async Task DeadLetterMessageAsync(object message, string reason = null)
             => await ((ProcessMessageEventArgs)message).DeadLetterMessageAsync(((ProcessMessageEventArgs)message).Message, reason);
+
+        public async Task PublishAsync(Message<IEvent> eventMessage)
+        {
+            var messageBody = JsonSerializer.Serialize<object>(eventMessage.Body);
+            var message = new ServiceBusMessage(messageBody);
+
+            await _serviceBusSender.SendMessageAsync(message);
+        }
     }
 }
