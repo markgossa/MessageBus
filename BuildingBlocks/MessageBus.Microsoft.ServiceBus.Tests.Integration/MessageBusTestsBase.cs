@@ -104,9 +104,11 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             sut.AddErrorMessageHandler(mockTestHandler.Object.ErrorMessageHandler);
         }
 
-        protected async Task<List<ServiceBusReceivedMessage>> ReceiveMessagesForSubscription(string subscription)
+        protected async Task<List<ServiceBusReceivedMessage>> ReceiveMessagesForSubscriptionAsync(string subscription,
+            bool deadLetter = false)
         {
-            var receiver = _serviceBusClient.CreateReceiver(_topic, subscription);
+            var receiver = BuildServiceBusReceiver(subscription, deadLetter);
+
             var messages = new List<ServiceBusReceivedMessage>();
             ServiceBusReceivedMessage message;
             do
@@ -121,5 +123,14 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
             return messages;
         }
+
+        private ServiceBusReceiver BuildServiceBusReceiver(string subscription, bool deadLetter) 
+            => deadLetter
+                ? _serviceBusClient.CreateReceiver(_topic, subscription,
+                    new ServiceBusReceiverOptions { SubQueue = SubQueue.DeadLetter })
+                : _serviceBusClient.CreateReceiver(_topic, subscription);
+
+        protected static bool IsMatchingAircraftId(ServiceBusReceivedMessage m, AircraftLanded aircraftlandedEvent) 
+            => JsonSerializer.Deserialize<AircraftLanded>(m.Body.ToString()).AircraftId == aircraftlandedEvent.AircraftId;
     }
 }

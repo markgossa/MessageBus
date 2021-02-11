@@ -4,7 +4,6 @@ using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
 using Moq;
 using System;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -51,7 +50,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         [Fact]
         public async Task DeadLettersMessageWithoutReasonAsync()
         {
-            var aircraftlandedEvent = await CreateSubscriptionAndSendAircraftLandedEvent(nameof(DeadLettersMessageWithoutReasonAsync));
+            var subscription = nameof(DeadLettersMessageWithoutReasonAsync);
+            var aircraftlandedEvent = await CreateSubscriptionAndSendAircraftLandedEvent(subscription);
             var aircraftLandedHandler = new AircraftLandedHandler();
             var mockMessageHandlerResolver = new Mock<IMessageHandlerResolver>();
             mockMessageHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded))).Returns(aircraftLandedHandler);
@@ -62,16 +62,19 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
             await messageBus.StartAsync();
 
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            await Task.Delay(TimeSpan.FromSeconds(2));
+            var messages = await ReceiveMessagesForSubscriptionAsync(subscription, true);
 
             Assert.Equal(1, aircraftLandedHandler.MessageCount);
+            Assert.Single(messages.Where(m => IsMatchingAircraftId(m, aircraftlandedEvent)));
         }
         
         [Fact]
         public async Task DeadLettersMessageWithReasonAsync()
         {
             const string deadLetterReason = "Json Serliazation issue";
-            var aircraftlandedEvent = await CreateSubscriptionAndSendAircraftLandedEvent(nameof(DeadLettersMessageWithReasonAsync));
+            var subscription = nameof(DeadLettersMessageWithReasonAsync);
+            var aircraftlandedEvent = await CreateSubscriptionAndSendAircraftLandedEvent(subscription);
             var aircraftLandedHandler = new AircraftLandedHandler(deadLetterReason);
             var mockMessageHandlerResolver = new Mock<IMessageHandlerResolver>();
             mockMessageHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded))).Returns(aircraftLandedHandler);
@@ -82,9 +85,11 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
             await messageBus.StartAsync();
 
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            await Task.Delay(TimeSpan.FromSeconds(2));
 
+            var messages = await ReceiveMessagesForSubscriptionAsync(subscription, true);
             Assert.Equal(1, aircraftLandedHandler.MessageCount);
+            Assert.Single(messages.Where(m => IsMatchingAircraftId(m, aircraftlandedEvent)));
         }
 
         [Fact]
@@ -98,8 +103,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var sut = new AzureServiceBusClient(_hostname, _topic, subscription, _tenantId);
             await sut.PublishAsync(eventObject);
 
-            var messages = await ReceiveMessagesForSubscription(subscription);
-            Assert.Single(messages.Where(m => JsonSerializer.Deserialize<AircraftLanded>(m.Body.ToString()).AircraftId == aircraftlandedEvent.AircraftId));
+            var messages = await ReceiveMessagesForSubscriptionAsync(subscription);
+            Assert.Single(messages.Where(m => IsMatchingAircraftId(m, aircraftlandedEvent)));
         }
     }
 }
