@@ -7,7 +7,7 @@ namespace MessageBus.Abstractions.Tests.Unit
 {
     public class MessageTestsBase
     {
-        protected static CreateNewFlightPlan BuildCreateNewFlightPlan()
+        protected static CreateNewFlightPlan BuildCreateNewFlightPlanCommand()
            => new CreateNewFlightPlan
            {
                Source = "EGKK",
