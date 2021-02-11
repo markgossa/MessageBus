@@ -66,7 +66,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var messages = await ReceiveMessagesForSubscriptionAsync(subscription, true);
 
             Assert.Equal(1, aircraftLandedHandler.MessageCount);
-            Assert.Single(messages.Where(m => IsMatchingAircraftId(m, aircraftlandedEvent)));
+            Assert.Single(messages.Where(m => IsMatchingAircraftId<AircraftLanded>(m, aircraftlandedEvent.AircraftId)));
         }
         
         [Fact]
@@ -89,7 +89,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
             var messages = await ReceiveMessagesForSubscriptionAsync(subscription, true);
             Assert.Equal(1, aircraftLandedHandler.MessageCount);
-            Assert.Single(messages.Where(m => IsMatchingAircraftId(m, aircraftlandedEvent)));
+            Assert.Single(messages.Where(m => IsMatchingAircraftId<AircraftLanded>(m, aircraftlandedEvent.AircraftId)));
         }
 
         [Fact]
@@ -103,8 +103,29 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var sut = new AzureServiceBusClient(_hostname, _topic, subscription, _tenantId);
             await sut.PublishAsync(eventObject);
 
-            var messages = await ReceiveMessagesForSubscriptionAsync(subscription);
-            Assert.Single(messages.Where(m => IsMatchingAircraftId(m, aircraftlandedEvent)));
+            var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
+                .Where(m => IsMatchingAircraftId<AircraftLanded>(m, aircraftlandedEvent.AircraftId));
+            
+            Assert.Single(matchingMessages);
+            Assert.Equal(nameof(AircraftLanded), matchingMessages.First().ApplicationProperties["MessageType"]);
+        }
+        
+        [Fact]
+        public async Task PublishesEventUsingConnectionString()
+        {
+            var subscription = nameof(PublishesEventUsingConnectionString);
+            await CreateSubscriptionAsync(subscription);
+            var aircraftTakenOffEvent = new AircraftTakenOff { AircraftId = Guid.NewGuid().ToString() };
+            var eventObject = new Message<IEvent>(aircraftTakenOffEvent);
+
+            var sut = new AzureServiceBusClient(_connectionString, _topic, subscription);
+            await sut.PublishAsync(eventObject);
+
+            var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
+                .Where(m => IsMatchingAircraftId<AircraftTakenOff>(m, aircraftTakenOffEvent.AircraftId));
+
+            Assert.Single(matchingMessages);
+            Assert.Equal(nameof(AircraftTakenOff), matchingMessages.First().ApplicationProperties["MessageType"]);
         }
     }
 }

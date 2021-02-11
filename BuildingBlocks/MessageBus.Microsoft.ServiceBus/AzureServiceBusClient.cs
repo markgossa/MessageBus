@@ -13,8 +13,8 @@ namespace MessageBus.Microsoft.ServiceBus
 {
     public class AzureServiceBusClient : IMessageBusClient
     {
-        private readonly ServiceBusProcessor _serviceBusProcessor;
-        private readonly ServiceBusSender _serviceBusSender;
+        private ServiceBusProcessor _serviceBusProcessor;
+        private ServiceBusSender _serviceBusSender;
         private Func<MessageErrorReceivedEventArgs, Task> _errorMessageHandler;
         private Func<MessageReceivedEventArgs, Task> _messageHandler;
 
@@ -22,10 +22,16 @@ namespace MessageBus.Microsoft.ServiceBus
             ServiceBusProcessorOptions? serviceBusProcessorOptions = null)
         {
             var serviceBusClient = new ServiceBusClient(connectionString);
-            _serviceBusProcessor = BuildServiceBusProcessor(serviceBusClient, topic, subscription,
-                serviceBusProcessorOptions);
-            
+            BuildServiceBusClients(topic, subscription, serviceBusProcessorOptions, serviceBusClient);
             AddMessageHandlers();
+        }
+
+        private void BuildServiceBusClients(string topic, string subscription, 
+            ServiceBusProcessorOptions? serviceBusProcessorOptions, ServiceBusClient serviceBusClient)
+        {
+            _serviceBusProcessor = BuildServiceBusProcessor(serviceBusClient, topic, subscription,
+                            serviceBusProcessorOptions);
+            _serviceBusSender = serviceBusClient.CreateSender(topic);
         }
 
         public AzureServiceBusClient(string hostname, string topic, string subscription,
@@ -37,9 +43,7 @@ namespace MessageBus.Microsoft.ServiceBus
             };
 
             var serviceBusClient = new ServiceBusClient(hostname,new DefaultAzureCredential(options));
-            _serviceBusProcessor = BuildServiceBusProcessor(serviceBusClient, topic, subscription, serviceBusProcessorOptions);
-            _serviceBusSender = serviceBusClient.CreateSender(topic);
-            
+            BuildServiceBusClients(topic, subscription, serviceBusProcessorOptions, serviceBusClient);
             AddMessageHandlers();
         }
 
@@ -100,6 +104,7 @@ namespace MessageBus.Microsoft.ServiceBus
         {
             var messageBody = JsonSerializer.Serialize<object>(eventMessage.Body);
             var message = new ServiceBusMessage(messageBody);
+            message.ApplicationProperties.Add("MessageType", eventMessage.Body.GetType().Name);
 
             await _serviceBusSender.SendMessageAsync(message);
         }

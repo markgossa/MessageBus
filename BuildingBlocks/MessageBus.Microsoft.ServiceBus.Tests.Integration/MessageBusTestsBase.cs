@@ -130,7 +130,10 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                     new ServiceBusReceiverOptions { SubQueue = SubQueue.DeadLetter })
                 : _serviceBusClient.CreateReceiver(_topic, subscription);
 
-        protected static bool IsMatchingAircraftId(ServiceBusReceivedMessage m, AircraftLanded aircraftlandedEvent) 
-            => JsonSerializer.Deserialize<AircraftLanded>(m.Body.ToString()).AircraftId == aircraftlandedEvent.AircraftId;
+        protected static bool IsMatchingAircraftId<T>(ServiceBusReceivedMessage message, string aircraftId)
+        {
+            dynamic eventObject = JsonSerializer.Deserialize<T>(message.Body.ToString());
+            return eventObject.AircraftId == aircraftId;
+        }
     }
 }
