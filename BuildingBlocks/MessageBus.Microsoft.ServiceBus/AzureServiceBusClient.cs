@@ -13,29 +13,23 @@ namespace MessageBus.Microsoft.ServiceBus
 {
     public class AzureServiceBusClient : IMessageBusClient
     {
-        private ServiceBusProcessor _serviceBusProcessor;
-        private ServiceBusSender _serviceBusSender;
-        private Func<MessageErrorReceivedEventArgs, Task> _errorMessageHandler;
-        private Func<MessageReceivedEventArgs, Task> _messageHandler;
+        private readonly ServiceBusProcessor _serviceBusProcessor;
+        private readonly ServiceBusSender _serviceBusSender;
+        private Func<MessageErrorReceivedEventArgs, Task>? _errorMessageHandler;
+        private Func<MessageReceivedEventArgs, Task>? _messageHandler;
 
         public AzureServiceBusClient(string connectionString, string topic, string subscription, 
             ServiceBusProcessorOptions? serviceBusProcessorOptions = null)
         {
             var serviceBusClient = new ServiceBusClient(connectionString);
-            BuildServiceBusClients(topic, subscription, serviceBusProcessorOptions, serviceBusClient);
-            AddMessageHandlers();
-        }
-
-        private void BuildServiceBusClients(string topic, string subscription, 
-            ServiceBusProcessorOptions? serviceBusProcessorOptions, ServiceBusClient serviceBusClient)
-        {
             _serviceBusProcessor = BuildServiceBusProcessor(serviceBusClient, topic, subscription,
                             serviceBusProcessorOptions);
             _serviceBusSender = serviceBusClient.CreateSender(topic);
+            AddMessageHandlers();
         }
 
         public AzureServiceBusClient(string hostname, string topic, string subscription,
-            string tenantId, ServiceBusProcessorOptions serviceBusProcessorOptions = null)
+            string tenantId, ServiceBusProcessorOptions? serviceBusProcessorOptions = null)
         {
             var options = new DefaultAzureCredentialOptions
             {
@@ -43,7 +37,9 @@ namespace MessageBus.Microsoft.ServiceBus
             };
 
             var serviceBusClient = new ServiceBusClient(hostname,new DefaultAzureCredential(options));
-            BuildServiceBusClients(topic, subscription, serviceBusProcessorOptions, serviceBusClient);
+            _serviceBusProcessor = BuildServiceBusProcessor(serviceBusClient, topic, subscription,
+                            serviceBusProcessorOptions);
+            _serviceBusSender = serviceBusClient.CreateSender(topic);
             AddMessageHandlers();
         }
 

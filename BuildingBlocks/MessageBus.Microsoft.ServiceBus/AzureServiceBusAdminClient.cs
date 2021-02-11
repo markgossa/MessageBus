@@ -11,8 +11,6 @@ namespace MessageBus.Microsoft.ServiceBus
 {
     public class AzureServiceBusAdminClient : IMessageBusAdminClient
     {
-        private const string _defaultMessageTypePropertyName = "MessageType";
-        private const string _defaultMessageVersionPropertyName = "MessageVersion";
         private readonly string? _connectionString;
         private readonly string? _hostName;
         private readonly string _topic;
@@ -41,10 +39,10 @@ namespace MessageBus.Microsoft.ServiceBus
         }
 
         public async Task ConfigureAsync(IEnumerable<MessageSubscription> messageSubscriptions, 
-            MessageBusOptions? options = null)
+            MessageBusOptions options)
         {
-            _messageTypePropertyName = options?.MessageTypePropertyName ?? _defaultMessageTypePropertyName;
-            _messageVersionPropertyName = options?.MessageVersionPropertyName ?? _defaultMessageVersionPropertyName;
+            _messageTypePropertyName = options?.MessageTypePropertyName;
+            _messageVersionPropertyName = options?.MessageVersionPropertyName;
             await CreateSubscriptionAsync();
             await UpdateRulesAsync(messageSubscriptions);
         }
