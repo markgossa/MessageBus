@@ -135,5 +135,13 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             dynamic eventObject = JsonSerializer.Deserialize<T>(message.Body.ToString());
             return eventObject.AircraftId == aircraftId;
         }
+
+        protected AzureServiceBusClient BuildAzureServiceBusClient(AuthenticationType authenticationType, string subscription)
+            => authenticationType switch
+            {
+                AuthenticationType.ConnectionString => new AzureServiceBusClient(_connectionString, _topic, subscription),
+                AuthenticationType.ManagedIdentity => new AzureServiceBusClient(_hostname, _topic, subscription, _tenantId),
+                _ => throw new NotImplementedException()
+            };
     }
 }

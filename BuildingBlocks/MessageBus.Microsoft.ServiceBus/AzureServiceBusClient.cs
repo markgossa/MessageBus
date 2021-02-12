@@ -3,6 +3,7 @@ using Azure.Messaging.ServiceBus;
 using MessageBus.Abstractions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -54,6 +55,9 @@ namespace MessageBus.Microsoft.ServiceBus
         
         public async Task StopAsync() => await _serviceBusProcessor.StopProcessingAsync();
 
+        public async Task ConfigureAsync(MessageBusOptions messageBusOptions)
+            => await Task.Run(() => _messageBusOptions = messageBusOptions); 
+        
         private ServiceBusProcessor BuildServiceBusProcessor(ServiceBusClient serviceBusClient, string topic,
             string subscription, ServiceBusProcessorOptions? serviceBusProcessorOptions)
                 => serviceBusProcessorOptions is null
@@ -99,14 +103,27 @@ namespace MessageBus.Microsoft.ServiceBus
 
         public async Task PublishAsync(Message<IEvent> eventMessage)
         {
-            var messageBody = JsonSerializer.Serialize<object>(eventMessage.Body);
-            var message = new ServiceBusMessage(messageBody);
-            message.ApplicationProperties.Add(_messageBusOptions.MessageTypePropertyName, eventMessage.Body.GetType().Name);
+            var message = new ServiceBusMessage(JsonSerializer.Serialize<object>(eventMessage.Body));
+            AddMessageTypeProperty(eventMessage, message);
+            AddMessageVersionProperty(eventMessage, message);
 
             await _serviceBusSender.SendMessageAsync(message);
         }
 
-        public async Task ConfigureAsync(MessageBusOptions messageBusOptions) 
-            => await Task.Run(() => _messageBusOptions = messageBusOptions);
+        private void AddMessageTypeProperty(Message<IEvent> eventMessage, ServiceBusMessage message)
+            => message.ApplicationProperties.Add(_messageBusOptions.MessageTypePropertyName, eventMessage.Body.GetType().Name);
+        
+        private void AddMessageVersionProperty(Message<IEvent> eventMessage, ServiceBusMessage message)
+        {
+            var messageVersion = GetMessageVersion(eventMessage);
+            if (messageVersion != null)
+            {
+                message.ApplicationProperties.Add(_messageBusOptions.MessageVersionPropertyName, messageVersion);
+            }
+        }
+
+        private static object? GetMessageVersion(Message<IEvent> eventMessage) 
+            => eventMessage.Body.GetType().CustomAttributes.FirstOrDefault(b =>
+                b.AttributeType == typeof(MessageVersionAttribute))?.ConstructorArguments[0].Value;
     }
 }
