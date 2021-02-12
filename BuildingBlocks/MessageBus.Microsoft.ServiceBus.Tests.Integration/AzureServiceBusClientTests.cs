@@ -92,8 +92,10 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             Assert.Single(messages.Where(m => IsMatchingAircraftId<AircraftLanded>(m, aircraftlandedEvent.AircraftId)));
         }
 
-        [Fact]
-        public async Task PublishesEventUsingManagedIdentity()
+        [Theory]
+        [InlineData("MessageType")]
+        [InlineData("MyMessageType")]
+        public async Task PublishesEventUsingManagedIdentity(string messageTypePropertyName)
         {
             var subscription = nameof(PublishesEventUsingManagedIdentity);
             await CreateSubscriptionAsync(subscription);
@@ -101,13 +103,14 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var eventObject = new Message<IEvent>(aircraftlandedEvent);
 
             var sut = new AzureServiceBusClient(_hostname, _topic, subscription, _tenantId);
+            await sut.ConfigureAsync(new MessageBusOptions { MessageTypePropertyName = messageTypePropertyName });
             await sut.PublishAsync(eventObject);
 
             var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
                 .Where(m => IsMatchingAircraftId<AircraftLanded>(m, aircraftlandedEvent.AircraftId));
             
             Assert.Single(matchingMessages);
-            Assert.Equal(nameof(AircraftLanded), matchingMessages.First().ApplicationProperties["MessageType"]);
+            Assert.Equal(nameof(AircraftLanded), matchingMessages.First().ApplicationProperties[messageTypePropertyName]);
         }
         
         [Fact]

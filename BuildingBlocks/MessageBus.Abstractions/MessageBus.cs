@@ -14,7 +14,7 @@ namespace MessageBus.Abstractions
         private readonly IMessageBusAdminClient _messageBusAdminClient;
         private readonly IMessageBusClient _messageBusClient;
         private readonly string _messageTypePropertyName;
-        private readonly MessageBusOptions? _messageBusOptions;
+        private readonly MessageBusOptions _messageBusOptions;
 
         public MessageBus(IMessageHandlerResolver messageHandlerResolver,
             IMessageBusAdminClient messageBusAdmin, IMessageBusClient messageBusClient, 
@@ -39,6 +39,7 @@ namespace MessageBus.Abstractions
             _messageHandlerResolver.Initialize();
             await _messageBusAdminClient.ConfigureAsync(_messageHandlerResolver.GetMessageSubscriptions(),
                 _messageBusOptions);
+            await _messageBusClient.ConfigureAsync(_messageBusOptions);
         }
 
         public async Task DeadLetterMessageAsync(object message, string? reason = null) 

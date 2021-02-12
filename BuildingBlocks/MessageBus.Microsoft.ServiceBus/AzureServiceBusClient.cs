@@ -17,6 +17,7 @@ namespace MessageBus.Microsoft.ServiceBus
         private readonly ServiceBusSender _serviceBusSender;
         private Func<MessageErrorReceivedEventArgs, Task>? _errorMessageHandler;
         private Func<MessageReceivedEventArgs, Task>? _messageHandler;
+        private MessageBusOptions _messageBusOptions = new MessageBusOptions();
 
         public AzureServiceBusClient(string connectionString, string topic, string subscription, 
             ServiceBusProcessorOptions? serviceBusProcessorOptions = null)
@@ -100,9 +101,12 @@ namespace MessageBus.Microsoft.ServiceBus
         {
             var messageBody = JsonSerializer.Serialize<object>(eventMessage.Body);
             var message = new ServiceBusMessage(messageBody);
-            message.ApplicationProperties.Add("MessageType", eventMessage.Body.GetType().Name);
+            message.ApplicationProperties.Add(_messageBusOptions.MessageTypePropertyName, eventMessage.Body.GetType().Name);
 
             await _serviceBusSender.SendMessageAsync(message);
         }
+
+        public async Task ConfigureAsync(MessageBusOptions messageBusOptions) 
+            => await Task.Run(() => _messageBusOptions = messageBusOptions);
     }
 }

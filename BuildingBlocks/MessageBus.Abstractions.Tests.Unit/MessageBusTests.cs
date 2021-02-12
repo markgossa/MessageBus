@@ -17,6 +17,7 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             _mockMessageHandlerResolver.Verify(m => m.Initialize(), Times.Once);
             _mockMessageBusAdminClient.Verify(m => m.ConfigureAsync(_messageSubscriptions, It.IsAny<MessageBusOptions>()), Times.Once);
+            _mockMessageBusClient.Verify(m => m.ConfigureAsync(It.IsAny<MessageBusOptions>()), Times.Once);
         }
         
         [Fact]
