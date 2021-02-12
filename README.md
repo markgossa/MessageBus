@@ -104,6 +104,10 @@ await serviceProvider.GetRequiredService<IMessageBus>().ConfigureAsync();
 await serviceProvider.GetRequiredService<IMessageBus>().StartAsync();
 ```
 
+### Sending messages
+
+You can either publish an IEvent or send an ICommand. In either case, the Type of the message being sent is automatically used as the `MessageType` property on the sent message. In addition, if you have set the `MessageVersion` attribute on the message class that you are sending, this is automatically added as the `MessageVersion` property on the sent message.
+
 ## Advanced
 
 ### Dead lettering messages
