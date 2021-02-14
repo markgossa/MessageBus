@@ -1,4 +1,4 @@
-﻿namespace MessageBus.Abstractions.Tests.Unit.Models.Events.V2
+﻿namespace MessageBus.Abstractions.Tests.Unit.Models.Commands.V2
 {
     [MessageVersion(2)]
     public class CreateNewFlightPlan : ICommand

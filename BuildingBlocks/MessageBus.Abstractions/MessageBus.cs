@@ -99,7 +99,7 @@ namespace MessageBus.Abstractions
             await _messageBusClient.PublishAsync(eventObject);
         }
 
-        internal async Task SendAsync(Message<ICommand> command)
+        public async Task SendAsync(Message<ICommand> command)
         {
             AddMessageProperties(command);
 

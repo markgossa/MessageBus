@@ -32,5 +32,11 @@ namespace MessageBus.Abstractions
             eventObject.CorrelationId ??= CorrelationId;
             await _messageBus.PublishAsync(eventObject);
         }
+
+        internal async Task SendAsync(Message<ICommand> command)
+        {
+            command.CorrelationId ??= CorrelationId;
+            await _messageBus.SendAsync(command);
+        }
     }
 }

@@ -14,5 +14,6 @@ namespace MessageBus.Abstractions
             where TMessage : IMessage
             where TMessageHandler : IMessageHandler<TMessage>;
         Task PublishAsync(Message<IEvent> message);
+        Task SendAsync(Message<ICommand> message);
     }
 }

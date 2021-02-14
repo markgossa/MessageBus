@@ -1,4 +1,5 @@
-﻿using MessageBus.Abstractions.Tests.Unit.Models.Events;
+﻿using MessageBus.Abstractions.Tests.Unit.Models.Commands;
+using MessageBus.Abstractions.Tests.Unit.Models.Events;
 using Moq;
 using System;
 using System.Threading.Tasks;
@@ -77,6 +78,42 @@ namespace MessageBus.Abstractions.Tests.Unit
         
         [Fact]
         public async Task PublishesEventWithNewCorrelationIdIfSpecified()
+        {
+            var aircraftLandedEvent = new AircraftLanded() { AircraftId = Guid.NewGuid().ToString() };
+            var expectedCorrelationId = Guid.NewGuid().ToString();
+            var message = new Message<IEvent>(aircraftLandedEvent) { CorrelationId = expectedCorrelationId };
+            Message<IEvent> callbackEvent = null;
+            _mockMessageBus.Setup(m => m.PublishAsync(It.Is<Message<IEvent>>(e
+                => (e.Body as AircraftLanded).AircraftId == aircraftLandedEvent.AircraftId)))
+                    .Callback<Message<IEvent>>(e => callbackEvent = e);
+
+            _sut.CorrelationId = Guid.NewGuid().ToString();
+            await _sut.PublishAsync(message);
+
+            Assert.Equal(expectedCorrelationId, callbackEvent.CorrelationId);
+        }
+        
+        [Theory]
+        [InlineData("MyCorrelationId")]
+        [InlineData("")]
+        [InlineData(null)]
+        public async Task SendsCommandWithSameCorrelationIdAsReceivedMessage(string expectedCorrelationId)
+        {
+            var createNewFlightPlanCommand = new CreateNewFlightPlan() { Destination = Guid.NewGuid().ToString() };
+            var message = new Message<ICommand>(createNewFlightPlanCommand);
+            Message<ICommand> callbackEvent = null;
+            _mockMessageBus.Setup(m => m.SendAsync(It.Is<Message<ICommand>>(e 
+                => (e.Body as CreateNewFlightPlan).Destination == createNewFlightPlanCommand.Destination)))
+                    .Callback<Message<ICommand>>(e => callbackEvent = e);
+
+            _sut.CorrelationId = expectedCorrelationId;
+            await _sut.SendAsync(message);
+
+            Assert.Equal(expectedCorrelationId, callbackEvent.CorrelationId);
+        }
+        
+        [Fact]
+        public async Task SendsCommandWithNewCorrelationIdIfSpecified()
         {
             var aircraftLandedEvent = new AircraftLanded() { AircraftId = Guid.NewGuid().ToString() };
             var expectedCorrelationId = Guid.NewGuid().ToString();

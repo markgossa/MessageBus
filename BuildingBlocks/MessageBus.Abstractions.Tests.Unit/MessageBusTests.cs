@@ -379,7 +379,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         [InlineData("MyMessageVersion2")]
         public async Task SendsCommandWithMessageTypeAndMessageVersion(string messageVersionPropertyName)
         {
-            var createNewFlightPlan = new Models.Events.V2.CreateNewFlightPlan { Destination = Guid.NewGuid().ToString() };
+            var createNewFlightPlan = new Models.Commands.V2.CreateNewFlightPlan { Destination = Guid.NewGuid().ToString() };
             var command = new Message<ICommand>(createNewFlightPlan);
 
             Message<ICommand> callbackCommand = null;
@@ -395,7 +395,7 @@ namespace MessageBus.Abstractions.Tests.Unit
                 _mockMessageBusClient.Object, options);
             await sut.SendAsync(command);
 
-            Assert.Equal(nameof(Models.Events.V2.CreateNewFlightPlan), callbackCommand.MessageProperties["MessageType"]);
+            Assert.Equal(nameof(Models.Commands.V2.CreateNewFlightPlan), callbackCommand.MessageProperties["MessageType"]);
             Assert.Equal("2", callbackCommand.MessageProperties[messageVersionPropertyName ?? "MessageVersion"]);
         }
 
@@ -404,7 +404,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         [InlineData(false)]
         public async Task SendsCommandWithCustomMessageProperties(bool overrideDefaultProperties)
         {
-            var createNewFlightPlan = new Models.Events.V2.CreateNewFlightPlan { Destination = Guid.NewGuid().ToString() };
+            var createNewFlightPlan = new Models.Commands.V2.CreateNewFlightPlan { Destination = Guid.NewGuid().ToString() };
             var command = new Message<ICommand>(createNewFlightPlan)
             {
                 OverrideDefaultMessageProperties = overrideDefaultProperties,
