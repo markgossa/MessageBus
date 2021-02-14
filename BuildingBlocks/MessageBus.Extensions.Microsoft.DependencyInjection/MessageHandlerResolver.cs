@@ -18,13 +18,13 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
         
         public void Initialize() => _serviceProvider = _services.BuildServiceProvider();
 
-        public object? Resolve(string messageType)
+        public object Resolve(string messageType)
         {
             try
             {
                 var messageTypeType = _messageSubscriptions[messageType].MessageType;
                 var handlerServiceType = typeof(IMessageHandler<>).MakeGenericType(messageTypeType);
-                return _serviceProvider?.GetRequiredService(handlerServiceType);
+                return (_serviceProvider?.GetRequiredService(handlerServiceType))!;
             }
             catch (Exception ex)
             {

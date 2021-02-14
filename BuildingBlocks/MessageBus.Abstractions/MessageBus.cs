@@ -77,20 +77,27 @@ namespace MessageBus.Abstractions
             }
         }
 
-        private object? BuildMessageContext(MessageReceivedEventArgs args, object handler)
+        private object BuildMessageContext(MessageReceivedEventArgs args, object handler)
         {
-            dynamic? messageContext = Activator.CreateInstance(BuildMessageContextType(handler), 
+            dynamic? messageContext = Activator.CreateInstance(BuildMessageContextType(handler),
                 new object[] { args.Message, args.MessageObject, this });
 
-            if (messageContext != null)
-            {
-                messageContext.MessageId = args.MessageId;
-                messageContext.CorrelationId = args.CorrelationId;
-                messageContext.Properties = args.MessageProperties;
-                messageContext.DeliveryCount = args.DeliveryCount;
-            }
+            ThrowIfNullMessageContext(args.MessageId, messageContext);
+
+            messageContext!.MessageId = args.MessageId;
+            messageContext.CorrelationId = args.CorrelationId;
+            messageContext.Properties = args.MessageProperties;
+            messageContext.DeliveryCount = args.DeliveryCount;
 
             return messageContext;
+        }
+
+        private static void ThrowIfNullMessageContext(string messageId, dynamic messageContext)
+        {
+            if (messageContext is null)
+            {
+                throw new ApplicationException($"Unable to build message context for MessageId {messageId}");
+            }
         }
 
         private static Type BuildMessageContextType(object handler)
