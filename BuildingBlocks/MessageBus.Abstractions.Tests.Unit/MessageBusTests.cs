@@ -279,12 +279,15 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.Equal("2", callbackEvent.MessageProperties[messageVersionPropertyName ?? "MessageVersion"]);
         }
 
-        [Fact]
-        public async Task PublishesEventWithCustomMessageProperties()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task PublishesEventWithCustomMessageProperties(bool overrideDefaultProperties)
         {
             var aircraftlandedEvent = new AircraftLanded { AircraftId = Guid.NewGuid().ToString() };
             var eventObject = new Message<IEvent>(aircraftlandedEvent)
             {
+                OverrideDefaultMessageProperties = overrideDefaultProperties,
                 MessageProperties = new Dictionary<string, string>
             {
                 { "AircraftType", "Commercial" },
@@ -299,18 +302,25 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             Assert.Equal("Commercial", callbackEvent.MessageProperties["AircraftType"]);
             Assert.Equal("Heavy", callbackEvent.MessageProperties["AircraftSize"]);
-            Assert.False(callbackEvent.MessageProperties.ContainsKey("MessageType"));
-            Assert.False(callbackEvent.MessageProperties.ContainsKey("MessageVersion"));
+            Assert.Equal(overrideDefaultProperties, !callbackEvent.MessageProperties.ContainsKey("MessageType"));
         }
 
         [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData("My message")]
-        [InlineData("Hello world!")]
-        public async Task PublishesEventAsString(string messageString)
+        [InlineData(null, true)]
+        [InlineData("", false)]
+        [InlineData("My message", true)]
+        [InlineData("Hello world!", false)]
+        public async Task PublishesEventAsStringWithCustomMessageProperties(string messageString, bool overrideDefaultProperties)
         {
-            var eventObject = new Message<IEvent>(messageString);
+            var eventObject = new Message<IEvent>(messageString)
+            {
+                OverrideDefaultMessageProperties = overrideDefaultProperties,
+                MessageProperties = new Dictionary<string, string>
+            {
+                { "AircraftType", "Commercial" },
+                { "AircraftSize", "Heavy" }
+            }
+            };
 
             Message<IEvent> callbackEvent = null;
             _mockMessageBusClient.Setup(m => m.PublishAsync(eventObject)).Callback<Message<IEvent>>(a => callbackEvent = a);
@@ -318,6 +328,11 @@ namespace MessageBus.Abstractions.Tests.Unit
             await _sut.PublishAsync(eventObject);
 
             Assert.Equal(messageString, callbackEvent.BodyAsString);
+            Assert.Equal("Commercial", callbackEvent.MessageProperties["AircraftType"]);
+            Assert.Equal("Heavy", callbackEvent.MessageProperties["AircraftSize"]);
+            Assert.False(callbackEvent.MessageProperties.ContainsKey("MessageType"));
+            Assert.False(callbackEvent.MessageProperties.ContainsKey("MessageVersion"));
         }
+
     }
 }

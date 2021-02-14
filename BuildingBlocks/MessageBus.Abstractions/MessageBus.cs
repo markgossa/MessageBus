@@ -109,7 +109,7 @@ namespace MessageBus.Abstractions
 
         private void AddMessageProperties(Message<IEvent> eventObject)
         {
-            if (!eventObject.MessageProperties.Any())
+            if (!eventObject.OverrideDefaultMessageProperties)
             {
                 AddMessageTypeProperty(eventObject);
                 AddMessageVersionProperty(eventObject);
