@@ -98,11 +98,16 @@ namespace MessageBus.Microsoft.ServiceBus
 
         public async Task PublishAsync(Message<IEvent> eventMessage)
         {
-            var message = new ServiceBusMessage(JsonSerializer.Serialize<object>(eventMessage.Body));
+            var message = new ServiceBusMessage(BuildMessageBody(eventMessage));
             AddMessageProperties(eventMessage, message);
 
             await _serviceBusSender.SendMessageAsync(message);
         }
+
+        private static string? BuildMessageBody(Message<IEvent> eventMessage) 
+            => eventMessage.Body != null
+                ? JsonSerializer.Serialize<object>(eventMessage.Body)
+                : eventMessage.BodyAsString;
 
         private static void AddMessageProperties(Message<IEvent> eventMessage, ServiceBusMessage message)
         {

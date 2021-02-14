@@ -96,9 +96,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         [Theory]
         [InlineData("LightAircraft", AuthenticationType.ConnectionString)]
         [InlineData("Commercial", AuthenticationType.ManagedIdentity)]
-        public async Task PublishesEvent(string aircraftType, AuthenticationType authenticationType)
+        public async Task PublishesEventBody(string aircraftType, AuthenticationType authenticationType)
         {
-            var subscription = nameof(PublishesEvent);
+            var subscription = nameof(PublishesEventBody);
             await CreateSubscriptionAsync(subscription);
             var aircraftlandedEvent = new AircraftLanded { AircraftId = Guid.NewGuid().ToString() };
             var message = new Message<IEvent>(aircraftlandedEvent)
@@ -118,6 +118,36 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
             Assert.Single(matchingMessages);
             Assert.Equal(aircraftType, matchingMessages.First().ApplicationProperties["AircraftType"]);
+            Assert.Equal("Heavy", matchingMessages.First().ApplicationProperties["AircraftSize"]);
+        }
+        
+        [Theory]
+        [InlineData("")]
+        [InlineData("Hello world!")]
+        public async Task PublishesEventBodyAsString(string messageString)
+        {
+            var subscription = nameof(PublishesEventBodyAsString);
+            await CreateSubscriptionAsync(subscription);
+            var aircraftId = Guid.NewGuid().ToString();
+            var message = new Message<IEvent>(messageString)
+            {
+                MessageProperties = new Dictionary<string, string>
+            {
+                { "AircraftId", aircraftId },
+                { "AircraftSize", "Heavy" }
+            }
+            };
+
+            var sut = BuildAzureServiceBusClient(AuthenticationType.ManagedIdentity, subscription);
+            await sut.PublishAsync(message);
+
+            var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
+                .Where(m => m.Body.ToString() == messageString
+                && m.ApplicationProperties.TryGetValue("AircraftId", out var value)
+                && aircraftId == value.ToString());
+
+            Assert.Single(matchingMessages);
+            Assert.Equal(aircraftId, matchingMessages.First().ApplicationProperties["AircraftId"]);
             Assert.Equal("Heavy", matchingMessages.First().ApplicationProperties["AircraftSize"]);
         }
     }
