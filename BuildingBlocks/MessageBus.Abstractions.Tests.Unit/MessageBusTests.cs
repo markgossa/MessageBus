@@ -1,4 +1,5 @@
 using MessageBus.Abstractions.Tests.Unit.Handlers;
+using MessageBus.Abstractions.Tests.Unit.Models.Commands;
 using MessageBus.Abstractions.Tests.Unit.Models.Events;
 using Moq;
 using System;
@@ -216,7 +217,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         }
 
         [Fact]
-        public async Task PublishMessageAsyncCallsMessageBusClient()
+        public async Task PublishAsyncCallsMessageBusClient()
         {
             var aircraftId = Guid.NewGuid().ToString();
             var aircraftLandedEvent = new AircraftLanded { AircraftId = aircraftId };
@@ -334,5 +335,123 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.False(callbackEvent.MessageProperties.ContainsKey("MessageVersion"));
         }
 
+        [Fact]
+        public async Task SendAsyncCallsMessageBusClient()
+        {
+            var aircraftId = Guid.NewGuid().ToString();
+            var createNewFlightPlanCommand = new CreateNewFlightPlan { Destination = Guid.NewGuid().ToString() };
+            var command = new Message<ICommand>(createNewFlightPlanCommand);
+
+            await _sut.SendAsync(command);
+
+            _mockMessageBusClient.Verify(m => m.SendAsync(command), Times.Once);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("MyMessageType")]
+        [InlineData("MyMessageType2")]
+        public async Task SendsCommandWithMessageTypeOnly(string messageTypePropertyName)
+        {
+            var createNewFlightPlan = new CreateNewFlightPlan { Destination = Guid.NewGuid().ToString() };
+            var command = new Message<ICommand>(createNewFlightPlan);
+
+            Message<ICommand> callbackCommand = null;
+            _mockMessageBusClient.Setup(m => m.SendAsync(command)).Callback<Message<ICommand>>(a => callbackCommand = a);
+
+            var options = new MessageBusOptions();
+            if (messageTypePropertyName is not null)
+            {
+                options.MessageTypePropertyName = messageTypePropertyName;
+            }
+
+            var sut = new MessageBus(_mockMessageHandlerResolver.Object, _mockMessageBusAdminClient.Object,
+                _mockMessageBusClient.Object, options);
+            await sut.SendAsync(command);
+
+            Assert.Equal(nameof(CreateNewFlightPlan), callbackCommand.MessageProperties[messageTypePropertyName ?? "MessageType"]);
+            Assert.False(callbackCommand.MessageProperties.ContainsKey("MessageVersion"));
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("MyMessageVersion")]
+        [InlineData("MyMessageVersion2")]
+        public async Task SendsCommandWithMessageTypeAndMessageVersion(string messageVersionPropertyName)
+        {
+            var createNewFlightPlan = new Models.Events.V2.CreateNewFlightPlan { Destination = Guid.NewGuid().ToString() };
+            var command = new Message<ICommand>(createNewFlightPlan);
+
+            Message<ICommand> callbackCommand = null;
+            _mockMessageBusClient.Setup(m => m.SendAsync(command)).Callback<Message<ICommand>>(a => callbackCommand = a);
+
+            var options = new MessageBusOptions();
+            if (messageVersionPropertyName is not null)
+            {
+                options.MessageVersionPropertyName = messageVersionPropertyName;
+            }
+
+            var sut = new MessageBus(_mockMessageHandlerResolver.Object, _mockMessageBusAdminClient.Object,
+                _mockMessageBusClient.Object, options);
+            await sut.SendAsync(command);
+
+            Assert.Equal(nameof(Models.Events.V2.CreateNewFlightPlan), callbackCommand.MessageProperties["MessageType"]);
+            Assert.Equal("2", callbackCommand.MessageProperties[messageVersionPropertyName ?? "MessageVersion"]);
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task SendsCommandWithCustomMessageProperties(bool overrideDefaultProperties)
+        {
+            var createNewFlightPlan = new Models.Events.V2.CreateNewFlightPlan { Destination = Guid.NewGuid().ToString() };
+            var command = new Message<ICommand>(createNewFlightPlan)
+            {
+                OverrideDefaultMessageProperties = overrideDefaultProperties,
+                MessageProperties = new Dictionary<string, string>
+            {
+                { "AircraftType", "Commercial" },
+                { "AircraftSize", "Heavy" }
+            }
+            };
+
+            Message<ICommand> callbackCommand = null;
+            _mockMessageBusClient.Setup(m => m.SendAsync(command)).Callback<Message<ICommand>>(a => callbackCommand = a);
+
+            await _sut.SendAsync(command);
+
+            Assert.Equal("Commercial", callbackCommand.MessageProperties["AircraftType"]);
+            Assert.Equal("Heavy", callbackCommand.MessageProperties["AircraftSize"]);
+            Assert.Equal(overrideDefaultProperties, !callbackCommand.MessageProperties.ContainsKey("MessageType"));
+        }
+
+        [Theory]
+        [InlineData(null, true)]
+        [InlineData("", false)]
+        [InlineData("My message", true)]
+        [InlineData("Hello world!", false)]
+        public async Task SendsCommandAsStringWithCustomMessageProperties(string messageString, bool overrideDefaultProperties)
+        {
+            var command = new Message<ICommand>(messageString)
+            {
+                OverrideDefaultMessageProperties = overrideDefaultProperties,
+                MessageProperties = new Dictionary<string, string>
+            {
+                { "AircraftType", "Commercial" },
+                { "AircraftSize", "Heavy" }
+            }
+            };
+
+            Message<ICommand> callbackEvent = null;
+            _mockMessageBusClient.Setup(m => m.SendAsync(command)).Callback<Message<ICommand>>(a => callbackEvent = a);
+
+            await _sut.SendAsync(command);
+
+            Assert.Equal(messageString, callbackEvent.BodyAsString);
+            Assert.Equal("Commercial", callbackEvent.MessageProperties["AircraftType"]);
+            Assert.Equal("Heavy", callbackEvent.MessageProperties["AircraftSize"]);
+            Assert.False(callbackEvent.MessageProperties.ContainsKey("MessageType"));
+            Assert.False(callbackEvent.MessageProperties.ContainsKey("MessageVersion"));
+        }
     }
 }

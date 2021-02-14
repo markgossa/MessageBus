@@ -53,11 +53,24 @@ namespace MessageBus.Microsoft.ServiceBus
         
         public async Task StopAsync() => await _serviceBusProcessor.StopProcessingAsync();
 
+        public async Task DeadLetterMessageAsync(object message, string reason = null)
+            => await ((ProcessMessageEventArgs)message).DeadLetterMessageAsync(((ProcessMessageEventArgs)message).Message, reason);
+
+        public async Task PublishAsync(Message<IEvent> eventMessage)
+        {
+            var message = new ServiceBusMessage(BuildMessageBody(eventMessage));
+            AddMessageProperties(eventMessage, message);
+
+            await _serviceBusSender.SendMessageAsync(message);
+        }
+
+        public void SendAsync(Message<ICommand> command) => throw new NotImplementedException();
+
         private ServiceBusProcessor BuildServiceBusProcessor(ServiceBusClient serviceBusClient, string topic,
             string subscription, ServiceBusProcessorOptions? serviceBusProcessorOptions)
-                => serviceBusProcessorOptions is null
-                    ? serviceBusClient.CreateProcessor(topic, subscription)
-                    : serviceBusClient.CreateProcessor(topic, subscription, serviceBusProcessorOptions);
+        => serviceBusProcessorOptions is null
+            ? serviceBusClient.CreateProcessor(topic, subscription)
+            : serviceBusClient.CreateProcessor(topic, subscription, serviceBusProcessorOptions);
 
         private void AddMessageHandlers()
         {
@@ -91,17 +104,6 @@ namespace MessageBus.Microsoft.ServiceBus
             }
 
             return messageProperties;
-        }
-
-        public async Task DeadLetterMessageAsync(object message, string reason = null)
-            => await ((ProcessMessageEventArgs)message).DeadLetterMessageAsync(((ProcessMessageEventArgs)message).Message, reason);
-
-        public async Task PublishAsync(Message<IEvent> eventMessage)
-        {
-            var message = new ServiceBusMessage(BuildMessageBody(eventMessage));
-            AddMessageProperties(eventMessage, message);
-
-            await _serviceBusSender.SendMessageAsync(message);
         }
 
         private static string? BuildMessageBody(Message<IEvent> eventMessage) 
