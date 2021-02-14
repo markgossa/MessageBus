@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 
-namespace MessageBusWithHealthCheck.Example
+namespace MessageBus.HostedService.Example
 {
     public class Program
     {

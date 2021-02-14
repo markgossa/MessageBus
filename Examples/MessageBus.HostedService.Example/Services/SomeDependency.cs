@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 
-namespace MessageBusWithHealthCheck.Example.Services
+namespace MessageBus.HostedService.Example.Services
 {
     public class SomeDependency : IDependency
     {

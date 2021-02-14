@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MessageBusWithHealthCheck.Example.Services
+namespace MessageBus.HostedService.Example.Services
 {
     public interface IDependency
     {

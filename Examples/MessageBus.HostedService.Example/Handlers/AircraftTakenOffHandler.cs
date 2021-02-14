@@ -1,11 +1,11 @@
 ﻿using MessageBus.Abstractions;
-using MessageBusWithHealthCheck.Example.Events;
-using MessageBusWithHealthCheck.Example.Services;
+using MessageBus.HostedService.Example.Events;
+using MessageBus.HostedService.Example.Services;
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace MessageBusWithHealthCheck.Example.Handlers
+namespace MessageBus.HostedService.Example.Handlers
 {
     public class AircraftTakenOffHandler : IMessageHandler<AircraftTakenOff>
     {

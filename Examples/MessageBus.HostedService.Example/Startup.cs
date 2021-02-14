@@ -1,13 +1,13 @@
 using MessageBus.Extensions.Microsoft.DependencyInjection;
 using MessageBus.Microsoft.ServiceBus;
-using MessageBusWithHealthCheck.Example.Events;
-using MessageBusWithHealthCheck.Example.Handlers;
-using MessageBusWithHealthCheck.Example.Services;
+using MessageBus.HostedService.Example.Events;
+using MessageBus.HostedService.Example.Handlers;
+using MessageBus.HostedService.Example.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace MessageBusWithHealthCheck.Example
+namespace MessageBus.HostedService.Example
 {
     public class Startup
     {
