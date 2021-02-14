@@ -56,15 +56,17 @@ namespace MessageBus.Microsoft.ServiceBus
         public async Task DeadLetterMessageAsync(object message, string reason = null)
             => await ((ProcessMessageEventArgs)message).DeadLetterMessageAsync(((ProcessMessageEventArgs)message).Message, reason);
 
-        public async Task PublishAsync(Message<IEvent> eventMessage)
+        public async Task PublishAsync(Message<IEvent> eventMessage) => await SendMessageAsync(eventMessage);
+
+        public async Task SendAsync(Message<ICommand> command) => await SendMessageAsync(command);
+
+        private async Task SendMessageAsync<T>(Message<T> eventMessage) where T : IMessage
         {
             var message = new ServiceBusMessage(BuildMessageBody(eventMessage));
             AddMessageProperties(eventMessage, message);
 
             await _serviceBusSender.SendMessageAsync(message);
         }
-
-        public void SendAsync(Message<ICommand> command) => throw new NotImplementedException();
 
         private ServiceBusProcessor BuildServiceBusProcessor(ServiceBusClient serviceBusClient, string topic,
             string subscription, ServiceBusProcessorOptions? serviceBusProcessorOptions)
@@ -106,16 +108,17 @@ namespace MessageBus.Microsoft.ServiceBus
             return messageProperties;
         }
 
-        private static string? BuildMessageBody(Message<IEvent> eventMessage) 
-            => eventMessage.Body != null
-                ? JsonSerializer.Serialize<object>(eventMessage.Body)
-                : eventMessage.BodyAsString;
+        private static string? BuildMessageBody<T>(Message<T> message) where T : IMessage
+            => message.Body != null
+                ? JsonSerializer.Serialize<object>(message.Body)
+                : message.BodyAsString;
 
-        private static void AddMessageProperties(Message<IEvent> eventMessage, ServiceBusMessage message)
+        private static void AddMessageProperties<T>(Message<T> message, ServiceBusMessage serviceBusMessage)
+            where T : IMessage
         {
-            foreach (var property in eventMessage.MessageProperties)
+            foreach (var property in message.MessageProperties)
             {
-                message.ApplicationProperties.Add(property.Key, property.Value);
+                serviceBusMessage.ApplicationProperties.Add(property.Key, property.Value);
             }
         }
     }

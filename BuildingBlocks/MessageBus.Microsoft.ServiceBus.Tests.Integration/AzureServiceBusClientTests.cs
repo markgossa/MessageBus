@@ -143,8 +143,67 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
             var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
                 .Where(m => m.Body.ToString() == messageString
-                && m.ApplicationProperties.TryGetValue("AircraftId", out var value)
-                && aircraftId == value.ToString());
+                    && m.ApplicationProperties.TryGetValue("AircraftId", out var value)
+                    && aircraftId == value.ToString());
+
+            Assert.Single(matchingMessages);
+            Assert.Equal(aircraftId, matchingMessages.First().ApplicationProperties["AircraftId"]);
+            Assert.Equal("Heavy", matchingMessages.First().ApplicationProperties["AircraftSize"]);
+        }
+
+        [Theory]
+        [InlineData("LightAircraft", AuthenticationType.ConnectionString)]
+        [InlineData("Commercial", AuthenticationType.ManagedIdentity)]
+        public async Task SendsCommandBody(string aircraftType, AuthenticationType authenticationType)
+        {
+            var subscription = nameof(SendsCommandBody);
+            await CreateSubscriptionAsync(subscription);
+            var createNewFlightPlanCommand = new CreateNewFlightPlan { Destination = Guid.NewGuid().ToString() };
+            var message = new Message<ICommand>(createNewFlightPlanCommand)
+            {
+                MessageProperties = new Dictionary<string, string>
+            {
+                { "AircraftType", aircraftType },
+                { "AircraftSize", "Heavy" }
+            }
+            };
+
+            var sut = BuildAzureServiceBusClient(authenticationType, subscription);
+            await sut.SendAsync(message);
+
+            var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
+                .Where(m => m.Body.ToObjectFromJson<CreateNewFlightPlan>().Destination == 
+                    createNewFlightPlanCommand.Destination);
+
+            Assert.Single(matchingMessages);
+            Assert.Equal(aircraftType, matchingMessages.First().ApplicationProperties["AircraftType"]);
+            Assert.Equal("Heavy", matchingMessages.First().ApplicationProperties["AircraftSize"]);
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("Hello world!")]
+        public async Task SendsCommandBodyAsString(string messageString)
+        {
+            var subscription = nameof(SendsCommandBodyAsString);
+            await CreateSubscriptionAsync(subscription);
+            var aircraftId = Guid.NewGuid().ToString();
+            var message = new Message<ICommand>(messageString)
+            {
+                MessageProperties = new Dictionary<string, string>
+            {
+                { "AircraftId", aircraftId },
+                { "AircraftSize", "Heavy" }
+            }
+            };
+
+            var sut = BuildAzureServiceBusClient(AuthenticationType.ManagedIdentity, subscription);
+            await sut.SendAsync(message);
+
+            var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
+                .Where(m => m.Body.ToString() == messageString
+                    && m.ApplicationProperties.TryGetValue("AircraftId", out var value)
+                    && aircraftId == value.ToString());
 
             Assert.Single(matchingMessages);
             Assert.Equal(aircraftId, matchingMessages.First().ApplicationProperties["AircraftId"]);

@@ -11,6 +11,6 @@ namespace MessageBus.Abstractions
         void AddErrorMessageHandler(Func<MessageErrorReceivedEventArgs, Task> errorMessageHandler);
         Task DeadLetterMessageAsync(object message, string reason = null);
         Task PublishAsync(Message<IEvent> eventObject);
-        void SendAsync(Message<ICommand> command);
+        Task SendAsync(Message<ICommand> command);
     }
 }
