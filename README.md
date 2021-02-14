@@ -110,6 +110,8 @@ You can either publish an IEvent or send an ICommand. In either case, the Type o
 
 When publishing or sending messages, you can override the message properties of the sent message by setting the message properties on the `Message<IEvent>` or `Message<ICommand>` that you are sending. This does not add the `MessageType` or `MessageVersion` properties to the message.
 
+You can publish an IEvent or simple string. Likewise, you can either send an ICommand or a simple string.
+
 ## Advanced
 
 ### Dead lettering messages
