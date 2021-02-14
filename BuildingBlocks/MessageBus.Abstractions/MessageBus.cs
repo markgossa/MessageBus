@@ -117,7 +117,12 @@ namespace MessageBus.Abstractions
         }
 
         private void AddMessageTypeProperty(Message<IEvent> eventObject)
-            => eventObject.MessageProperties.Add(_messageBusOptions.MessageTypePropertyName, eventObject.Body.GetType().Name);
+        {
+            if (eventObject.Body != null)
+            {
+                eventObject.MessageProperties.Add(_messageBusOptions.MessageTypePropertyName, eventObject.Body.GetType().Name);
+            }
+        }
 
         private void AddMessageVersionProperty(Message<IEvent> eventObject)
         {
@@ -129,7 +134,7 @@ namespace MessageBus.Abstractions
         }
 
         private static string? GetMessageVersion(Message<IEvent> eventMessage)
-            => eventMessage.Body.GetType().CustomAttributes.FirstOrDefault(b =>
+            => eventMessage.Body?.GetType().CustomAttributes.FirstOrDefault(b =>
                 b.AttributeType == typeof(MessageVersionAttribute))?.ConstructorArguments.FirstOrDefault().Value?.ToString();
     }
 }

@@ -302,5 +302,22 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.False(callbackEvent.MessageProperties.ContainsKey("MessageType"));
             Assert.False(callbackEvent.MessageProperties.ContainsKey("MessageVersion"));
         }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("My message")]
+        [InlineData("Hello world!")]
+        public async Task PublishesEventAsString(string messageString)
+        {
+            var eventObject = new Message<IEvent>(messageString);
+
+            Message<IEvent> callbackEvent = null;
+            _mockMessageBusClient.Setup(m => m.PublishAsync(eventObject)).Callback<Message<IEvent>>(a => callbackEvent = a);
+
+            await _sut.PublishAsync(eventObject);
+
+            Assert.Equal(messageString, callbackEvent.BodyAsString);
+        }
     }
 }
