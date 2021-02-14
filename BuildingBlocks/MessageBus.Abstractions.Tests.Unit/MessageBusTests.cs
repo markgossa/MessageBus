@@ -17,7 +17,6 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             _mockMessageHandlerResolver.Verify(m => m.Initialize(), Times.Once);
             _mockMessageBusAdminClient.Verify(m => m.ConfigureAsync(_messageSubscriptions, It.IsAny<MessageBusOptions>()), Times.Once);
-            _mockMessageBusClient.Verify(m => m.ConfigureAsync(It.IsAny<MessageBusOptions>()), Times.Once);
         }
         
         [Fact]
@@ -226,6 +225,58 @@ namespace MessageBus.Abstractions.Tests.Unit
             await _sut.PublishAsync(eventToSend);
 
             _mockMessageBusClient.Verify(m => m.PublishAsync(eventToSend), Times.Once);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("MyMessageType")]
+        [InlineData("MyMessageType2")]
+        public async Task PublishesEventWithMessageTypeOnly(string messageTypePropertyName)
+        {
+            var aircraftlandedEvent = new AircraftLanded { AircraftId = Guid.NewGuid().ToString() };
+            var eventObject = new Message<IEvent>(aircraftlandedEvent);
+            
+            Message<IEvent> callbackEvent = null;
+            _mockMessageBusClient.Setup(m => m.PublishAsync(eventObject)).Callback<Message<IEvent>>(a => callbackEvent = a);
+            
+            var options = new MessageBusOptions();
+            if (messageTypePropertyName is not null)
+            {
+                options.MessageTypePropertyName = messageTypePropertyName;
+            }
+
+            var sut = new MessageBus(_mockMessageHandlerResolver.Object, _mockMessageBusAdminClient.Object, 
+                _mockMessageBusClient.Object, options);
+            await sut.PublishAsync(eventObject);
+
+            Assert.Equal(nameof(AircraftLanded), callbackEvent.MessageProperties[messageTypePropertyName ?? "MessageType"]);
+            Assert.False(callbackEvent.MessageProperties.ContainsKey("MessageVersion"));
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("MyMessageVersion")]
+        [InlineData("MyMessageVersion2")]
+        public async Task PublishesEventWithMessageTypeAndMessageVersion(string messageVersionPropertyName)
+        {
+            var aircraftlandedEvent = new Models.Events.V2.AircraftLanded { AircraftId = Guid.NewGuid().ToString() };
+            var eventObject = new Message<IEvent>(aircraftlandedEvent);
+
+            Message<IEvent> callbackEvent = null;
+            _mockMessageBusClient.Setup(m => m.PublishAsync(eventObject)).Callback<Message<IEvent>>(a => callbackEvent = a);
+
+            var options = new MessageBusOptions();
+            if (messageVersionPropertyName is not null)
+            {
+                options.MessageVersionPropertyName = messageVersionPropertyName;
+            }
+
+            var sut = new MessageBus(_mockMessageHandlerResolver.Object, _mockMessageBusAdminClient.Object,
+                _mockMessageBusClient.Object, options);
+            await sut.PublishAsync(eventObject);
+
+            Assert.Equal(nameof(Models.Events.V2.AircraftLanded), callbackEvent.MessageProperties["MessageType"]);
+            Assert.Equal("2", callbackEvent.MessageProperties[messageVersionPropertyName ?? "MessageVersion"]);
         }
     }
 }

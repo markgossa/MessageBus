@@ -39,7 +39,6 @@ namespace MessageBus.Abstractions
             _messageHandlerResolver.Initialize();
             await _messageBusAdminClient.ConfigureAsync(_messageHandlerResolver.GetMessageSubscriptions(),
                 _messageBusOptions);
-            await _messageBusClient.ConfigureAsync(_messageBusOptions);
         }
 
         public async Task DeadLetterMessageAsync(object message, string? reason = null) 
@@ -80,7 +79,8 @@ namespace MessageBus.Abstractions
 
         private object BuildMessageContext(MessageReceivedEventArgs args, object handler)
         {
-            dynamic? messageContext = Activator.CreateInstance(GetMessageContextType(handler), new object[] { args.Message, args.MessageObject, this });
+            dynamic? messageContext = Activator.CreateInstance(BuildMessageContextType(handler), 
+                new object[] { args.Message, args.MessageObject, this });
             messageContext.MessageId = args.MessageId;
             messageContext.CorrelationId = args.CorrelationId;
             messageContext.Properties = args.MessageProperties;
@@ -89,7 +89,7 @@ namespace MessageBus.Abstractions
             return messageContext;
         }
 
-        private static Type GetMessageContextType(object handler)
+        private static Type BuildMessageContextType(object handler)
             => typeof(MessageContext<>).MakeGenericType((Type)GetMessageTypeFromHandler(handler));
 
         internal async Task OnErrorMessageReceived(MessageErrorReceivedEventArgs args)
@@ -100,6 +100,27 @@ namespace MessageBus.Abstractions
                 .First(i => i.Name.Contains(typeof(IMessageHandler<>).Name))
                 .GenericTypeArguments.First();
 
-        internal async Task PublishAsync(Message<IEvent> eventObject) => await _messageBusClient.PublishAsync(eventObject);
+        internal async Task PublishAsync(Message<IEvent> eventObject)
+        {
+            AddMessageTypeProperty(eventObject);
+            AddMessageVersionProperty(eventObject);
+            await _messageBusClient.PublishAsync(eventObject);
+        }
+
+        private void AddMessageTypeProperty(Message<IEvent> eventObject)
+            => eventObject.MessageProperties.Add(_messageBusOptions.MessageTypePropertyName, eventObject.Body.GetType().Name);
+
+        private void AddMessageVersionProperty(Message<IEvent> eventObject)
+        {
+            var messageVersion = GetMessageVersion(eventObject);
+            if (messageVersion != null)
+            {
+                eventObject.MessageProperties.Add(_messageBusOptions.MessageVersionPropertyName, messageVersion);
+            }
+        }
+
+        private static string? GetMessageVersion(Message<IEvent> eventMessage)
+            => eventMessage.Body.GetType().CustomAttributes.FirstOrDefault(b =>
+                b.AttributeType == typeof(MessageVersionAttribute))?.ConstructorArguments.FirstOrDefault().Value?.ToString();
     }
 }

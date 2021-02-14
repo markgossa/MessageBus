@@ -3,6 +3,7 @@ using MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
 using Moq;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -40,7 +41,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var sut = new AzureServiceBusClient(_hostname, _topic, subscription, _tenantId);
             AddHandlers(mockTestHandler, sut);
             await sut.StartAsync();
-            
+
             await Task.Delay(TimeSpan.FromSeconds(5));
             mockTestHandler.Verify(m => m.MessageHandler(It.Is<MessageReceivedEventArgs>(m =>
                 GetAircraftIdFromMessage(m.Message) == aircraftlandedEvent.AircraftId)),
@@ -68,7 +69,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             Assert.Equal(1, aircraftLandedHandler.MessageCount);
             Assert.Single(messages.Where(m => IsMatchingAircraftId<AircraftLanded>(m, aircraftlandedEvent.AircraftId)));
         }
-        
+
         [Fact]
         public async Task DeadLettersMessageWithReasonAsync()
         {
@@ -93,59 +94,31 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         }
 
         [Theory]
-        [InlineData(null, AuthenticationType.ConnectionString)]
-        [InlineData("MyMessageType", AuthenticationType.ConnectionString)]
-        public async Task PublishesEventWithMessageType(string messageTypePropertyName, AuthenticationType authenticationType)
+        [InlineData("LightAircraft", AuthenticationType.ConnectionString)]
+        [InlineData("Commercial", AuthenticationType.ManagedIdentity)]
+        public async Task PublishesEvent(string aircraftType, AuthenticationType authenticationType)
         {
-            var subscription = nameof(PublishesEventWithMessageType);
+            var subscription = nameof(PublishesEvent);
             await CreateSubscriptionAsync(subscription);
             var aircraftlandedEvent = new AircraftLanded { AircraftId = Guid.NewGuid().ToString() };
-            var eventObject = new Message<IEvent>(aircraftlandedEvent);
-
-            var options = new MessageBusOptions();
-            if (messageTypePropertyName is not null)
+            var message = new Message<IEvent>(aircraftlandedEvent)
             {
-                options.MessageTypePropertyName = messageTypePropertyName;
+                MessageProperties = new Dictionary<string, string>
+            {
+                { "AircraftType", aircraftType },
+                { "AircraftSize", "Heavy" }
             }
+            };
 
             var sut = BuildAzureServiceBusClient(authenticationType, subscription);
-            await sut.ConfigureAsync(options);
-            await sut.PublishAsync(eventObject);
+            await sut.PublishAsync(message);
 
             var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
                 .Where(m => IsMatchingAircraftId<AircraftLanded>(m, aircraftlandedEvent.AircraftId));
 
             Assert.Single(matchingMessages);
-            Assert.Equal(nameof(AircraftLanded), matchingMessages.First().ApplicationProperties[messageTypePropertyName ?? "MessageType"]);
-            Assert.False(matchingMessages.First().ApplicationProperties.TryGetValue("MessageVersion", out var _));
-        }
-        
-        [Theory]
-        [InlineData(null, AuthenticationType.ConnectionString)]
-        [InlineData("MyMessageVersion", AuthenticationType.ConnectionString)]
-        public async Task PublishesEventWithMessageVersion(string messageVersionPropertyName, AuthenticationType authenticationType)
-        {
-            var subscription = nameof(PublishesEventWithMessageVersion);
-            await CreateSubscriptionAsync(subscription);
-            var aircraftlandedEvent = new Models.V2.AircraftLanded { AircraftId = Guid.NewGuid().ToString() };
-            var eventObject = new Message<IEvent>(aircraftlandedEvent);
-
-            var options = new MessageBusOptions();
-            if (messageVersionPropertyName is not null)
-            {
-                options.MessageVersionPropertyName = messageVersionPropertyName;
-            }
-
-            var sut = BuildAzureServiceBusClient(authenticationType, subscription);
-            await sut.ConfigureAsync(options);
-            await sut.PublishAsync(eventObject);
-
-            var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
-                .Where(m => IsMatchingAircraftId<Models.V2.AircraftLanded>(m, aircraftlandedEvent.AircraftId));
-
-            Assert.Single(matchingMessages);
-            Assert.Equal(nameof(Models.V2.AircraftLanded), matchingMessages.First().ApplicationProperties["MessageType"]);
-            Assert.Equal(2, matchingMessages.First().ApplicationProperties[messageVersionPropertyName ?? "MessageVersion"]);
+            Assert.Equal(aircraftType, matchingMessages.First().ApplicationProperties["AircraftType"]);
+            Assert.Equal("Heavy", matchingMessages.First().ApplicationProperties["AircraftSize"]);
         }
     }
 }

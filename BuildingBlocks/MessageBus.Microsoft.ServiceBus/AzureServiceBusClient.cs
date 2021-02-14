@@ -3,7 +3,6 @@ using Azure.Messaging.ServiceBus;
 using MessageBus.Abstractions;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -18,7 +17,6 @@ namespace MessageBus.Microsoft.ServiceBus
         private readonly ServiceBusSender _serviceBusSender;
         private Func<MessageErrorReceivedEventArgs, Task>? _errorMessageHandler;
         private Func<MessageReceivedEventArgs, Task>? _messageHandler;
-        private MessageBusOptions _messageBusOptions = new MessageBusOptions();
 
         public AzureServiceBusClient(string connectionString, string topic, string subscription, 
             ServiceBusProcessorOptions? serviceBusProcessorOptions = null)
@@ -55,9 +53,6 @@ namespace MessageBus.Microsoft.ServiceBus
         
         public async Task StopAsync() => await _serviceBusProcessor.StopProcessingAsync();
 
-        public async Task ConfigureAsync(MessageBusOptions messageBusOptions)
-            => await Task.Run(() => _messageBusOptions = messageBusOptions); 
-        
         private ServiceBusProcessor BuildServiceBusProcessor(ServiceBusClient serviceBusClient, string topic,
             string subscription, ServiceBusProcessorOptions? serviceBusProcessorOptions)
                 => serviceBusProcessorOptions is null
@@ -104,26 +99,17 @@ namespace MessageBus.Microsoft.ServiceBus
         public async Task PublishAsync(Message<IEvent> eventMessage)
         {
             var message = new ServiceBusMessage(JsonSerializer.Serialize<object>(eventMessage.Body));
-            AddMessageTypeProperty(eventMessage, message);
-            AddMessageVersionProperty(eventMessage, message);
+            AddMessageProperties(eventMessage, message);
 
             await _serviceBusSender.SendMessageAsync(message);
         }
 
-        private void AddMessageTypeProperty(Message<IEvent> eventMessage, ServiceBusMessage message)
-            => message.ApplicationProperties.Add(_messageBusOptions.MessageTypePropertyName, eventMessage.Body.GetType().Name);
-        
-        private void AddMessageVersionProperty(Message<IEvent> eventMessage, ServiceBusMessage message)
+        private static void AddMessageProperties(Message<IEvent> eventMessage, ServiceBusMessage message)
         {
-            var messageVersion = GetMessageVersion(eventMessage);
-            if (messageVersion != null)
+            foreach (var property in eventMessage.MessageProperties)
             {
-                message.ApplicationProperties.Add(_messageBusOptions.MessageVersionPropertyName, messageVersion);
+                message.ApplicationProperties.Add(property.Key, property.Value);
             }
         }
-
-        private static object? GetMessageVersion(Message<IEvent> eventMessage) 
-            => eventMessage.Body.GetType().CustomAttributes.FirstOrDefault(b =>
-                b.AttributeType == typeof(MessageVersionAttribute))?.ConstructorArguments[0].Value;
     }
 }

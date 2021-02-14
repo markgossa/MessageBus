@@ -34,12 +34,12 @@ namespace MessageBus.Abstractions.Tests.Unit
         [Fact]
         public void AttributeCanBeUsedOnMessages()
         {
-            var aircraftLandedEvent = new AircraftLanded();
+            var aircraftLandedEvent = new Models.Events.V2.AircraftLanded();
             var attributes = aircraftLandedEvent.GetType().GetCustomAttributes<Attribute>(false);
             var messageVersionAttributes = attributes.Where(a => a.GetType().Name == nameof(MessageVersionAttribute));
 
             Assert.Single(messageVersionAttributes);
-            Assert.Equal(1, ((MessageVersionAttribute)messageVersionAttributes.First()).Version);
+            Assert.Equal(2, ((MessageVersionAttribute)messageVersionAttributes.First()).Version);
         }
     }
 }
