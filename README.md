@@ -108,7 +108,7 @@ await serviceProvider.GetRequiredService<IMessageBus>().StartAsync();
 
 You can either publish an IEvent or send an ICommand. In either case, the Type of the message being sent is automatically used as the `MessageType` property on the sent message. In addition, if you have set the `MessageVersion` attribute on the message class that you are sending, this is automatically added as the `MessageVersion` property on the sent message.
 
-When publishing or sending messages, you can override the message properties of the sent message by setting the message properties on the `Message<IEvent>` or `Message<ICommand>` that you are sending. This does not add the `MessageType` or `MessageVersion` properties to the message.
+When publishing or sending messages, you can either override or add to the default message properties of the sent message by setting the message properties on the `Message<IEvent>` or `Message<ICommand>` that you are sending. This does not add the `MessageType` or `MessageVersion` properties to the message.
 
 You can publish an IEvent or simple string. Likewise, you can either send an ICommand or a simple string.
 
