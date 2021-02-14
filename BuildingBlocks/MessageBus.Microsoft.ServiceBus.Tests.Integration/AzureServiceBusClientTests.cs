@@ -30,6 +30,22 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 GetAircraftIdFromMessage(m.Message) == aircraftTakenOffEvent.AircraftId)),
                 Times.Once);
         }
+        
+        [Fact]
+        public async Task ThrowsHandlerExceptionIfNoMessageHandlerFound()
+        {
+            var mockTestHandler = new Mock<ITestHandler>();
+            var subscription = nameof(CallsCorrectMessageHandlerUsingConnectionString);
+            var aircraftTakenOffEvent = await CreateSubscriptionAndSendAircraftTakenOffEvent(subscription);
+
+            var sut = new AzureServiceBusClient(_connectionString, _topic, subscription);
+            sut.AddErrorMessageHandler(mockTestHandler.Object.ErrorMessageHandler); 
+            await sut.StartAsync();
+
+            await Task.Delay(TimeSpan.FromSeconds(5));
+            mockTestHandler.Verify(m => m.ErrorMessageHandler(It.Is<MessageErrorReceivedEventArgs>(m =>
+                m.Exception.GetType() == typeof(MessageHandlerNotFoundException))), Times.Exactly(10));
+        }
 
         [Fact]
         public async Task CallsCorrectMessageHandlerUsingManagedIdentity()

@@ -77,14 +77,18 @@ namespace MessageBus.Abstractions
             }
         }
 
-        private object BuildMessageContext(MessageReceivedEventArgs args, object handler)
+        private object? BuildMessageContext(MessageReceivedEventArgs args, object handler)
         {
             dynamic? messageContext = Activator.CreateInstance(BuildMessageContextType(handler), 
                 new object[] { args.Message, args.MessageObject, this });
-            messageContext.MessageId = args.MessageId;
-            messageContext.CorrelationId = args.CorrelationId;
-            messageContext.Properties = args.MessageProperties;
-            messageContext.DeliveryCount = args.DeliveryCount;
+
+            if (messageContext != null)
+            {
+                messageContext.MessageId = args.MessageId;
+                messageContext.CorrelationId = args.CorrelationId;
+                messageContext.Properties = args.MessageProperties;
+                messageContext.DeliveryCount = args.DeliveryCount;
+            }
 
             return messageContext;
         }

@@ -53,7 +53,7 @@ namespace MessageBus.Microsoft.ServiceBus
         
         public async Task StopAsync() => await _serviceBusProcessor.StopProcessingAsync();
 
-        public async Task DeadLetterMessageAsync(object message, string reason = null)
+        public async Task DeadLetterMessageAsync(object message, string? reason = null)
             => await ((ProcessMessageEventArgs)message).DeadLetterMessageAsync(((ProcessMessageEventArgs)message).Message, reason);
 
         public async Task PublishAsync(Message<IEvent> eventMessage) => await SendMessageAsync(eventMessage);
@@ -90,11 +90,35 @@ namespace MessageBus.Microsoft.ServiceBus
                 DeliveryCount = args.Message.DeliveryCount
             };
 
-            await _messageHandler(messageReceivedEventArgs);
+            ThrowIfMessageHandlerNotFound(messageReceivedEventArgs.MessageId);
+
+            await _messageHandler!(messageReceivedEventArgs);
         }
 
         internal async Task CallErrorMessageHandlerAsync(ProcessErrorEventArgs args)
-            => await _errorMessageHandler(new MessageErrorReceivedEventArgs(args.Exception));
+        {
+            ThrowIfErrorMessageHandlerNotFound();
+
+            await _errorMessageHandler!(new MessageErrorReceivedEventArgs(args.Exception));
+        }
+
+        private void ThrowIfMessageHandlerNotFound(string messageId)
+        {
+            if (_messageHandler is null)
+            {
+                throw new MessageHandlerNotFoundException($"No message handler found on " +
+                    $"{nameof(AzureServiceBusClient)} for MessageId: {messageId}");
+            }
+        }
+        
+        private void ThrowIfErrorMessageHandlerNotFound()
+        {
+            if (_errorMessageHandler is null)
+            {
+                throw new MessageHandlerNotFoundException($"No error message handler found on " +
+                    $"{nameof(AzureServiceBusClient)}");
+            }
+        }
 
         private static Dictionary<string, string> MapToMessageProperties(IReadOnlyDictionary<string, object>
             applicationProperties)
@@ -102,7 +126,11 @@ namespace MessageBus.Microsoft.ServiceBus
             var messageProperties = new Dictionary<string, string>();
             foreach (var item in applicationProperties)
             {
-                messageProperties.Add(item.Key, item.Value.ToString());
+                var value = item.Value.ToString();
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    messageProperties.Add(item.Key, value);
+                }
             }
 
             return messageProperties;
