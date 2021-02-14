@@ -102,9 +102,18 @@ namespace MessageBus.Abstractions
 
         internal async Task PublishAsync(Message<IEvent> eventObject)
         {
-            AddMessageTypeProperty(eventObject);
-            AddMessageVersionProperty(eventObject);
+            AddMessageProperties(eventObject);
+
             await _messageBusClient.PublishAsync(eventObject);
+        }
+
+        private void AddMessageProperties(Message<IEvent> eventObject)
+        {
+            if (!eventObject.MessageProperties.Any())
+            {
+                AddMessageTypeProperty(eventObject);
+                AddMessageVersionProperty(eventObject);
+            }
         }
 
         private void AddMessageTypeProperty(Message<IEvent> eventObject)

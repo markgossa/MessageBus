@@ -278,5 +278,29 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.Equal(nameof(Models.Events.V2.AircraftLanded), callbackEvent.MessageProperties["MessageType"]);
             Assert.Equal("2", callbackEvent.MessageProperties[messageVersionPropertyName ?? "MessageVersion"]);
         }
+
+        [Fact]
+        public async Task PublishesEventWithCustomMessageProperties()
+        {
+            var aircraftlandedEvent = new AircraftLanded { AircraftId = Guid.NewGuid().ToString() };
+            var eventObject = new Message<IEvent>(aircraftlandedEvent)
+            {
+                MessageProperties = new Dictionary<string, string>
+            {
+                { "AircraftType", "Commercial" },
+                { "AircraftSize", "Heavy" }
+            }
+            };
+
+            Message<IEvent> callbackEvent = null;
+            _mockMessageBusClient.Setup(m => m.PublishAsync(eventObject)).Callback<Message<IEvent>>(a => callbackEvent = a);
+
+            await _sut.PublishAsync(eventObject);
+
+            Assert.Equal("Commercial", callbackEvent.MessageProperties["AircraftType"]);
+            Assert.Equal("Heavy", callbackEvent.MessageProperties["AircraftSize"]);
+            Assert.False(callbackEvent.MessageProperties.ContainsKey("MessageType"));
+            Assert.False(callbackEvent.MessageProperties.ContainsKey("MessageVersion"));
+        }
     }
 }
