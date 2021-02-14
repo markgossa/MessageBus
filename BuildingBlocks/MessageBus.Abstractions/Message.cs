@@ -7,7 +7,7 @@ namespace MessageBus.Abstractions
     {
         public T Body { get; }
         public string? BodyAsString { get; }
-        public string CorrelationId { get; set; }
+        public string? CorrelationId { get; set; }
         public string MessageId { get; set; }
         public Dictionary<string, string> MessageProperties { get; set; }
         public bool OverrideDefaultMessageProperties { get; set; }
@@ -30,7 +30,7 @@ namespace MessageBus.Abstractions
             Dictionary<string, string>? messageProperties = null)
         {
             MessageProperties = messageProperties ?? new Dictionary<string, string>();
-            CorrelationId = correlationId ?? Guid.NewGuid().ToString();
+            CorrelationId = correlationId;
             MessageId = messageId ?? Guid.NewGuid().ToString();
         }
     }

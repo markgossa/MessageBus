@@ -13,5 +13,6 @@ namespace MessageBus.Abstractions
         IMessageBus SubscribeToMessage<TMessage, TMessageHandler>(Dictionary<string, string> messageProperties = null)
             where TMessage : IMessage
             where TMessageHandler : IMessageHandler<TMessage>;
+        Task PublishAsync(Message<IEvent> message);
     }
 }

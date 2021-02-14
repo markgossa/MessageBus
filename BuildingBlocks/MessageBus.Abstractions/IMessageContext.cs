@@ -8,11 +8,12 @@ namespace MessageBus.Abstractions
     {
         BinaryData Body { get; }
         TMessage Message { get; }
-        string MessageId { get; }
-        string CorrelationId { get; }
+        string? MessageId { get; }
+        string? CorrelationId { get; }
         Dictionary<string, string> Properties { get; }
         int DeliveryCount { get; }
 
         Task DeadLetterMessageAsync(string? reason = null);
     }
 }
+ 

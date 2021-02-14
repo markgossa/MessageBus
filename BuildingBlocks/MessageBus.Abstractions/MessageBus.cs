@@ -92,7 +92,7 @@ namespace MessageBus.Abstractions
         private static Type BuildMessageContextType(object handler)
             => typeof(MessageContext<>).MakeGenericType((Type)GetMessageTypeFromHandler(handler));
 
-        internal async Task PublishAsync(Message<IEvent> eventObject)
+        public async Task PublishAsync(Message<IEvent> eventObject)
         {
             AddMessageProperties(eventObject);
 
@@ -103,7 +103,7 @@ namespace MessageBus.Abstractions
         {
             AddMessageProperties(command);
 
-            _messageBusClient.SendAsync(command);
+            await _messageBusClient.SendAsync(command);
         }
 
         internal async Task OnErrorMessageReceived(MessageErrorReceivedEventArgs args)

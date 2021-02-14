@@ -55,5 +55,41 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             _mockMessageBus.Verify(m => m.DeadLetterMessageAsync(_messageObject, deadLetterMessage), Times.Once);
         }
+
+        [Theory]
+        [InlineData("MyCorrelationId")]
+        [InlineData("")]
+        [InlineData(null)]
+        public async Task PublishesEventWithSameCorrelationIdAsReceivedMessage(string expectedCorrelationId)
+        {
+            var aircraftLandedEvent = new AircraftLanded() { AircraftId = Guid.NewGuid().ToString() };
+            var message = new Message<IEvent>(aircraftLandedEvent);
+            Message<IEvent> callbackEvent = null;
+            _mockMessageBus.Setup(m => m.PublishAsync(It.Is<Message<IEvent>>(e 
+                => (e.Body as AircraftLanded).AircraftId == aircraftLandedEvent.AircraftId)))
+                    .Callback<Message<IEvent>>(e => callbackEvent = e);
+
+            _sut.CorrelationId = expectedCorrelationId;
+            await _sut.PublishAsync(message);
+
+            Assert.Equal(expectedCorrelationId, callbackEvent.CorrelationId);
+        }
+        
+        [Fact]
+        public async Task PublishesEventWithNewCorrelationIdIfSpecified()
+        {
+            var aircraftLandedEvent = new AircraftLanded() { AircraftId = Guid.NewGuid().ToString() };
+            var expectedCorrelationId = Guid.NewGuid().ToString();
+            var message = new Message<IEvent>(aircraftLandedEvent) { CorrelationId = expectedCorrelationId };
+            Message<IEvent> callbackEvent = null;
+            _mockMessageBus.Setup(m => m.PublishAsync(It.Is<Message<IEvent>>(e
+                => (e.Body as AircraftLanded).AircraftId == aircraftLandedEvent.AircraftId)))
+                    .Callback<Message<IEvent>>(e => callbackEvent = e);
+
+            _sut.CorrelationId = Guid.NewGuid().ToString();
+            await _sut.PublishAsync(message);
+
+            Assert.Equal(expectedCorrelationId, callbackEvent.CorrelationId);
+        }
     }
 }

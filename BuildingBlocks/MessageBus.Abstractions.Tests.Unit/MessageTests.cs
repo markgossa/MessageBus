@@ -126,7 +126,6 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             var sut = new Message<IEvent>(aircraftLandedEvent);
 
-            Assert.False(string.IsNullOrWhiteSpace(sut.CorrelationId));
             Assert.False(string.IsNullOrWhiteSpace(sut.MessageId));
         }
 
@@ -137,7 +136,6 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             var sut = new Message<IEvent>(eventString);
 
-            Assert.False(string.IsNullOrWhiteSpace(sut.CorrelationId));
             Assert.False(string.IsNullOrWhiteSpace(sut.MessageId));
         }
         
@@ -148,7 +146,6 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             var sut = new Message<ICommand>(command);
 
-            Assert.False(string.IsNullOrWhiteSpace(sut.CorrelationId));
             Assert.False(string.IsNullOrWhiteSpace(sut.MessageId));
         }
 
@@ -159,7 +156,6 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             var sut = new Message<ICommand>(eventString);
 
-            Assert.False(string.IsNullOrWhiteSpace(sut.CorrelationId));
             Assert.False(string.IsNullOrWhiteSpace(sut.MessageId));
         }
     }
