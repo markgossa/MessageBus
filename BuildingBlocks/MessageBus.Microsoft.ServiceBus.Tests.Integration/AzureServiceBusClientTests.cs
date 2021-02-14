@@ -79,11 +79,11 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
             await messageBus.StartAsync();
 
-            await Task.Delay(TimeSpan.FromSeconds(2));
+            await Task.Delay(TimeSpan.FromSeconds(6));
             var messages = await ReceiveMessagesForSubscriptionAsync(subscription, true);
 
-            Assert.Equal(1, aircraftLandedHandler.MessageCount);
             Assert.Single(messages.Where(m => IsMatchingAircraftId<AircraftLanded>(m, aircraftlandedEvent.AircraftId)));
+            Assert.Equal(1, aircraftLandedHandler.MessageCount);
         }
 
         [Fact]

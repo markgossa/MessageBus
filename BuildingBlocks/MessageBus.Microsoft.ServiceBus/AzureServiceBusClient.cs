@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 [assembly: InternalsVisibleTo("MessageBus.microsoft.ServiceBus.Tests.Unit")]
@@ -36,7 +37,7 @@ namespace MessageBus.Microsoft.ServiceBus
                 SharedTokenCacheTenantId = tenantId
             };
 
-            var serviceBusClient = new ServiceBusClient(hostname,new DefaultAzureCredential(options));
+            var serviceBusClient = new ServiceBusClient(hostname, new DefaultAzureCredential(options));
             _serviceBusProcessor = BuildServiceBusProcessor(serviceBusClient, topic, subscription,
                             serviceBusProcessorOptions);
             _serviceBusSender = serviceBusClient.CreateSender(topic);
@@ -50,8 +51,8 @@ namespace MessageBus.Microsoft.ServiceBus
             => _errorMessageHandler = errorMessageHandler;
 
         public async Task StartAsync() => await _serviceBusProcessor.StartProcessingAsync();
-        
-        public async Task StopAsync() => await _serviceBusProcessor.StopProcessingAsync();
+
+        public async Task StopAsync() => await _serviceBusProcessor.StopProcessingAsync(new CancellationToken());
 
         public async Task DeadLetterMessageAsync(object message, string? reason = null)
             => await ((ProcessMessageEventArgs)message).DeadLetterMessageAsync(((ProcessMessageEventArgs)message).Message, reason);

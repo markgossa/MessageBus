@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
     <PackageReference Include="Microsoft.Azure.Management.ServiceBus.Fluent" Version="1.36.1" />
     <PackageReference Include="microsoft.extensions.configuration" Version="5.0.0" />
     <PackageReference Include="microsoft.extensions.configuration.json" Version="5.0.0" />

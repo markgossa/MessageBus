@@ -1,14 +1,18 @@
 ﻿using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 using MessageBus.Abstractions;
+using MessageBus.Extensions.Microsoft.DependencyInjection;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Moq;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
@@ -65,7 +69,13 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         }
 
         protected async Task DeleteSubscriptionAsync(string subscription)
-            => await _serviceBusAdminClient.DeleteSubscriptionAsync(_topic, subscription);
+        {
+            try
+            {
+                await _serviceBusAdminClient.DeleteSubscriptionAsync(_topic, subscription);
+            }
+            catch { }
+        }
 
         protected static string GetAircraftIdFromMessage(BinaryData message)
         {
@@ -143,5 +153,13 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 AuthenticationType.ManagedIdentity => new AzureServiceBusClient(_hostname, _topic, subscription, _tenantId),
                 _ => throw new NotImplementedException()
             };
+
+        protected static async Task RunMessageBusHostedService(ServiceProvider serviceProvider, int durationInSeconds = 10)
+        {
+            var sut = serviceProvider.GetService<IHostedService>() as MessageBusHostedService;
+
+            await sut.StartAsync(new CancellationToken());
+            await Task.Delay(TimeSpan.FromSeconds(durationInSeconds));
+        }
     }
 }
