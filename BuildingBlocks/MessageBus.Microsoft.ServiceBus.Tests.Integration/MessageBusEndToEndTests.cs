@@ -47,19 +47,12 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var inputSubscription = nameof(ReceivesAndSendsEventsHighPerformance);
             await CreateEndToEndTestSubscriptions(inputSubscription);
 
-            var serviceBusAdminClient = new AzureServiceBusAdminClient(Configuration["Hostname"],
-                Configuration["Topic"], inputSubscription, Configuration["TenantId"]);
-            var options = new ServiceBusProcessorOptions
-            {
-                PrefetchCount = 50,
-                MaxConcurrentCalls = 50
-            };
-            var serviceBusClient = new AzureServiceBusClient(Configuration["Hostname"],
-                    Configuration["Topic"], inputSubscription, Configuration["TenantId"], options);
             var services = new ServiceCollection();
             services.AddHostedService<MessageBusHostedService>()
                 .AddSingleton<ISomeDependency, SomeDependency>()
-                .AddMessageBus(serviceBusAdminClient, serviceBusClient)
+                .AddMessageBus(new AzureServiceBusAdminClient(Configuration["Hostname"],
+                    Configuration["Topic"], inputSubscription, Configuration["TenantId"]), 
+                    CreateHighPerformanceClient(inputSubscription))
                 .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
             var serviceProvider = services.BuildServiceProvider();
             await StartMessageBusHostedService(serviceProvider);
@@ -69,7 +62,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             await Task.Delay(TimeSpan.FromSeconds(4));
             Assert.DoesNotContain(await ReceiveMessagesForSubscriptionAsync(inputSubscription),
                 m => m.Body.ToObjectFromJson<AircraftTakenOff>().AircraftId == aircraftTakenOffEvent.AircraftId);
-            Assert.Equal(count, (await ReceiveMessagesForSubscriptionAsync($"{inputSubscription}-Output")).Count(m => 
+            Assert.Equal(count, (await ReceiveMessagesForSubscriptionAsync($"{inputSubscription}-Output")).Count(m =>
                 m.ApplicationProperties["MessageType"].ToString() == nameof(AircraftLeftAirspace)
                 && m.Body.ToObjectFromJson<AircraftLeftAirspace>().AircraftIdentifier == aircraftTakenOffEvent.AircraftId));
         }

@@ -173,5 +173,17 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             await DeleteSubscriptionAsync($"{subscription}-Output");
             await CreateSubscriptionAsync($"{subscription}-Output");
         }
+
+        protected AzureServiceBusClient CreateHighPerformanceClient(string inputSubscription)
+        {
+            var options = new ServiceBusProcessorOptions
+            {
+                PrefetchCount = 50,
+                MaxConcurrentCalls = 50
+            };
+            var serviceBusClient = new AzureServiceBusClient(Configuration["Hostname"],
+                    Configuration["Topic"], inputSubscription, Configuration["TenantId"], options);
+            return serviceBusClient;
+        }
     }
 }
