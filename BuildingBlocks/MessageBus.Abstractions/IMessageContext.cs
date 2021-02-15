@@ -15,6 +15,7 @@ namespace MessageBus.Abstractions
 
         Task DeadLetterMessageAsync(string? reason = null);
         Task PublishAsync(Message<IEvent> eventMessage);
+        Task SendAsync(Message<ICommand> command);
     }
 }
  
