@@ -4,6 +4,7 @@ using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -207,6 +208,56 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             Assert.Single(await ReceiveMessagesForSubscriptionAsync($"{subscription}", deadLetter: true),
                 m => m.ApplicationProperties["MessageType"].ToString() == nameof(CreateNewFlightPlan)
                 && m.DeadLetterReason == createNewFlightPlan.Destination);
+        }
+
+        [Fact]
+        public async Task ReceivesAndSendsMessagesHighPerformance()
+        {
+            var inputSubscription = nameof(ReceivesAndSendsMessagesHighPerformance);
+            await CreateEndToEndTestSubscriptions(inputSubscription);
+
+            var services = new ServiceCollection();
+            services.AddHostedService<MessageBusHostedService>()
+                .AddSingleton<ISomeDependency, SomeDependency>()
+                .AddMessageBus(new AzureServiceBusAdminClient(Configuration["Hostname"],
+                    Configuration["Topic"], inputSubscription, Configuration["TenantId"]),
+                    CreateHighPerformanceClient(inputSubscription))
+                .SubscribeToMessage<CreateNewFlightPlan, CreateNewFlightPlanHandler>()
+                .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>()
+                .SubscribeToMessage<AircraftLeftRunway, AircraftLeftRunwayHandlerDeadLetter>();
+            var serviceProvider = services.BuildServiceProvider();
+            await StartMessageBusHostedService(serviceProvider);
+
+            var count = 25;
+            var createNewFlightPlanCommand = new CreateNewFlightPlan { Destination = Guid.NewGuid().ToString() };
+            var aircraftTakenOffEvent1 = BuildAircraftTakenOffEvent();
+            var aircraftTakenOffEvent2 = BuildAircraftTakenOffEvent();
+            var aircraftLeftRunwayEvent1 = new AircraftLeftRunway { RunwayId = Guid.NewGuid().ToString() };
+            var aircraftLeftRunwayEvent2 = new AircraftLeftRunway { RunwayId = Guid.NewGuid().ToString() };
+            var tasks = new List<Task>
+            {
+                SendMessages(createNewFlightPlanCommand, count),
+                SendMessages(aircraftTakenOffEvent1, count),
+                SendMessages(aircraftTakenOffEvent2, count),
+                SendMessages(aircraftLeftRunwayEvent1, count),
+                SendMessages(aircraftLeftRunwayEvent2, count)
+            };
+            await Task.WhenAll(tasks);
+            await Task.Delay(TimeSpan.FromSeconds(4));
+            Assert.DoesNotContain(await ReceiveMessagesForSubscriptionAsync(inputSubscription),
+                m => m.Body.ToObjectFromJson<AircraftTakenOff>().AircraftId == aircraftTakenOffEvent1.AircraftId);
+            var messages = await ReceiveMessagesForSubscriptionAsync($"{inputSubscription}-Output");
+            var deadLetterMessages = await ReceiveMessagesForSubscriptionAsync($"{inputSubscription}", deadLetter: true);
+            Assert.Equal(count, messages.Count(m => m.ApplicationProperties["MessageType"].ToString() == nameof(StartEngines)
+                && m.Body.ToObjectFromJson<StartEngines>().EngineId == createNewFlightPlanCommand.Destination));
+            Assert.Equal(count, messages.Count(m => m.ApplicationProperties["MessageType"].ToString() == nameof(AircraftLeftAirspace)
+                && m.Body.ToObjectFromJson<AircraftLeftAirspace>().AircraftIdentifier == aircraftTakenOffEvent1.AircraftId));
+            Assert.Equal(count, messages.Count(m => m.ApplicationProperties["MessageType"].ToString() == nameof(AircraftLeftAirspace)
+                && m.Body.ToObjectFromJson<AircraftLeftAirspace>().AircraftIdentifier == aircraftTakenOffEvent2.AircraftId));
+            Assert.Equal(count, deadLetterMessages.Count(m => m.ApplicationProperties["MessageType"].ToString() == nameof(AircraftLeftRunway)
+                && m.DeadLetterReason == aircraftLeftRunwayEvent1.RunwayId));
+            Assert.Equal(count, deadLetterMessages.Count(m => m.ApplicationProperties["MessageType"].ToString() == nameof(AircraftLeftRunway)
+                && m.DeadLetterReason == aircraftLeftRunwayEvent2.RunwayId));
         }
     }
 }
