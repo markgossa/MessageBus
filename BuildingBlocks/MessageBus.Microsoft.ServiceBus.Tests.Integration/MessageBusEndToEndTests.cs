@@ -49,7 +49,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             services.AddHostedService<MessageBusHostedService>()
                 .AddSingleton<ISomeDependency, SomeDependency>()
                 .AddMessageBus(new AzureServiceBusAdminClient(Configuration["Hostname"],
-                    Configuration["Topic"], inputSubscription, Configuration["TenantId"]), 
+                    Configuration["Topic"], inputSubscription, Configuration["TenantId"]),
                     CreateHighPerformanceClient(inputSubscription))
                 .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
             var serviceProvider = services.BuildServiceProvider();
@@ -96,7 +96,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var createNewFlightPlanCommand = new CreateNewFlightPlan { Destination = Guid.NewGuid().ToString() };
             var inputSubscription = nameof(ReceivesAndSendsCommandsHighPerformance);
             await CreateEndToEndTestSubscriptions(inputSubscription);
-            
+
             var services = new ServiceCollection();
             services.AddHostedService<MessageBusHostedService>()
                 .AddSingleton<ISomeDependency, SomeDependency>()
@@ -115,6 +115,48 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             Assert.Equal(count, (await ReceiveMessagesForSubscriptionAsync($"{inputSubscription}-Output")).Count(m =>
                 m.ApplicationProperties["MessageType"].ToString() == nameof(StartEngines)
                 && m.Body.ToObjectFromJson<StartEngines>().EngineId == createNewFlightPlanCommand.Destination));
+        }
+
+        [Fact]
+        public async Task SendsCommand()
+        {
+            var subscription = nameof(SendsCommand);
+            await CreateEndToEndTestSubscriptions(subscription);
+
+            var services = new ServiceCollection();
+            services.AddHostedService<MessageBusHostedService>()
+                .AddSingleton<ISomeDependency, SomeDependency>()
+                .AddSingleton<ISendingService, SendingService>()
+                .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
+                        Configuration["Topic"], subscription, Configuration["TenantId"]));
+            var serviceProvider = services.BuildServiceProvider();
+            var setAutopilotCommand = new SetAutopilot { AutopilotId = Guid.NewGuid().ToString() };
+            await serviceProvider.GetRequiredService<ISendingService>().SendAsync(setAutopilotCommand);
+
+             Assert.Single(await ReceiveMessagesForSubscriptionAsync($"{subscription}-Output"),
+                m => m.ApplicationProperties["MessageType"].ToString() == nameof(SetAutopilot)
+                && m.Body.ToObjectFromJson<SetAutopilot>().AutopilotId == setAutopilotCommand.AutopilotId);
+        }
+        
+        [Fact]
+        public async Task SendsEvent()
+        {
+            var subscription = nameof(SendsEvent);
+            await CreateEndToEndTestSubscriptions(subscription);
+
+            var services = new ServiceCollection();
+            services.AddHostedService<MessageBusHostedService>()
+                .AddSingleton<ISomeDependency, SomeDependency>()
+                .AddSingleton<IPublishingService, PublishingService>()
+                .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
+                        Configuration["Topic"], subscription, Configuration["TenantId"]));
+            var serviceProvider = services.BuildServiceProvider();
+            var aircraftTakenOffEvent = new AircraftTakenOff { AircraftId = Guid.NewGuid().ToString() };
+            await serviceProvider.GetRequiredService<IPublishingService>().PublishAsync(aircraftTakenOffEvent);
+
+             Assert.Single(await ReceiveMessagesForSubscriptionAsync($"{subscription}-Output"),
+                m => m.ApplicationProperties["MessageType"].ToString() == nameof(AircraftTakenOff)
+                && m.Body.ToObjectFromJson<AircraftTakenOff>().AircraftId == aircraftTakenOffEvent.AircraftId);
         }
     }
 }
