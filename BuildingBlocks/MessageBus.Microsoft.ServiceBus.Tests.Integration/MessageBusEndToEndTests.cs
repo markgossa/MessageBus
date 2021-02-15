@@ -16,7 +16,6 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         [Fact]
         public async Task ReceivesAndSendsEvent()
         {
-            var aircraftLeftRunwayEvent = new AircraftLeftRunway { RunwayId = Guid.NewGuid().ToString() };
             var inputSubscription = nameof(ReceivesAndSendsEvent);
             await CreateEndToEndTestSubscriptions(inputSubscription);
 
@@ -29,6 +28,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var serviceProvider = services.BuildServiceProvider();
             await StartMessageBusHostedService(serviceProvider);
 
+            var aircraftLeftRunwayEvent = new AircraftLeftRunway { RunwayId = Guid.NewGuid().ToString() };
             await SendMessages(aircraftLeftRunwayEvent);
             await Task.Delay(TimeSpan.FromSeconds(4));
             Assert.DoesNotContain(await ReceiveMessagesForSubscriptionAsync(inputSubscription),
@@ -41,7 +41,6 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         [Fact]
         public async Task ReceivesAndSendsEventsHighPerformance()
         {
-            var aircraftTakenOffEvent = BuildAircraftTakenOffEvent();
             var inputSubscription = nameof(ReceivesAndSendsEventsHighPerformance);
             await CreateEndToEndTestSubscriptions(inputSubscription);
 
@@ -56,6 +55,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             await StartMessageBusHostedService(serviceProvider);
 
             var count = 50;
+            var aircraftTakenOffEvent = BuildAircraftTakenOffEvent();
             await SendMessages(aircraftTakenOffEvent, count);
             await Task.Delay(TimeSpan.FromSeconds(4));
             Assert.DoesNotContain(await ReceiveMessagesForSubscriptionAsync(inputSubscription),
@@ -68,7 +68,6 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         [Fact]
         public async Task ReceivesAndSendsCommand()
         {
-            var setAutopilotCommand = new SetAutopilot { AutopilotId = Guid.NewGuid().ToString() };
             var inputSubscription = nameof(ReceivesAndSendsCommand);
             await CreateEndToEndTestSubscriptions(inputSubscription);
 
@@ -81,6 +80,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var serviceProvider = services.BuildServiceProvider();
             await StartMessageBusHostedService(serviceProvider);
 
+            var setAutopilotCommand = new SetAutopilot { AutopilotId = Guid.NewGuid().ToString() };
             await SendMessages(setAutopilotCommand);
             await Task.Delay(TimeSpan.FromSeconds(4));
             Assert.DoesNotContain(await ReceiveMessagesForSubscriptionAsync(inputSubscription),
@@ -93,7 +93,6 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         [Fact]
         public async Task ReceivesAndSendsCommandsHighPerformance()
         {
-            var createNewFlightPlanCommand = new CreateNewFlightPlan { Destination = Guid.NewGuid().ToString() };
             var inputSubscription = nameof(ReceivesAndSendsCommandsHighPerformance);
             await CreateEndToEndTestSubscriptions(inputSubscription);
 
@@ -108,6 +107,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             await StartMessageBusHostedService(serviceProvider);
 
             var count = 50;
+            var createNewFlightPlanCommand = new CreateNewFlightPlan { Destination = Guid.NewGuid().ToString() };
             await SendMessages(createNewFlightPlanCommand, count);
             await Task.Delay(TimeSpan.FromSeconds(4));
             Assert.DoesNotContain(await ReceiveMessagesForSubscriptionAsync(inputSubscription),
@@ -133,7 +133,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var setAutopilotCommand = new SetAutopilot { AutopilotId = Guid.NewGuid().ToString() };
             await serviceProvider.GetRequiredService<ISendingService>().SendAsync(setAutopilotCommand);
 
-             Assert.Single(await ReceiveMessagesForSubscriptionAsync($"{subscription}-Output"),
+            Assert.Single(await ReceiveMessagesForSubscriptionAsync($"{subscription}-Output"),
                 m => m.ApplicationProperties["MessageType"].ToString() == nameof(SetAutopilot)
                 && m.Body.ToObjectFromJson<SetAutopilot>().AutopilotId == setAutopilotCommand.AutopilotId);
         }
