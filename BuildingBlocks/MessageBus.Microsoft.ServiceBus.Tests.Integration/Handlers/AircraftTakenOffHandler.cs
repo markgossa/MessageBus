@@ -19,7 +19,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers
         public async Task HandleAsync(IMessageContext<AircraftTakenOff> context)
         {
             _dependency.Ids.Add(context.Message.AircraftId);
-            await Task.Run(() => System.Console.WriteLine("Jeronimo!"));
+
+            var message = new Message<IEvent>(new AircraftLeftAirspace { AircraftIdentifier = context.Message.AircraftId });
+            await context.PublishAsync(message);
         }
     }
 }

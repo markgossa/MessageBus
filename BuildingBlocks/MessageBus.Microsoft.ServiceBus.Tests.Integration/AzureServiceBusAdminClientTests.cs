@@ -7,6 +7,7 @@ using Xunit;
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 {
+    [Collection("IntegrationTests")]
     public class AzureServiceBusAdminClientTests : AzureServiceBusAdminClientTestsBase
     {
         [Fact]

@@ -10,6 +10,7 @@ using Xunit;
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 {
+    [Collection("IntegrationTests")]
     public class AzureServiceBusClientTests : MessageBusTestsBase
     {
         private readonly Mock<ITestHandler> mockTestHandler = new Mock<ITestHandler>();
@@ -42,7 +43,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             sut.AddErrorMessageHandler(mockTestHandler.Object.ErrorMessageHandler); 
             await sut.StartAsync();
 
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            await Task.Delay(TimeSpan.FromSeconds(10));
             mockTestHandler.Verify(m => m.ErrorMessageHandler(It.Is<MessageErrorReceivedEventArgs>(m =>
                 m.Exception.GetType() == typeof(MessageHandlerNotFoundException))), Times.Exactly(10));
         }

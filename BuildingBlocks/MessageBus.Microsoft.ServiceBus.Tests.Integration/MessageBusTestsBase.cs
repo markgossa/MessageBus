@@ -50,11 +50,17 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 Timestamp = DateTime.Now
             };
 
-        protected async Task SendEvent(IMessage message)
+        protected async Task SendMessages(IMessage message, int count = 1)
         {
-            var messageBody = new ServiceBusMessage(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, message.GetType())));
-            messageBody.ApplicationProperties.Add("MessageType", message.GetType().Name);
-            await _serviceBusSender.SendMessageAsync(messageBody);
+            var messages = new List<ServiceBusMessage>();
+            for (var i = 0; i < count; i++)
+            {
+                var serviceBusMessage = new ServiceBusMessage(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, message.GetType())));
+                serviceBusMessage.ApplicationProperties.Add("MessageType", message.GetType().Name);
+                messages.Add(serviceBusMessage);
+            }
+
+            await _serviceBusSender.SendMessagesAsync(messages);
         }
 
         protected async Task CreateSubscriptionAsync(string subscription)
@@ -87,7 +93,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             await CreateSubscriptionAsync(subscriptionName);
             var aircraftTakenOffEvent = BuildAircraftTakenOffEvent();
-            await SendEvent(aircraftTakenOffEvent);
+            await SendMessages(aircraftTakenOffEvent);
 
             return aircraftTakenOffEvent;
         }
@@ -96,7 +102,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             await CreateSubscriptionAsync(subscriptionName);
             var aircraftTakenOffEvent = new AircraftLanded { AircraftId = Guid.NewGuid().ToString() };
-            await SendEvent(aircraftTakenOffEvent);
+            await SendMessages(aircraftTakenOffEvent);
 
             return aircraftTakenOffEvent;
         }
@@ -154,12 +160,18 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 _ => throw new NotImplementedException()
             };
 
-        protected static async Task RunMessageBusHostedService(ServiceProvider serviceProvider, int durationInSeconds = 10)
+        protected static async Task StartMessageBusHostedService(ServiceProvider serviceProvider)
         {
             var sut = serviceProvider.GetService<IHostedService>() as MessageBusHostedService;
 
             await sut.StartAsync(new CancellationToken());
-            await Task.Delay(TimeSpan.FromSeconds(durationInSeconds));
+        }
+
+        protected async Task CreateEndToEndTestSubscriptions(string subscription)
+        {
+            await DeleteSubscriptionAsync(subscription);
+            await DeleteSubscriptionAsync($"{subscription}-Output");
+            await CreateSubscriptionAsync($"{subscription}-Output");
         }
     }
 }

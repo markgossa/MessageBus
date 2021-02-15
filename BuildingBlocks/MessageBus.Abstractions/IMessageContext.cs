@@ -14,6 +14,7 @@ namespace MessageBus.Abstractions
         int DeliveryCount { get; }
 
         Task DeadLetterMessageAsync(string? reason = null);
+        Task PublishAsync(Message<IEvent> eventMessage);
     }
 }
  
