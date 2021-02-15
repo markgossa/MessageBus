@@ -158,5 +158,55 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 m => m.ApplicationProperties["MessageType"].ToString() == nameof(AircraftTakenOff)
                 && m.Body.ToObjectFromJson<AircraftTakenOff>().AircraftId == aircraftTakenOffEvent.AircraftId);
         }
+
+        [Fact]
+        public async Task ReceivesAndDeadLettersEvent()
+        {
+            var aircraftLeftRunwayEvent = new AircraftLeftRunway { RunwayId = Guid.NewGuid().ToString() };
+            var inputSubscription = nameof(ReceivesAndDeadLettersEvent);
+            await CreateEndToEndTestSubscriptions(inputSubscription);
+
+            var services = new ServiceCollection();
+            services.AddHostedService<MessageBusHostedService>()
+                .AddSingleton<ISomeDependency, SomeDependency>()
+                .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
+                        Configuration["Topic"], inputSubscription, Configuration["TenantId"]))
+                .SubscribeToMessage<AircraftLeftRunway, AircraftLeftRunwayHandlerDeadLetter>();
+            var serviceProvider = services.BuildServiceProvider();
+            await StartMessageBusHostedService(serviceProvider);
+
+            await SendMessages(aircraftLeftRunwayEvent);
+            await Task.Delay(TimeSpan.FromSeconds(4));
+            Assert.DoesNotContain(await ReceiveMessagesForSubscriptionAsync(inputSubscription),
+                m => m.Body.ToObjectFromJson<AircraftLeftRunway>().RunwayId == aircraftLeftRunwayEvent.RunwayId);
+            Assert.Single(await ReceiveMessagesForSubscriptionAsync($"{inputSubscription}", deadLetter: true),
+                m => m.ApplicationProperties["MessageType"].ToString() == nameof(AircraftLeftRunway)
+                && m.DeadLetterReason == aircraftLeftRunwayEvent.RunwayId);
+        }
+        
+        [Fact]
+        public async Task ReceivesAndDeadLettersCommand()
+        {
+            var createNewFlightPlan = new CreateNewFlightPlan { Destination = Guid.NewGuid().ToString() };
+            var subscription = nameof(ReceivesAndDeadLettersCommand);
+            await CreateEndToEndTestSubscriptions(subscription);
+
+            var services = new ServiceCollection();
+            services.AddHostedService<MessageBusHostedService>()
+                .AddSingleton<ISomeDependency, SomeDependency>()
+                .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
+                        Configuration["Topic"], subscription, Configuration["TenantId"]))
+                .SubscribeToMessage<CreateNewFlightPlan, CreateNewFlightPlanHandlerDeadLetter>();
+            var serviceProvider = services.BuildServiceProvider();
+            await StartMessageBusHostedService(serviceProvider);
+
+            await SendMessages(createNewFlightPlan);
+            await Task.Delay(TimeSpan.FromSeconds(4));
+            Assert.DoesNotContain(await ReceiveMessagesForSubscriptionAsync(subscription),
+                m => m.Body.ToObjectFromJson<CreateNewFlightPlan>().Destination == createNewFlightPlan.Destination);
+            Assert.Single(await ReceiveMessagesForSubscriptionAsync($"{subscription}", deadLetter: true),
+                m => m.ApplicationProperties["MessageType"].ToString() == nameof(CreateNewFlightPlan)
+                && m.DeadLetterReason == createNewFlightPlan.Destination);
+        }
     }
 }
