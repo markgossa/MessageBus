@@ -40,33 +40,6 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         }
 
         [Fact]
-        public async Task ReceivesAndSendsEventsHighPerformance()
-        {
-            var inputSubscription = nameof(ReceivesAndSendsEventsHighPerformance);
-            await CreateEndToEndTestSubscriptions(inputSubscription);
-
-            var services = new ServiceCollection();
-            services.AddHostedService<MessageBusHostedService>()
-                .AddSingleton<ISomeDependency, SomeDependency>()
-                .AddMessageBus(new AzureServiceBusAdminClient(Configuration["Hostname"],
-                    Configuration["Topic"], inputSubscription, Configuration["TenantId"]),
-                    CreateHighPerformanceClient(inputSubscription))
-                .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
-            var serviceProvider = services.BuildServiceProvider();
-            await StartMessageBusHostedService(serviceProvider);
-
-            var count = 50;
-            var aircraftTakenOffEvent = BuildAircraftTakenOffEvent();
-            await SendMessages(aircraftTakenOffEvent, count);
-            await Task.Delay(TimeSpan.FromSeconds(4));
-            Assert.DoesNotContain(await ReceiveMessagesForSubscriptionAsync(inputSubscription),
-                m => m.Body.ToObjectFromJson<AircraftTakenOff>().AircraftId == aircraftTakenOffEvent.AircraftId);
-            Assert.Equal(count, (await ReceiveMessagesForSubscriptionAsync($"{inputSubscription}-Output")).Count(m =>
-                m.ApplicationProperties["MessageType"].ToString() == nameof(AircraftLeftAirspace)
-                && m.Body.ToObjectFromJson<AircraftLeftAirspace>().AircraftIdentifier == aircraftTakenOffEvent.AircraftId));
-        }
-
-        [Fact]
         public async Task ReceivesAndSendsCommand()
         {
             var inputSubscription = nameof(ReceivesAndSendsCommand);
@@ -89,33 +62,6 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             Assert.Single(await ReceiveMessagesForSubscriptionAsync($"{inputSubscription}-Output"),
                 m => m.ApplicationProperties["MessageType"].ToString() == nameof(MonitorAutopilot)
                 && m.Body.ToObjectFromJson<MonitorAutopilot>().AutopilotIdentifider == setAutopilotCommand.AutopilotId);
-        }
-
-        [Fact]
-        public async Task ReceivesAndSendsCommandsHighPerformance()
-        {
-            var inputSubscription = nameof(ReceivesAndSendsCommandsHighPerformance);
-            await CreateEndToEndTestSubscriptions(inputSubscription);
-
-            var services = new ServiceCollection();
-            services.AddHostedService<MessageBusHostedService>()
-                .AddSingleton<ISomeDependency, SomeDependency>()
-                .AddMessageBus(new AzureServiceBusAdminClient(Configuration["Hostname"],
-                    Configuration["Topic"], inputSubscription, Configuration["TenantId"]),
-                    CreateHighPerformanceClient(inputSubscription))
-                .SubscribeToMessage<CreateNewFlightPlan, CreateNewFlightPlanHandler>();
-            var serviceProvider = services.BuildServiceProvider();
-            await StartMessageBusHostedService(serviceProvider);
-
-            var count = 50;
-            var createNewFlightPlanCommand = new CreateNewFlightPlan { Destination = Guid.NewGuid().ToString() };
-            await SendMessages(createNewFlightPlanCommand, count);
-            await Task.Delay(TimeSpan.FromSeconds(4));
-            Assert.DoesNotContain(await ReceiveMessagesForSubscriptionAsync(inputSubscription),
-                m => m.Body.ToObjectFromJson<AircraftTakenOff>().AircraftId == createNewFlightPlanCommand.Destination);
-            Assert.Equal(count, (await ReceiveMessagesForSubscriptionAsync($"{inputSubscription}-Output")).Count(m =>
-                m.ApplicationProperties["MessageType"].ToString() == nameof(StartEngines)
-                && m.Body.ToObjectFromJson<StartEngines>().EngineId == createNewFlightPlanCommand.Destination));
         }
 
         [Fact]

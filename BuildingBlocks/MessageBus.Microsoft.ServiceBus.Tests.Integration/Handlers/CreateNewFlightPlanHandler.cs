@@ -9,7 +9,6 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers
         public async Task HandleAsync(IMessageContext<CreateNewFlightPlan> context)
         {
             var startEnginesCommand = new StartEngines { EngineId = context.Message.Destination };
-
             await context.SendAsync(new Message<ICommand>(startEnginesCommand));
         }
     }

@@ -15,10 +15,10 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Services
             _someDependency = someDependency;
         }
 
-        public Task SendAsync(ICommand message)
+        public async Task SendAsync(ICommand message)
         {
             _someDependency.Ids.Add(Guid.NewGuid().ToString());
-            return _messageBus.SendAsync(new Message<ICommand>(message));
+            await _messageBus.SendAsync(new Message<ICommand>(message));
         }
     }
 }
