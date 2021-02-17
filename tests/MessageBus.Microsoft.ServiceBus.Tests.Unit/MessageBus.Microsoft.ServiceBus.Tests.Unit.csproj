@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MessageBus.Microsoft.ServiceBus\MessageBus.Microsoft.ServiceBus.csproj" />
+    <ProjectReference Include="..\..\src\MessageBus.Microsoft.ServiceBus\MessageBus.Microsoft.ServiceBus.csproj" />
   </ItemGroup>
 
 </Project>

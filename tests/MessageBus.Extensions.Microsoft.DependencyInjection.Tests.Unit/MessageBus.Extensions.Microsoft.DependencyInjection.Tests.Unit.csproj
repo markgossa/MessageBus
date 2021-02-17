@@ -4,17 +4,11 @@
 	  <TargetFramework>net5.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
-    <UserSecretsId>3911ee07-0565-477b-9569-bff8b78519c5</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
-    <PackageReference Include="Microsoft.Azure.Management.ServiceBus.Fluent" Version="1.36.1" />
-    <PackageReference Include="microsoft.extensions.configuration" Version="5.0.0" />
-    <PackageReference Include="microsoft.extensions.configuration.json" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions" Version="5.0.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
     <PackageReference Include="Moq" Version="4.15.2" />
     <PackageReference Include="xunit" Version="2.4.1" />
@@ -29,14 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MessageBus.Abstractions\MessageBus.Abstractions.csproj" />
-    <ProjectReference Include="..\MessageBus.Microsoft.ServiceBus\MessageBus.Microsoft.ServiceBus.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <ProjectReference Include="..\..\src\MessageBus.Extensions.Microsoft.DependencyInjection\MessageBus.Extensions.Microsoft.DependencyInjection.csproj" />
   </ItemGroup>
 
 </Project>

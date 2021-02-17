@@ -10,9 +10,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\BuildingBlocks\MessageBus.Abstractions\MessageBus.Abstractions.csproj" />
-    <ProjectReference Include="..\..\BuildingBlocks\MessageBus.Extensions.Microsoft.DependencyInjection\MessageBus.Extensions.Microsoft.DependencyInjection.csproj" />
-    <ProjectReference Include="..\..\BuildingBlocks\MessageBus.Microsoft.ServiceBus\MessageBus.Microsoft.ServiceBus.csproj" />
+    <ProjectReference Include="..\..\src\MessageBus.Abstractions\MessageBus.Abstractions.csproj" />
+    <ProjectReference Include="..\..\src\MessageBus.Extensions.Microsoft.DependencyInjection\MessageBus.Extensions.Microsoft.DependencyInjection.csproj" />
+    <ProjectReference Include="..\..\src\MessageBus.Microsoft.ServiceBus\MessageBus.Microsoft.ServiceBus.csproj" />
   </ItemGroup>
 
 </Project>
