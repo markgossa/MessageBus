@@ -609,7 +609,7 @@ private static ServiceProvider ConfigureServices()
 
 MessageBus is designed to be extensible so you can use it with any messaging technology and so it can be extended with additional features. See a UML diagram of the abstractions below. For example, any implementation of `IMessageBusClient` or `IMessageBusAdminClient` can be used to enable the use of RabbitMQ or other messaging technologies.
 
-![](Documentation/MessageBusUmlDiagram.jpg)
+![](docs/MessageBusUmlDiagram.jpg)
 
 | Class | Interface | Description |
 | --- | --- | --- |
