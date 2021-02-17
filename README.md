@@ -19,20 +19,21 @@ MessageBus is an abstraction layer for messaging technologies such as Azure Serv
     - [5. Add settings to appsettings.json](#5-add-settings-to-appsettingsjson)
       - [Managed Identity settings](#managed-identity-settings)
       - [Connection String settings](#connection-string-settings)
-  - [Advanced](#advanced)
-    - [Sending messages](#sending-messages)
-      - [Send or publish commands or events from a message handler](#send-or-publish-commands-or-events-from-a-message-handler)
-      - [Send or publish commands or events from a service](#send-or-publish-commands-or-events-from-a-service)
+  - [Sending messages](#sending-messages)
+    - [Send commands or publish events from a message handler](#send-commands-or-publish-events-from-a-message-handler)
+    - [Send commands or publish events from a service](#send-commands-or-publish-events-from-a-service)
+    - [Set custom properties on messages](#set-custom-properties-on-messages)
+  - [Working with messages](#working-with-messages)
     - [Deserializing messages](#deserializing-messages)
     - [Get message properties](#get-message-properties)
     - [Get message context properties](#get-message-context-properties)
     - [Start listening for messages](#start-listening-for-messages)
     - [Dead lettering messages](#dead-lettering-messages)
     - [Message Versioning](#message-versioning)
-    - [Health checks](#health-checks)
     - [Change the default properties (MessageType and MessageVersion)](#change-the-default-properties-messagetype-and-messageversion)
     - [Using custom message properties for subscription filters](#using-custom-message-properties-for-subscription-filters)
-    - [Configuring Service Bus Processor options](#configuring-service-bus-processor-options)
+  - [Health checks](#health-checks)
+  - [Configuring Service Bus Processor options](#configuring-service-bus-processor-options)
   - [Programming model](#programming-model)
 
 ## Getting Started with MessageBus and Azure Service Bus
@@ -106,7 +107,6 @@ This can be done using the `IServiceCollection` extension methods in conjunction
 You can either authenticate with Managed Identity or a Connection String.
 
 #### Authenticate with Managed Identity
-
 ```csharp
 using MessageBus.Extensions.Microsoft.DependencyInjection;
 using MessageBus.Microsoft.ServiceBus;
@@ -152,7 +152,6 @@ namespace MessageBus.HostedService.Example
 ```
 
 #### Authenticate with a connection string
-
 ```csharp
         private static ServiceProvider ConfigureServices()
         {
@@ -250,9 +249,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Services
 }
 ```
 
-## Advanced
-
-### Sending messages
+## Sending messages
 
 You can either publish an IEvent or send an ICommand. In either case, the Type of the message being sent is automatically used as the `MessageType` property on the sent message. In addition, if you have set the `MessageVersion` attribute on the message class that you are sending, this is automatically added as the `MessageVersion` property on the sent message.
 
@@ -262,7 +259,9 @@ You can publish an IEvent or simple string. Likewise, you can either send an ICo
 
 When sending messages from handlers using `MessageContext.SendAsync()` or `MessageContext.PublishAsync()`, these messages will have the same `CorrelationId` as the received message however this can be overridden by setting properties on `Message<IEvent>` or `Message<ICommand>`.
 
-#### Send or publish commands or events from a message handler
+### Send commands or publish events from a message handler
+
+You can send commands or publish events from ICommand objects or IEvent objects respectively or you can send just a string as a message. See below.
 
 ```csharp
 using MessageBus.Abstractions;
@@ -275,17 +274,27 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers
     {
         public async Task HandleAsync(IMessageContext<AircraftLeftRunway> context)
         {
+            // Publish an event from an IEvent e.g. AircraftReachedGate
             var aircraftReachedGateEvent = new AircraftReachedGate { AirlineId = context.Message.RunwayId };
             await context.PublishAsync(new Message<IEvent>(aircraftReachedGateEvent));
 
+            // Publish an event from a string
+            await context.PublishAsync(new Message<IEvent>("Hello world!"));
+
+            // Publish a command from an ICommand e.g. StartEngines
             var startEnginesCommand = new StartEngines { EngineId = context.Message.Destination };
             await context.SendAsync(new Message<ICommand>(startEnginesCommand));
+            
+            // Publish a command from a string
+            await context.SendAsync(new Message<ICommand>("Hello world!"));
         }
     }
 }
 ```
 
-#### Send or publish commands or events from a service
+### Send commands or publish events from a service
+
+You can send commands or publish events from ICommand objects or IEvent objects respectively or you can send just a string as a message. See below.
 
 ```csharp
 using MessageBus.Abstractions;
@@ -307,15 +316,50 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Services
 
         public async Task SendMessages()
         {
+            // Publish an event from an IEvent e.g. AircraftReachedGate
             var aircraftReachedGateEvent = new AircraftReachedGate { AirlineId = context.Message.RunwayId };
             await _messageBus.PublishAsync(new Message<IEvent>(aircraftReachedGateEvent));
+            
+            // Publish an event from a string
+            await _messageBus.PublishAsync(new Message<IEvent>("Hello world!"));
 
+            // Publish a command from an ICommand e.g. StartEngines
             var startEnginesCommand = new StartEngines { EngineId = context.Message.Destination };
             await _messageBus.SendAsync(new Message<ICommand>(startEnginesCommand));
+            
+            // Publish a command from a string
+            await _messageBus.SendAsync(new Message<ICommand>("Hello world!"));
         }
     }
 }
 ```
+
+### Set custom properties on messages
+
+You can set custom message properties on messages that are sent and you can also specify whether the default message properties (`MessageType` and `MessageVersion`) are removed so you can get maximum flexibility. 
+
+`MessageId` and `CorrelationId` can also be overridden. By default `MessageId` defaults to a new Guid. `CorrelationId` defaults to null if sending from an injected instance of `IMessageBus` but defaults to the `CorrelationId` of the received message when sending using `MessageContext<T>` within a message handler.
+
+```csharp
+public async Task SendMessages()
+{
+    var eventObject = new Message<IEvent>("Hello World!")
+    {
+        OverrideDefaultMessageProperties = false,
+        CorrelationId = "MyCorrelationId",
+        MessageId = "MyMessageId",
+        MessageProperties = new Dictionary<string, string>
+        {
+            { "AircraftType", "Commercial" },
+            { "AircraftSize", "Heavy" }
+        }
+    };
+
+    await _messageBus.PublishAsync(eventObject);
+}
+```
+
+## Working with messages
 
 ### Deserializing messages
 
@@ -405,57 +449,6 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Models.V2
 }
 ```
 
-### Health checks
-
-This is done by using the ASP.NET built in health check in conjunction with `MessageBusHealthCheck`. In the case of Azure Service Bus, the health check will check networking and permissions by attempting to get details about the topic.
-
-In the example below, the health status can be checked using http://myservice/health.
-
-```csharp
-using MessageBus.Extensions.Microsoft.DependencyInjection;
-using MessageBus.Microsoft.ServiceBus;
-using MessageBus.HostedService.Example.Events;
-using MessageBus.HostedService.Example.Handlers;
-using MessageBus.HostedService.Example.Services;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace MessageBus.HostedService.Example
-{
-    public class Startup
-    {
-        public IConfiguration Configuration { get; }
-
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
-
-        public void ConfigureServices(IServiceCollection services)
-        {
-            services.AddHostedService<MessageBusHostedService>()
-                .AddSingleton<IDependency, SomeDependency>()
-                .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
-                        Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
-                        Configuration["ServiceBus:TenantId"]))
-                    .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
-            services.AddHealthChecks().AddCheck<MessageBusHealthCheck>("MessageBus");
-        }
-
-        public void Configure(IApplicationBuilder app)
-        {
-            app.UseRouting();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapHealthChecks("/health");
-            });
-        }
-    }
-}
-```
-
 ### Change the default properties (MessageType and MessageVersion)
 
 If using Azure Service Bus, the `AzureServiceBusAdminClient` is used to create and configure the subscription. By default, the message property that determines the message type is called `MessageType` and the property that determines the message version is called `MessageVersion` however these can be configured by passing `MessageBusOptions` into `AddMessageBus()`.
@@ -533,9 +526,60 @@ private static ServiceProvider ConfigureServices()
 }
 ```
 
-### Configuring Service Bus Processor options
+## Health checks
 
-You can configure options such as `PrefetchCount` and `MaxConcurrentCalls` by using another override on the `AddMessageBus()` method which takes an `AzureServiceBusAdminClient` and `AzureServiceBusClient`. You then pass `ServiceBusProcessorOptions` as a parameter when building the `AzureServiceBusClient`:
+This is done by using the ASP.NET built in health check in conjunction with `MessageBusHealthCheck`. In the case of Azure Service Bus, the health check will check networking and permissions by attempting to get details about the topic.
+
+In the example below, the health status can be checked using http://myservice/health.
+
+```csharp
+using MessageBus.Extensions.Microsoft.DependencyInjection;
+using MessageBus.Microsoft.ServiceBus;
+using MessageBus.HostedService.Example.Events;
+using MessageBus.HostedService.Example.Handlers;
+using MessageBus.HostedService.Example.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace MessageBus.HostedService.Example
+{
+    public class Startup
+    {
+        public IConfiguration Configuration { get; }
+
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddHostedService<MessageBusHostedService>()
+                .AddSingleton<IDependency, SomeDependency>()
+                .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
+                        Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
+                        Configuration["ServiceBus:TenantId"]))
+                    .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
+            services.AddHealthChecks().AddCheck<MessageBusHealthCheck>("MessageBus");
+        }
+
+        public void Configure(IApplicationBuilder app)
+        {
+            app.UseRouting();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHealthChecks("/health");
+            });
+        }
+    }
+}
+```
+
+## Configuring Service Bus Processor options
+
+You can configure options such as `PrefetchCount` and `MaxConcurrentCalls` by using another override on the `AddMessageBus()` method which takes an `AzureServiceBusAdminClient` and `AzureServiceBusClient`. You then pass `ServiceBusProcessorOptions` as a parameter when building the `AzureServiceBusClient` which means all Service Bus processor options are available:
 
 ```csharp
 private static ServiceProvider ConfigureServices()
