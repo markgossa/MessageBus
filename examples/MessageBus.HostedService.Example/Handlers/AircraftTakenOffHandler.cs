@@ -1,7 +1,9 @@
-﻿using MessageBus.Abstractions;
+﻿using Message.BusHostedService.Example.Commands;
+using MessageBus.Abstractions;
 using MessageBus.HostedService.Example.Events;
 using MessageBus.HostedService.Example.Services;
 using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -37,7 +39,8 @@ namespace MessageBus.HostedService.Example.Handlers
 
                 // Deserialize message using custom JSON Serializer Options
                 var jsonOptions = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
-                Console.WriteLine($"AircraftId using JSON serializer options: {context.Body.ToObjectFromJson<AircraftTakenOff>(jsonOptions).AircraftId}");
+                Console.WriteLine($"AircraftId using JSON serializer options: " +
+                    $"{context.Body.ToObjectFromJson<AircraftTakenOff>(jsonOptions).AircraftId}");
             }
             catch (Exception)
             {
@@ -48,6 +51,23 @@ namespace MessageBus.HostedService.Example.Handlers
 
             // Do stuff
             _dependency.SaveMessageId(Guid.Parse(context.MessageId));
+
+            // Publish a new event
+            var aircraftLeftAirspaceEvent = new AircraftLeftAirspace { Airspace = "London" };
+            await context.PublishAsync(new Message<IEvent>(aircraftLeftAirspaceEvent));
+
+            // Send a command with custom message properties
+            var changeFrequency = new ChangeFrequency { NewFrequency = 101.5m };
+            var changeFrequencyCommand = new Message<ICommand>(changeFrequency)
+            {
+                MessageId = $"MyMessageId-{context.Message.AircraftId}",
+                MessageProperties = new Dictionary<string, string>
+                {
+                    { "AircraftId", context.Message.AircraftId }
+                }
+            };
+
+            await context.SendAsync(changeFrequencyCommand);
         }
     }
 }
