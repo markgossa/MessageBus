@@ -97,6 +97,10 @@ namespace MessageBus.HostedService.Example.Handlers
 
             // Do stuff
             _dependency.SaveMessageId(Guid.Parse(context.MessageId));
+
+            // Publish a new event
+            var aircraftLeftAirspaceEvent = new AircraftLeftAirspace { Airspace = "London" };
+            await context.PublishAsync(new Message<IEvent>(aircraftLeftAirspaceEvent));
         }
     }
 }
