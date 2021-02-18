@@ -8,7 +8,7 @@ MessageBus is an abstraction layer for messaging technologies such as Azure Serv
   - [Overview](#overview)
   - [Getting Started with MessageBus and Azure Service Bus](#getting-started-with-messagebus-and-azure-service-bus)
     - [Prerequisites](#prerequisites)
-    - [1. Create a message](#1-create-a-message)
+    - [1. Create messages](#1-create-messages)
     - [2. Create a message handler](#2-create-a-message-handler)
     - [3. Subscribe to messages and add MessageBus](#3-subscribe-to-messages-and-add-messagebus)
       - [Authenticate with Managed Identity](#authenticate-with-managed-identity)
@@ -40,7 +40,7 @@ MessageBus is an abstraction layer for messaging technologies such as Azure Serv
 
 MessageBus calls the message handler for the message type that is received based on the `MessageType` property on the message. For example, when a message is received with a `MessageType` property set to `AircraftTakenOff`, the `HandleAsync()` method on the handler is called.
 
-For a full example, see `Message.BusHostedService.Example` in the `Examples` folder.
+For a full example, see `MessageBus.HostedService.Example` project in the `examples` folder.
 
 ### Prerequisites
 
@@ -51,7 +51,7 @@ For a full example, see `Message.BusHostedService.Example` in the `Examples` fol
   * MessageBus.Extensions.Microsoft.DependencyInjection
 * Assign permissions to the managed identity or configure the Shared Access Policy so that MessageBus can create a subscription on the topic and send and receive messages
 
-### 1. Create a message
+### 1. Create messages
 
 To create a message, you can either implement the `IEvent` or `ICommand` interface depending on whether you are handling an event or command. An example event is below:
 
@@ -64,6 +64,18 @@ namespace MessageBus.HostedService.Example.Events
     {
         public string AircraftId { get; set; }
         public string SourceAirport { get; set; }
+    }
+}
+```
+
+```csharp
+using MessageBus.Abstractions;
+
+namespace MessageBus.HostedService.Example.Events
+{
+    public class AircraftLeftAirspace : IEvent
+    {
+        public string Airspace { get; set; }
     }
 }
 ```
