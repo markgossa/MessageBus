@@ -3,6 +3,13 @@
   <PropertyGroup>
 	  <TargetFramework>netcoreapp3.1</TargetFramework>
 	  <nullable>enable</nullable>
+	  <PackageId>MessageBus.Extensions.Microsoft.DependencyInjection</PackageId>
+	  <Version>1.0.2</Version>
+	  <Authors>Mark Gossa</Authors>
+	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+	  <Description>Microsoft .NET Dependency Injection extensions for MessageBus</Description>
+	  <PackageProjectUrl>https://github.com/markgossa/MessageBus</PackageProjectUrl>
+	  <PackageTags>Event driven architecture;DependencyInjection;Messaging</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
