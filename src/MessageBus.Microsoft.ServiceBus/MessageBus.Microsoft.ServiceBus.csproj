@@ -3,6 +3,13 @@
   <PropertyGroup>
 	  <TargetFramework>netcoreapp3.1</TargetFramework>
 	  <Nullable>enable</Nullable>
+	  <PackageId>MessageBus.Microsoft.ServiceBus</PackageId>
+	  <Version>1.0.2</Version>
+	  <Authors>Mark Gossa</Authors>
+	  <Description>Azure Service Bus package for MessageBus</Description>
+	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+	  <PackageProjectUrl>https://github.com/markgossa/MessageBus</PackageProjectUrl>
+	  <PackageTags>Azure Service Bus;Messaging</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

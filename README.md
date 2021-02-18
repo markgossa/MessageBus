@@ -45,6 +45,10 @@ For a full example, see `Message.BusHostedService.Example` in the `Examples` fol
 ### Prerequisites
 
 * Create an ASP .NET web application using the standard .NET template
+* Add the MessageBus NuGet packages to your web application project:
+  * MessageBus.Abstractions
+  * MessageBus.Microsoft.ServiceBus
+  * MessageBus.Extensions.Microsoft.DependencyInjection
 * Assign permissions to the managed identity or configure the Shared Access Policy so that MessageBus can create a subscription on the topic and send and receive messages
 
 ### 1. Create a message
