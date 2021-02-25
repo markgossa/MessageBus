@@ -525,6 +525,8 @@ namespace MessageBus.Example
 
 To do this, simply create a `Dictionary<string, string>` to hold the custom message subscription properties and then pass this to the `SubscribeToMessage()` method. Note that specifying custom message properties will mean that the defaults of `MessageType` and `MessageVersion` will not be added so you will need to add these yourself.
 
+Note that in this current version, custom message properties must include the `MessageType` property as this is required to route the message to the correct handler.
+
 ```csharp
 private static ServiceProvider ConfigureServices()
 {
