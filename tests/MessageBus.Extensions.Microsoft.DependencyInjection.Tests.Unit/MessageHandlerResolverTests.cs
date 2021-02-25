@@ -55,5 +55,35 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
             Assert.Single(messageSubscriptions.Where(m => m.MessageHandlerType == typeof(AircraftTakenOffHandler)));
             Assert.Equal(messageProperties, messageSubscriptions.First(m => m.MessageHandlerType == typeof(AircraftLandedHandler)).CustomSubscriptionFilterProperties);
         }
+
+        [Fact]
+        public void MessageHandlerResolverReturnsMessageHandlerInstanceForCustomSubscriptionFilterProperties()
+        {
+            var services = new ServiceCollection();
+            var sut = new MessageHandlerResolver(services);
+            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(new Dictionary<string, string> { { "MessageType", "AL" } });
+            sut.Initialize();
+            var handler = sut.Resolve("AL");
+
+            Assert.NotNull(handler);
+            Assert.IsType<AircraftLandedHandler>(handler);
+
+            var messageContext = new MessageContext<AircraftLanded>(new BinaryData("Hello world!"), new object(),
+                new Mock<IMessageBus>().Object);
+            typeof(AircraftLandedHandler).GetMethod("HandleAsync").Invoke(handler, new object[] { messageContext });
+        }
+        
+        [Fact]
+        public void MessageHandlerResolverThrowsIfNoMessageTypeInCustomSubscriptionFilterProperties()
+        {
+            var services = new ServiceCollection();
+            var sut = new MessageHandlerResolver(services);
+            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(new Dictionary<string, string> { { "SomethingElse", "AL" } });
+            sut.Initialize();
+
+            object testCode() => sut.Resolve("AL");
+
+            Assert.Throws<MessageHandlerNotFoundException>(testCode);
+        }
     }
 }
