@@ -1,6 +1,6 @@
-﻿using MessageBus.Abstractions;
-using MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Services;
+﻿using MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Services;
 using Microsoft.Extensions.DependencyInjection;
+using System.Linq;
 using Xunit;
 
 namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
@@ -8,52 +8,68 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
     public class MessageProcessorResolverTests
     {
         [Fact]
-        public void RetrievesMessagePreProcessor()
+        public void AddsAndRetrievesMessagePreProcessors()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<IMessagePreProcessor>(new TestPreProcessor1());
-            services.AddSingleton<IMessagePreProcessor>(new TestPreProcessor2());
-
+            
             var sut = new MessageProcessorResolver(services);
+            sut.AddMessagePreProcessor<TestPreProcessor1>();
+            sut.AddMessagePreProcessor<TestPreProcessor2>();
             sut.Initialize();
-            var preProcessor1 = sut.Resolve<TestPreProcessor1>();
-            var preProcessor2 = sut.Resolve<TestPreProcessor2>();
+            var preProcessors = sut.PreProcessors;
 
-            Assert.NotNull(preProcessor1);
-            Assert.IsType<TestPreProcessor1>(preProcessor1);
-            Assert.NotNull(preProcessor2);
-            Assert.IsType<TestPreProcessor2>(preProcessor2);
+            Assert.Equal(2, preProcessors.Count());
+            Assert.NotNull(preProcessors.First());
+            Assert.IsType<TestPreProcessor1>(preProcessors.First());
+            Assert.NotNull(preProcessors.Last());
+            Assert.IsType<TestPreProcessor2>(preProcessors.Last());
         }
         
         [Fact]
-        public void RetrievesMessagePostProcessor()
+        public void AddsAndRetrievesMessagePostProcessors()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<IMessagePostProcessor>(new TestPostProcessor1());
-            services.AddSingleton<IMessagePostProcessor>(new TestPostProcessor2());
-
+            
             var sut = new MessageProcessorResolver(services);
+            sut.AddMessagePostProcessor<TestPostProcessor1>();
+            sut.AddMessagePostProcessor<TestPostProcessor2>();
             sut.Initialize();
-            var postProcessor1 = sut.Resolve<TestPostProcessor1>();
-            var postProcessor2 = sut.Resolve<TestPostProcessor2>();
+            var postProcessors = sut.PostProcessors;
 
-            Assert.NotNull(postProcessor1);
-            Assert.IsType<TestPostProcessor1>(postProcessor1);
-            Assert.NotNull(postProcessor2);
-            Assert.IsType<TestPostProcessor2>(postProcessor2);
+            Assert.Equal(2, postProcessors.Count());
+            Assert.NotNull(postProcessors.First());
+            Assert.IsType<TestPostProcessor1>(postProcessors.First());
         }
         
         [Fact]
-        public void ThrowsMessageProcessorNotFoundExceptionIfMessageProcessorNotFound()
+        public void AddsAndRetrievesMessageProcessors()
         {
             var services = new ServiceCollection();
-
+            
             var sut = new MessageProcessorResolver(services);
+            sut.AddMessagePreProcessor<TestPreProcessor1>();
+            sut.AddMessagePostProcessor<TestPostProcessor1>();
             sut.Initialize();
-            object testMethod() => sut.Resolve<TestPreProcessor1>();
+            var preProcessors = sut.PreProcessors;
+            var postProcessors = sut.PostProcessors;
 
-            var ex = Assert.Throws<MessageProcessorNotFound>(testMethod);
-            Assert.Contains(nameof(TestPreProcessor1), ex.Message);
+            Assert.Single(preProcessors);
+            Assert.Single(postProcessors);
+            Assert.NotNull(preProcessors.First());
+            Assert.IsType<TestPreProcessor1>(preProcessors.First());
+            Assert.NotNull(postProcessors.First());
+            Assert.IsType<TestPostProcessor1>(postProcessors.First());
+        }
+        
+        [Fact]
+        public void ReturnsEmptyIEnumerableIfNoProcessorsAdded()
+        {
+            var sut = new MessageProcessorResolver(new ServiceCollection());
+            
+            sut.Initialize();
+
+            Assert.Empty(sut.PreProcessors);
+            Assert.Empty(sut.PostProcessors);
         }
     }
 }
