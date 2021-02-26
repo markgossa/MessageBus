@@ -13,16 +13,19 @@ namespace MessageBus.Abstractions
         private readonly IMessageHandlerResolver _messageHandlerResolver;
         private readonly IMessageBusAdminClient _messageBusAdminClient;
         private readonly IMessageBusClient _messageBusClient;
+        private readonly IMessageProcessorResolver _messageProcessorResolver;
         private readonly string _messageTypePropertyName;
         private readonly MessageBusOptions _messageBusOptions;
 
         public MessageBus(IMessageHandlerResolver messageHandlerResolver,
             IMessageBusAdminClient messageBusAdmin, IMessageBusClient messageBusClient, 
+            IMessageProcessorResolver messageProcessorResolver,
             MessageBusOptions? messageBusOptions = null)
         {
             _messageHandlerResolver = messageHandlerResolver;
             _messageBusAdminClient = messageBusAdmin;
             _messageBusClient = messageBusClient;
+            _messageProcessorResolver = messageProcessorResolver;
             _messageBusOptions = messageBusOptions ?? new MessageBusOptions();
             _messageTypePropertyName = _messageBusOptions.MessageTypePropertyName;
         }
@@ -69,6 +72,27 @@ namespace MessageBus.Abstractions
             await handlerTask!;
         }
 
+        public async Task PublishAsync(Message<IEvent> eventObject)
+        {
+            AddMessageProperties(eventObject);
+            await _messageBusClient.PublishAsync(eventObject);
+        }
+
+        public async Task SendAsync(Message<ICommand> command)
+        {
+            AddMessageProperties(command);
+            await _messageBusClient.SendAsync(command);
+        }
+
+        internal void AddMessagePreProcessor<T>() where T : class, IMessagePreProcessor
+            => _messageProcessorResolver.AddMessagePreProcessor<T>();
+
+        internal void AddMessagePostProcessor<T>() where T : class, IMessagePostProcessor
+            => _messageProcessorResolver.AddMessagePostProcessor<T>();
+
+        internal async Task OnErrorMessageReceived(MessageErrorReceivedEventArgs args)
+            => await Task.Run(() => throw new MessageReceivedException(args.Exception));
+
         private static void ThrowIfNullHandler(object? handler, Task? handlerTask, string messageId)
         {
             if (handlerTask is null || handler is null)
@@ -102,23 +126,6 @@ namespace MessageBus.Abstractions
 
         private static Type BuildMessageContextType(object handler)
             => typeof(MessageContext<>).MakeGenericType((Type)GetMessageTypeFromHandler(handler));
-
-        public async Task PublishAsync(Message<IEvent> eventObject)
-        {
-            AddMessageProperties(eventObject);
-
-            await _messageBusClient.PublishAsync(eventObject);
-        }
-
-        public async Task SendAsync(Message<ICommand> command)
-        {
-            AddMessageProperties(command);
-
-            await _messageBusClient.SendAsync(command);
-        }
-
-        internal async Task OnErrorMessageReceived(MessageErrorReceivedEventArgs args)
-            => await Task.Run(() => throw new MessageReceivedException(args.Exception));
 
         private static Type GetMessageTypeFromHandler(object handler)
             => handler.GetType().GetInterfaces()

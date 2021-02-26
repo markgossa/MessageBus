@@ -5,10 +5,10 @@ using System.Collections.Generic;
 
 namespace MessageBus.Extensions.Microsoft.DependencyInjection
 {
-    public class MessageProcessorResolver
+    public class MessageProcessorResolver : IMessageProcessorResolver
     {
-        private readonly ServiceCollection _services;
-        private ServiceProvider? _serviceProvider;
+        private readonly IServiceCollection _services;
+        private IServiceProvider? _serviceProvider;
 
         public IEnumerable<IMessagePreProcessor> PreProcessors
             => GetMessageProcessors<IMessagePreProcessor>();
@@ -16,7 +16,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
         public IEnumerable<IMessagePostProcessor> PostProcessors
             => GetMessageProcessors<IMessagePostProcessor>();
 
-        public MessageProcessorResolver(ServiceCollection services)
+        public MessageProcessorResolver(IServiceCollection services)
         {
             _services = services;
         }

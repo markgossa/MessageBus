@@ -1,6 +1,7 @@
 using MessageBus.Abstractions.Tests.Unit.Handlers;
 using MessageBus.Abstractions.Tests.Unit.Models.Commands;
 using MessageBus.Abstractions.Tests.Unit.Models.Events;
+using MessageBus.Abstractions.Tests.Unit.Services;
 using Moq;
 using System;
 using System.Collections.Generic;
@@ -25,7 +26,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         {
             const string messageTypePropertyName = "MyMessageType";
             var sut = new MessageBus(_mockMessageHandlerResolver.Object, _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object,
-                new MessageBusOptions { MessageTypePropertyName = messageTypePropertyName });
+                _mockMessageProcessorResolver.Object, new MessageBusOptions { MessageTypePropertyName = messageTypePropertyName });
             await sut.ConfigureAsync();
 
             _mockMessageHandlerResolver.Verify(m => m.Initialize(), Times.Once);
@@ -119,8 +120,8 @@ namespace MessageBus.Abstractions.Tests.Unit
             _mockMessageHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded)))
                 .Returns(mockAircraftTakenOffHandler);
             var sut = new MessageBus(_mockMessageHandlerResolver.Object,
-                _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object, new MessageBusOptions
-                { MessageTypePropertyName = "MessageTypeIdentifier" });
+                _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object, _mockMessageProcessorResolver.Object,
+                new MessageBusOptions { MessageTypePropertyName = "MessageTypeIdentifier" });
 
             var aircraftId = Guid.NewGuid().ToString();
             var args = new MessageReceivedEventArgs(BuildAircraftLandedMessage(aircraftId),
@@ -137,7 +138,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         public async Task ThrowsIfMessageHandlerNotFound()
         {
             var sut = new MessageBus(_mockMessageHandlerResolver.Object,
-                _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object);
+                _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object, _mockMessageProcessorResolver.Object);
 
             var aircraftId = Guid.NewGuid().ToString();
             var messageId = Guid.NewGuid().ToString();
@@ -247,7 +248,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             }
 
             var sut = new MessageBus(_mockMessageHandlerResolver.Object, _mockMessageBusAdminClient.Object, 
-                _mockMessageBusClient.Object, options);
+                _mockMessageBusClient.Object, _mockMessageProcessorResolver.Object, options);
             await sut.PublishAsync(eventObject);
 
             Assert.Equal(nameof(AircraftLanded), callbackEvent.MessageProperties[messageTypePropertyName ?? "MessageType"]);
@@ -273,7 +274,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             }
 
             var sut = new MessageBus(_mockMessageHandlerResolver.Object, _mockMessageBusAdminClient.Object,
-                _mockMessageBusClient.Object, options);
+                _mockMessageBusClient.Object, _mockMessageProcessorResolver.Object, options);
             await sut.PublishAsync(eventObject);
 
             Assert.Equal(nameof(Models.Events.V2.AircraftLanded), callbackEvent.MessageProperties["MessageType"]);
@@ -366,7 +367,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             }
 
             var sut = new MessageBus(_mockMessageHandlerResolver.Object, _mockMessageBusAdminClient.Object,
-                _mockMessageBusClient.Object, options);
+                _mockMessageBusClient.Object, _mockMessageProcessorResolver.Object, options);
             await sut.SendAsync(command);
 
             Assert.Equal(nameof(CreateNewFlightPlan), callbackCommand.MessageProperties[messageTypePropertyName ?? "MessageType"]);
@@ -392,7 +393,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             }
 
             var sut = new MessageBus(_mockMessageHandlerResolver.Object, _mockMessageBusAdminClient.Object,
-                _mockMessageBusClient.Object, options);
+                _mockMessageBusClient.Object, _mockMessageProcessorResolver.Object, options);
             await sut.SendAsync(command);
 
             Assert.Equal(nameof(Models.Commands.V2.CreateNewFlightPlan), callbackCommand.MessageProperties["MessageType"]);
@@ -452,6 +453,16 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.Equal("Heavy", callbackEvent.MessageProperties["AircraftSize"]);
             Assert.False(callbackEvent.MessageProperties.ContainsKey("MessageType"));
             Assert.False(callbackEvent.MessageProperties.ContainsKey("MessageVersion"));
+        }
+
+        [Fact]
+        public void AddsMessageProcessors()
+        {
+            _sut.AddMessagePreProcessor<TestPreProcessor1>();
+            _sut.AddMessagePostProcessor<TestPostProcessor1>();
+
+            _mockMessageProcessorResolver.Verify(m => m.AddMessagePreProcessor<TestPreProcessor1>(), Times.Once);
+            _mockMessageProcessorResolver.Verify(m => m.AddMessagePostProcessor<TestPostProcessor1>(), Times.Once);
         }
     }
 }
