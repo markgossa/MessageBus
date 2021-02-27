@@ -11,7 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{012F7757-802
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MessageBus.Example", "examples\MessageBus.Example\MessageBus.Example.csproj", "{04F3BECD-A09C-4728-B5C3-E7A8A4A66151}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Message.BusHostedService.Example", "examples\MessageBus.HostedService.Example\Message.BusHostedService.Example.csproj", "{8891D64B-66C0-408F-97A1-1027D96E8AA4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MessageBus.HostedService.Example", "examples\MessageBus.HostedService.Example\MessageBus.HostedService.Example.csproj", "{8891D64B-66C0-408F-97A1-1027D96E8AA4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MessageBus.Abstractions", "src\MessageBus.Abstractions\MessageBus.Abstractions.csproj", "{14B75BEE-655F-453F-836B-A3E21FEA7C34}"
 EndProject

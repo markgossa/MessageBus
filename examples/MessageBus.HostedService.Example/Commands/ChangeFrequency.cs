@@ -1,6 +1,6 @@
 ﻿using MessageBus.Abstractions;
 
-namespace Message.BusHostedService.Example.Commands
+namespace MessageBus.HostedService.Example.Commands
 {
     public class ChangeFrequency : ICommand
     {
