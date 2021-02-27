@@ -40,6 +40,7 @@ namespace MessageBus.Abstractions
         public async Task ConfigureAsync()
         {
             _messageHandlerResolver.Initialize();
+            _messageProcessorResolver.Initialize();
             await _messageBusAdminClient.ConfigureAsync(_messageHandlerResolver.GetMessageSubscriptions(),
                 _messageBusOptions);
         }
