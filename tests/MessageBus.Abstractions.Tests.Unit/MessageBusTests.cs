@@ -80,24 +80,26 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.Equal(1, mockAircraftTakenOffHandler.MessageCount);
         }
 
-        //[Fact]
-        //public async Task CallsMessagePreProcessors()
-        //{
-        //    var mockAircraftTakenOffHandler = new AircraftTakenOffHandler();
-        //    _mockMessageHandlerResolver.Setup(m => m.Resolve(nameof(AircraftTakenOff)))
-        //        .Returns(mockAircraftTakenOffHandler);
-        //    var mockMessageProcessor1 = new Mock<IMessagePreProcessor>();
-        //    var mockMessageProcessor2 = new Mock<IMessagePreProcessor>();
-        //    _mockMessageProcessorResolver.Setup(m => m.GetMessagePreProcessors())
-        //        .Returns(new List<IMessagePreProcessor> { mockMessageProcessor1.Object, mockMessageProcessor2.Object });
-        //    var aircraftId = Guid.NewGuid().ToString();
-        //    var args = new MessageReceivedEventArgs(BuildAircraftTakenOffMessage(aircraftId),
-        //        new object(), new Dictionary<string, string> { { "MessageType", nameof(AircraftTakenOff) } });
+        [Fact]
+        public async Task CallsMessagePreProcessors()
+        {
+            var mockAircraftTakenOffHandler = new AircraftTakenOffHandler();
+            _mockMessageHandlerResolver.Setup(m => m.Resolve(nameof(AircraftTakenOff)))
+                .Returns(mockAircraftTakenOffHandler);
+            var mockMessageProcessor1 = new Mock<IMessagePreProcessor>();
+            var mockMessageProcessor2 = new Mock<IMessagePreProcessor>();
+            _mockMessageProcessorResolver.Setup(m => m.GetMessagePreProcessors())
+                .Returns(new List<IMessagePreProcessor> { mockMessageProcessor1.Object, mockMessageProcessor2.Object });
+            var args = new MessageReceivedEventArgs(BuildAircraftTakenOffMessage(Guid.NewGuid().ToString()),
+                new object(), new Dictionary<string, string> { { "MessageType", nameof(AircraftTakenOff) } });
 
-        //    await _sut.OnMessageReceived(args);
+            await _sut.OnMessageReceived(args);
 
-        //    mockMessageProcessor1.Verify(m => m.ProcessAsync(It.IsAny<IMessageContext<AircraftTakenOff>>()), Times.Once);
-        //}
+            mockMessageProcessor1.Verify(m => m.ProcessAsync(It.Is<IMessageContext<AircraftTakenOff>>(c => 
+                c.MessageId == args.MessageId)), Times.Once);
+            mockMessageProcessor2.Verify(m => m.ProcessAsync(It.Is<IMessageContext<AircraftTakenOff>>(c => 
+                c.MessageId == args.MessageId)), Times.Once);
+        }
 
         [Fact]
         public async Task MessageContextPropertiesAvailableToMessageHandler()

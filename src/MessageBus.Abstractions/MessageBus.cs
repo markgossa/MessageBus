@@ -85,18 +85,21 @@ namespace MessageBus.Abstractions
         internal async Task OnMessageReceived(MessageReceivedEventArgs args)
         {
             var handler = GetMessageHandler(args);
-            var messageContext = BuildMessageContext(args, handler);
+            var messageType = GetMessageTypeFromHandler(handler);
+            var messageContext = BuildMessageContext(args, handler, messageType);
 
-            await CallMessageHandler(args, handler, messageContext);
+            await CallMessagePreProcessorsAsync(messageType, messageContext);
+            await CallMessageHandlerAsync(args, handler, messageContext);
         }
 
         private object GetMessageHandler(MessageReceivedEventArgs args) =>
             _messageHandlerResolver.Resolve(args.MessageProperties[_messageTypePropertyName])
-                ?? throw new MessageHandlerNotFoundException($"Message handler not found or could not be awaited for MessageId: {args.MessageId}");
+                ?? throw new MessageHandlerNotFoundException("Message handler not found or could not be awaited " +
+                    $"for MessageId: {args.MessageId}");
 
-        private object BuildMessageContext(MessageReceivedEventArgs args, object handler)
+        private object BuildMessageContext(MessageReceivedEventArgs args, object handler, Type messageTypeType)
         {
-            dynamic? messageContext = Activator.CreateInstance(BuildMessageContextType(handler),
+            dynamic messageContext = Activator.CreateInstance(BuildMessageContextType(handler, messageTypeType),
                 new object[] { args.Message, args.MessageObject, this })
                     ?? throw new ApplicationException($"Unable to build message context for MessageId {args.MessageId}");
 
@@ -108,7 +111,20 @@ namespace MessageBus.Abstractions
             return messageContext;
         }
 
-        private static async Task CallMessageHandler(MessageReceivedEventArgs args, object handler, object messageContext)
+        private async Task CallMessagePreProcessorsAsync(Type messageType, object messageContext)
+        {
+            var messagePreProcessors = _messageProcessorResolver.GetMessagePreProcessors();
+            foreach (var processor in messagePreProcessors)
+            {
+                var result = processor.GetType().GetMethod("ProcessAsync")?.MakeGenericMethod(messageType)
+                    .Invoke(processor, new object[] { messageContext });
+                var processorTask = result as Task 
+                    ?? throw new TaskSchedulerException($"Could not await ProcessAsync method on {processor.GetType()}");
+                await processorTask;
+            }
+        }
+        
+        private static async Task CallMessageHandlerAsync(MessageReceivedEventArgs args, object handler, object messageContext)
         {
             const string handlerHandleMethodName = "HandleAsync";
             var handlerResult = handler?.GetType()?.GetMethod(handlerHandleMethodName)?.Invoke(handler, new object[] { messageContext });
@@ -117,8 +133,8 @@ namespace MessageBus.Abstractions
             await handlerTask;
         }
 
-        private static Type BuildMessageContextType(object handler)
-            => typeof(MessageContext<>).MakeGenericType((Type)GetMessageTypeFromHandler(handler));
+        private static Type BuildMessageContextType(object handler, Type messageTypeType)
+            => typeof(MessageContext<>).MakeGenericType(messageTypeType);
 
         private static Type GetMessageTypeFromHandler(object handler)
             => handler.GetType().GetInterfaces()
