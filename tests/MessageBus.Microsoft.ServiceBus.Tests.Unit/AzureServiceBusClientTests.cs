@@ -1,6 +1,6 @@
 ﻿using Azure.Messaging.ServiceBus;
 using MessageBus.Abstractions;
-using MessageBus.Microsoft.ServiceBus.Utilities;
+using MessageBus.Microsoft.ServiceBus.Tests.Unit.Utilities;
 using Moq;
 using System.Threading;
 using System.Threading.Tasks;
