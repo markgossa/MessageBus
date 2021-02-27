@@ -16,7 +16,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
             sut.AddMessagePreProcessor<TestPreProcessor1>();
             sut.AddMessagePreProcessor<TestPreProcessor2>();
             sut.Initialize();
-            var preProcessors = sut.PreProcessors;
+            var preProcessors = sut.GetMessagePreProcessors();
 
             Assert.Equal(2, preProcessors.Count());
             Assert.NotNull(preProcessors.First());
@@ -34,7 +34,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
             sut.AddMessagePostProcessor<TestPostProcessor1>();
             sut.AddMessagePostProcessor<TestPostProcessor2>();
             sut.Initialize();
-            var postProcessors = sut.PostProcessors;
+            var postProcessors = sut.GetMessagePostProcessors();
 
             Assert.Equal(2, postProcessors.Count());
             Assert.NotNull(postProcessors.First());
@@ -50,8 +50,8 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
             sut.AddMessagePreProcessor<TestPreProcessor1>();
             sut.AddMessagePostProcessor<TestPostProcessor1>();
             sut.Initialize();
-            var preProcessors = sut.PreProcessors;
-            var postProcessors = sut.PostProcessors;
+            var preProcessors = sut.GetMessagePreProcessors();
+            var postProcessors = sut.GetMessagePostProcessors();
 
             Assert.Single(preProcessors);
             Assert.Single(postProcessors);
@@ -68,8 +68,8 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
             
             sut.Initialize();
 
-            Assert.Empty(sut.PreProcessors);
-            Assert.Empty(sut.PostProcessors);
+            Assert.Empty(sut.GetMessagePreProcessors());
+            Assert.Empty(sut.GetMessagePostProcessors());
         }
     }
 }

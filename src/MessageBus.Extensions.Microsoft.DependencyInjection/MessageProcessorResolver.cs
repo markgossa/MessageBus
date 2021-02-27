@@ -10,10 +10,10 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
         private readonly IServiceCollection _services;
         private IServiceProvider? _serviceProvider;
 
-        public IEnumerable<IMessagePreProcessor> PreProcessors
+        public IEnumerable<IMessagePreProcessor> GetMessagePreProcessors() 
             => GetMessageProcessors<IMessagePreProcessor>();
 
-        public IEnumerable<IMessagePostProcessor> PostProcessors
+        public IEnumerable<IMessagePostProcessor> GetMessagePostProcessors() 
             => GetMessageProcessors<IMessagePostProcessor>();
 
         public MessageProcessorResolver(IServiceCollection services)
