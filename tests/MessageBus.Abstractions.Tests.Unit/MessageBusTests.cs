@@ -81,23 +81,41 @@ namespace MessageBus.Abstractions.Tests.Unit
         }
 
         [Fact]
-        public async Task CallsMessagePreProcessors()
+        public async Task CallsMessageProcessorsAndMessageHandlersInOrder()
         {
-            var mockAircraftTakenOffHandler = new AircraftTakenOffHandler();
-            _mockMessageHandlerResolver.Setup(m => m.Resolve(nameof(AircraftTakenOff)))
-                .Returns(mockAircraftTakenOffHandler);
-            var mockMessageProcessor1 = new Mock<IMessagePreProcessor>();
-            var mockMessageProcessor2 = new Mock<IMessagePreProcessor>();
+            var order = 0;
+            var mockMessagePreProcessor1 = new Mock<IMessagePreProcessor>();
+            mockMessagePreProcessor1.Setup(m => m.ProcessAsync(It.IsAny<IMessageContext<AircraftTakenOff>>()))
+                .Callback(() => Assert.Equal(1, ++order));
+            var mockMessagePreProcessor2 = new Mock<IMessagePreProcessor>();
+            mockMessagePreProcessor2.Setup(m => m.ProcessAsync(It.IsAny<IMessageContext<AircraftTakenOff>>()))
+                .Callback(() => Assert.Equal(2, ++order));
+            var mockMessageHandler = new Mock<IMessageHandler<AircraftTakenOff>>();
+            _mockMessageHandlerResolver.Setup(m => m.Resolve(nameof(AircraftTakenOff))).Returns(mockMessageHandler.Object);
+            mockMessageHandler.Setup(m => m.HandleAsync(It.IsAny<IMessageContext<AircraftTakenOff>>()))
+                .Callback(() => Assert.Equal(3, ++order));
+            var mockMessagePostProcessor1 = new Mock<IMessagePostProcessor>();
+            mockMessagePostProcessor1.Setup(m => m.ProcessAsync(It.IsAny<IMessageContext<AircraftTakenOff>>()))
+                .Callback(() => Assert.Equal(4, ++order));
+            var mockMessagePostProcessor2 = new Mock<IMessagePostProcessor>();
+                mockMessagePostProcessor2.Setup(m => m.ProcessAsync(It.IsAny<IMessageContext<AircraftTakenOff>>()))
+                .Callback(() => Assert.Equal(5, ++order));
             _mockMessageProcessorResolver.Setup(m => m.GetMessagePreProcessors())
-                .Returns(new List<IMessagePreProcessor> { mockMessageProcessor1.Object, mockMessageProcessor2.Object });
+                .Returns(new List<IMessagePreProcessor> { mockMessagePreProcessor1.Object, mockMessagePreProcessor2.Object });
+            _mockMessageProcessorResolver.Setup(m => m.GetMessagePostProcessors())
+                .Returns(new List<IMessagePostProcessor> { mockMessagePostProcessor1.Object, mockMessagePostProcessor2.Object });
             var args = new MessageReceivedEventArgs(BuildAircraftTakenOffMessage(Guid.NewGuid().ToString()),
                 new object(), new Dictionary<string, string> { { "MessageType", nameof(AircraftTakenOff) } });
 
             await _sut.OnMessageReceived(args);
 
-            mockMessageProcessor1.Verify(m => m.ProcessAsync(It.Is<IMessageContext<AircraftTakenOff>>(c => 
+            mockMessagePreProcessor1.Verify(m => m.ProcessAsync(It.Is<IMessageContext<AircraftTakenOff>>(c => 
                 c.MessageId == args.MessageId)), Times.Once);
-            mockMessageProcessor2.Verify(m => m.ProcessAsync(It.Is<IMessageContext<AircraftTakenOff>>(c => 
+            mockMessagePreProcessor2.Verify(m => m.ProcessAsync(It.Is<IMessageContext<AircraftTakenOff>>(c => 
+                c.MessageId == args.MessageId)), Times.Once);
+            mockMessagePostProcessor1.Verify(m => m.ProcessAsync(It.Is<IMessageContext<AircraftTakenOff>>(c => 
+                c.MessageId == args.MessageId)), Times.Once);
+            mockMessagePostProcessor2.Verify(m => m.ProcessAsync(It.Is<IMessageContext<AircraftTakenOff>>(c => 
                 c.MessageId == args.MessageId)), Times.Once);
         }
 

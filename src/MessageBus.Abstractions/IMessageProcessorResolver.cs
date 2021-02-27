@@ -6,7 +6,8 @@ namespace MessageBus.Abstractions
     {
         void AddMessagePreProcessor<T>() where T : class, IMessagePreProcessor;
         void AddMessagePostProcessor<T>() where T : class, IMessagePostProcessor;
-        IEnumerable<IMessagePreProcessor> GetMessagePreProcessors();
         void Initialize();
+        IEnumerable<IMessagePreProcessor> GetMessagePreProcessors();
+        IEnumerable<IMessagePostProcessor> GetMessagePostProcessors();
     }
 }
