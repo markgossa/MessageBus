@@ -5,6 +5,6 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Service
 {
     internal class TestPreProcessor2 : IMessagePreProcessor
     {
-        public Task ProcessAsync(IMessageContext<IMessage> context) => throw new System.NotImplementedException();
+        public Task ProcessAsync<T>(IMessageContext<T> context) where T : IMessage => throw new System.NotImplementedException();
     }
 }
