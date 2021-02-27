@@ -79,7 +79,26 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.Equal(aircraftId, mockAircraftTakenOffHandler.AircraftId);
             Assert.Equal(1, mockAircraftTakenOffHandler.MessageCount);
         }
-        
+
+        //[Fact]
+        //public async Task CallsMessagePreProcessors()
+        //{
+        //    var mockAircraftTakenOffHandler = new AircraftTakenOffHandler();
+        //    _mockMessageHandlerResolver.Setup(m => m.Resolve(nameof(AircraftTakenOff)))
+        //        .Returns(mockAircraftTakenOffHandler);
+        //    var mockMessageProcessor1 = new Mock<IMessagePreProcessor>();
+        //    var mockMessageProcessor2 = new Mock<IMessagePreProcessor>();
+        //    _mockMessageProcessorResolver.Setup(m => m.GetMessagePreProcessors())
+        //        .Returns(new List<IMessagePreProcessor> { mockMessageProcessor1.Object, mockMessageProcessor2.Object });
+        //    var aircraftId = Guid.NewGuid().ToString();
+        //    var args = new MessageReceivedEventArgs(BuildAircraftTakenOffMessage(aircraftId),
+        //        new object(), new Dictionary<string, string> { { "MessageType", nameof(AircraftTakenOff) } });
+
+        //    await _sut.OnMessageReceived(args);
+
+        //    mockMessageProcessor1.Verify(m => m.ProcessAsync(It.IsAny<IMessageContext<AircraftTakenOff>>()), Times.Once);
+        //}
+
         [Fact]
         public async Task MessageContextPropertiesAvailableToMessageHandler()
         {

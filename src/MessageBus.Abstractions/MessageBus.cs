@@ -61,18 +61,6 @@ namespace MessageBus.Abstractions
             return this;
         }
 
-        internal async Task OnMessageReceived(MessageReceivedEventArgs args)
-        {
-            const string handlerHandleMethodName = "HandleAsync";
-
-            var handler = _messageHandlerResolver.Resolve(args.MessageProperties[_messageTypePropertyName]);
-            var result = handler?.GetType()?.GetMethod(handlerHandleMethodName)?.Invoke(handler, new object[] { BuildMessageContext(args, handler) });
-            var handlerTask = result as Task;
-            ThrowIfNullHandler(handler, handlerTask, args.MessageId);
-            
-            await handlerTask!;
-        }
-
         public async Task PublishAsync(Message<IEvent> eventObject)
         {
             AddMessageProperties(eventObject);
@@ -94,22 +82,25 @@ namespace MessageBus.Abstractions
         internal async Task OnErrorMessageReceived(MessageErrorReceivedEventArgs args)
             => await Task.Run(() => throw new MessageReceivedException(args.Exception));
 
-        private static void ThrowIfNullHandler(object? handler, Task? handlerTask, string messageId)
+        internal async Task OnMessageReceived(MessageReceivedEventArgs args)
         {
-            if (handlerTask is null || handler is null)
-            {
-                throw new MessageHandlerNotFoundException($"Message handler not found or could not be awaited for MessageId: {messageId}");
-            }
+            var handler = GetMessageHandler(args);
+            var messageContext = BuildMessageContext(args, handler);
+
+            await CallMessageHandler(args, handler, messageContext);
         }
+
+        private object GetMessageHandler(MessageReceivedEventArgs args) =>
+            _messageHandlerResolver.Resolve(args.MessageProperties[_messageTypePropertyName])
+                ?? throw new MessageHandlerNotFoundException($"Message handler not found or could not be awaited for MessageId: {args.MessageId}");
 
         private object BuildMessageContext(MessageReceivedEventArgs args, object handler)
         {
             dynamic? messageContext = Activator.CreateInstance(BuildMessageContextType(handler),
-                new object[] { args.Message, args.MessageObject, this });
+                new object[] { args.Message, args.MessageObject, this })
+                    ?? throw new ApplicationException($"Unable to build message context for MessageId {args.MessageId}");
 
-            ThrowIfNullMessageContext(args.MessageId, messageContext);
-
-            messageContext!.MessageId = args.MessageId;
+            messageContext.MessageId = args.MessageId;
             messageContext.CorrelationId = args.CorrelationId;
             messageContext.Properties = args.MessageProperties;
             messageContext.DeliveryCount = args.DeliveryCount;
@@ -117,12 +108,13 @@ namespace MessageBus.Abstractions
             return messageContext;
         }
 
-        private static void ThrowIfNullMessageContext(string messageId, dynamic messageContext)
+        private static async Task CallMessageHandler(MessageReceivedEventArgs args, object handler, object messageContext)
         {
-            if (messageContext is null)
-            {
-                throw new ApplicationException($"Unable to build message context for MessageId {messageId}");
-            }
+            const string handlerHandleMethodName = "HandleAsync";
+            var handlerResult = handler?.GetType()?.GetMethod(handlerHandleMethodName)?.Invoke(handler, new object[] { messageContext });
+            var handlerTask = handlerResult as Task
+                ?? throw new MessageHandlerNotFoundException($"Message handler could not be awaited for MessageId: {args.MessageId}");
+            await handlerTask;
         }
 
         private static Type BuildMessageContextType(object handler)
