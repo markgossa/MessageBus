@@ -20,7 +20,6 @@ namespace MessageBus.HostedService.Example.Handlers
 
         public async Task HandleAsync(IMessageContext<AircraftTakenOff> context)
         {
-            Console.WriteLine();
             Console.WriteLine($"{nameof(AircraftTakenOff)} message received");
 
             // Get message context properties
@@ -68,6 +67,7 @@ namespace MessageBus.HostedService.Example.Handlers
             };
 
             await context.SendAsync(changeFrequencyCommand);
+            Console.WriteLine();
         }
     }
 }

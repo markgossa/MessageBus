@@ -73,11 +73,19 @@ namespace MessageBus.Abstractions
             await _messageBusClient.SendAsync(command);
         }
 
-        internal void AddMessagePreProcessor<T>() where T : class, IMessagePreProcessor
-            => _messageProcessorResolver.AddMessagePreProcessor<T>();
+        public IMessageBus AddMessagePreProcessor<T>() where T : class, IMessagePreProcessor
+        {
+            _messageProcessorResolver.AddMessagePreProcessor<T>();
 
-        internal void AddMessagePostProcessor<T>() where T : class, IMessagePostProcessor
-            => _messageProcessorResolver.AddMessagePostProcessor<T>();
+            return this;
+        }
+
+        public IMessageBus AddMessagePostProcessor<T>() where T : class, IMessagePostProcessor
+        {
+            _messageProcessorResolver.AddMessagePostProcessor<T>();
+
+            return this;
+        }
 
         internal async Task OnErrorMessageReceived(MessageErrorReceivedEventArgs args)
             => await Task.Run(() => throw new MessageReceivedException(args.Exception));

@@ -15,5 +15,7 @@ namespace MessageBus.Abstractions
             where TMessageHandler : IMessageHandler<TMessage>;
         Task PublishAsync(Message<IEvent> message);
         Task SendAsync(Message<ICommand> message);
+        IMessageBus AddMessagePreProcessor<T>() where T : class, IMessagePreProcessor;
+        IMessageBus AddMessagePostProcessor<T>() where T : class, IMessagePostProcessor;
     }
 }
