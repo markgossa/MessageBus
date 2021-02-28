@@ -90,7 +90,12 @@ namespace MessageBus.Microsoft.ServiceBus
             var subscriptionProperties = await GetSubscriptionAsync();
             if (subscriptionProperties is null)
             {
-                await _serviceBusAdminClient.CreateSubscriptionAsync(_createSubscriptionOptions);
+                await CreateSubscriptionAsync();
+            }
+            else if (SubscriptionSessionSettingsChanged(subscriptionProperties))
+            {
+                await DeleteSubscriptionAsync();
+                await CreateSubscriptionAsync();
             }
             else
             {
@@ -114,10 +119,26 @@ namespace MessageBus.Microsoft.ServiceBus
             return subscription;
         }
 
+        private async Task<Azure.Response<SubscriptionProperties>> CreateSubscriptionAsync()
+            => await _serviceBusAdminClient.CreateSubscriptionAsync(_createSubscriptionOptions);
+
+        private bool SubscriptionSessionSettingsChanged(SubscriptionProperties subscriptionProperties)
+            => subscriptionProperties.RequiresSession != _createSubscriptionOptions.RequiresSession;
+        
+        private Task DeleteSubscriptionAsync()
+            => _serviceBusAdminClient.DeleteSubscriptionAsync(_createSubscriptionOptions.TopicName,
+                    _createSubscriptionOptions.SubscriptionName);
+
         private bool SubscriptionOptionsAreCorrect(SubscriptionProperties subscriptionProperties)
             => _createSubscriptionOptions == new CreateSubscriptionOptions(subscriptionProperties);
         
-        private async Task UpdateSubscriptionAsync(SubscriptionProperties subscriptionProperties)
+        private async Task UpdateSubscriptionAsync(SubscriptionProperties existingSubscriptionProperties)
+        {
+            var newSubscriptionProperties = CreateNewSubscriptionProperties(existingSubscriptionProperties);
+            await _serviceBusAdminClient.UpdateSubscriptionAsync(newSubscriptionProperties);
+        }
+
+        private SubscriptionProperties CreateNewSubscriptionProperties(SubscriptionProperties subscriptionProperties)
         {
             subscriptionProperties.AutoDeleteOnIdle = _createSubscriptionOptions.AutoDeleteOnIdle;
             subscriptionProperties.DeadLetteringOnMessageExpiration = _createSubscriptionOptions.DeadLetteringOnMessageExpiration;
@@ -129,9 +150,10 @@ namespace MessageBus.Microsoft.ServiceBus
             subscriptionProperties.LockDuration = _createSubscriptionOptions.LockDuration;
             subscriptionProperties.MaxDeliveryCount = _createSubscriptionOptions.MaxDeliveryCount;
             subscriptionProperties.RequiresSession = _createSubscriptionOptions.RequiresSession;
-            await _serviceBusAdminClient.UpdateSubscriptionAsync(subscriptionProperties);
+
+            return subscriptionProperties;
         }
-        
+
         private async Task UpdateRulesAsync(IEnumerable<MessageSubscription> messageSubscriptions)
         {
             var newRules = BuildListOfNewRules(messageSubscriptions);
