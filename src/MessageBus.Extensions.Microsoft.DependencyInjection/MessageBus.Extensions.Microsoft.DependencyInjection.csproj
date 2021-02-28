@@ -4,7 +4,7 @@
 	  <TargetFramework>netcoreapp3.1</TargetFramework>
 	  <nullable>enable</nullable>
 	  <PackageId>MessageBus.Extensions.Microsoft.DependencyInjection</PackageId>
-	  <Version>1.0.3</Version>
+	  <Version>1.1.0</Version>
 	  <Authors>Mark Gossa</Authors>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
 	  <Description>Microsoft .NET Dependency Injection extensions for MessageBus</Description>
