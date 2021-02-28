@@ -117,5 +117,12 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 await _serviceBusAdminClient.DeleteSubscriptionAsync(_topic, subscription);
             }
         }
+
+        protected async Task AssertSubscriptionOptions(string subscription, CreateSubscriptionOptions createSubscriptionOptions)
+        {
+            var subscriptionObject = await _serviceBusAdminClient.GetSubscriptionAsync(_topic, subscription);
+
+            Assert.Equal(createSubscriptionOptions, new CreateSubscriptionOptions(subscriptionObject.Value));
+        }
     }
 }

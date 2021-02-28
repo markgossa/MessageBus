@@ -39,6 +39,7 @@ namespace MessageBus.Microsoft.ServiceBus
         {
             _connectionString = connectionString;
             _createSubscriptionOptions = createSubscriptionOptions;
+            ThrowIfInvalidCreateSubscriptionOptions(createSubscriptionOptions);
             _serviceBusAdminClient = BuildServiceBusAdminClient();
         }
 
@@ -47,6 +48,7 @@ namespace MessageBus.Microsoft.ServiceBus
             _hostName = hostName;
             _tenantId = tenantId;
             _createSubscriptionOptions = createSubscriptionOptions;
+            ThrowIfInvalidCreateSubscriptionOptions(createSubscriptionOptions);
             _serviceBusAdminClient = BuildServiceBusAdminClient();
         }
 
@@ -85,6 +87,14 @@ namespace MessageBus.Microsoft.ServiceBus
                 : new ServiceBusAdministrationClient(_hostName, new DefaultAzureCredential(options));
         }
 
+        private static void ThrowIfInvalidCreateSubscriptionOptions(CreateSubscriptionOptions createSubscriptionOptions)
+        {
+            if (createSubscriptionOptions.RequiresSession)
+            {
+                throw new InvalidOperationException("RequiresSession is not yet supported");
+            }
+        }
+        
         private async Task CreateOrUpdateSubscriptionAsync()
         {
             var subscriptionProperties = await GetSubscriptionAsync();

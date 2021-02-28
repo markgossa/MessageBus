@@ -244,46 +244,5 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             await AssertSubscriptionRules(typeof(AircraftLanded), subscription);
             await AssertSubscriptionOptions(subscription, newSubscriptionOptions);
         }
-
-        [Fact]
-        public async Task UpdatesSubscriptionCustomOptionsRequiresSession()
-        {
-            var messageSubscriptions = new List<MessageSubscription>
-            {
-                new MessageSubscription(typeof(AircraftLanded), typeof(AircraftLandedHandler)),
-            };
-            var subscription = nameof(UpdatesSubscriptionCustomOptionsRequiresSession);
-            await DeleteSubscriptionAsync(subscription);
-            var initialSubscriptionOptions = new CreateSubscriptionOptions(_topic, subscription)
-            {
-                LockDuration = TimeSpan.FromSeconds(60),
-                MaxDeliveryCount = 5,
-                DefaultMessageTimeToLive = TimeSpan.FromSeconds(300),
-                RequiresSession = false
-            };
-            var newSubscriptionOptions = new CreateSubscriptionOptions(_topic, subscription)
-            {
-                LockDuration = TimeSpan.FromSeconds(30),
-                MaxDeliveryCount = 5,
-                DefaultMessageTimeToLive = TimeSpan.FromSeconds(150),
-                RequiresSession = true
-            };
-
-            await new AzureServiceBusAdminClient(_hostname, _tenantId, initialSubscriptionOptions).ConfigureAsync(messageSubscriptions,
-                new MessageBusOptions());
-            await AssertSubscriptionOptions(subscription, initialSubscriptionOptions);
-            await new AzureServiceBusAdminClient(_hostname, _tenantId, newSubscriptionOptions).ConfigureAsync(messageSubscriptions,
-                new MessageBusOptions());
-
-            await AssertSubscriptionRules(typeof(AircraftLanded), subscription);
-            await AssertSubscriptionOptions(subscription, newSubscriptionOptions);
-        }
-
-        private async Task AssertSubscriptionOptions(string subscription, CreateSubscriptionOptions createSubscriptionOptions)
-        {
-            var subscriptionObject = await _serviceBusAdminClient.GetSubscriptionAsync(_topic, subscription);
-
-            Assert.Equal(createSubscriptionOptions, new CreateSubscriptionOptions(subscriptionObject.Value));
-        }
     }
 }
