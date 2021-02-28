@@ -13,18 +13,16 @@ namespace MessageBus.Microsoft.ServiceBus
     {
         private readonly string? _connectionString;
         private readonly string? _hostName;
-        private readonly string _topic;
-        private readonly string _subscription;
         private string? _messageTypePropertyName;
         private string? _messageVersionPropertyName;
         private readonly ServiceBusAdministrationClient _serviceBusAdminClient;
         private readonly string? _tenantId;
+        private readonly CreateSubscriptionOptions _createSubscriptionOptions;
 
         public AzureServiceBusAdminClient(string connectionString, string topic, string subscription)
         {
             _connectionString = connectionString;
-            _topic = topic;
-            _subscription = subscription;
+            _createSubscriptionOptions = new CreateSubscriptionOptions(topic, subscription);
             _serviceBusAdminClient = BuildServiceBusAdminClient();
         }
         
@@ -32,9 +30,25 @@ namespace MessageBus.Microsoft.ServiceBus
             string tenantId)
         {
             _hostName = hostName;
-            _topic = topic;
-            _subscription = subscription;
+            _createSubscriptionOptions = new CreateSubscriptionOptions(topic, subscription);
             _tenantId = tenantId;
+            _serviceBusAdminClient = BuildServiceBusAdminClient();
+        }
+        
+        public AzureServiceBusAdminClient(string connectionString, CreateSubscriptionOptions createSubscriptionOptions)
+        {
+            _connectionString = connectionString;
+            _createSubscriptionOptions = createSubscriptionOptions;
+            ThrowIfInvalidCreateSubscriptionOptions(createSubscriptionOptions);
+            _serviceBusAdminClient = BuildServiceBusAdminClient();
+        }
+
+        public AzureServiceBusAdminClient(string hostName, string tenantId, CreateSubscriptionOptions createSubscriptionOptions)
+        {
+            _hostName = hostName;
+            _tenantId = tenantId;
+            _createSubscriptionOptions = createSubscriptionOptions;
+            ThrowIfInvalidCreateSubscriptionOptions(createSubscriptionOptions);
             _serviceBusAdminClient = BuildServiceBusAdminClient();
         }
 
@@ -43,7 +57,7 @@ namespace MessageBus.Microsoft.ServiceBus
         {
             _messageTypePropertyName = options?.MessageTypePropertyName;
             _messageVersionPropertyName = options?.MessageVersionPropertyName;
-            await CreateSubscriptionAsync();
+            await CreateOrUpdateSubscriptionAsync();
             await UpdateRulesAsync(messageSubscriptions);
         }
 
@@ -51,7 +65,8 @@ namespace MessageBus.Microsoft.ServiceBus
         {
             try
             {
-                var subscription = await _serviceBusAdminClient.GetSubscriptionAsync(_topic, _subscription);
+                var subscription = await _serviceBusAdminClient.GetSubscriptionAsync(_createSubscriptionOptions.TopicName, 
+                    _createSubscriptionOptions.SubscriptionName);
                 return subscription.Value != null;
             }
             catch
@@ -72,12 +87,81 @@ namespace MessageBus.Microsoft.ServiceBus
                 : new ServiceBusAdministrationClient(_hostName, new DefaultAzureCredential(options));
         }
 
-        private async Task CreateSubscriptionAsync()
+        private static void ThrowIfInvalidCreateSubscriptionOptions(CreateSubscriptionOptions createSubscriptionOptions)
         {
-            if (!await SubscriptionExistsAsync())
+            if (createSubscriptionOptions.RequiresSession)
             {
-                await _serviceBusAdminClient.CreateSubscriptionAsync(_topic, _subscription);
+                throw new InvalidOperationException("RequiresSession is not yet supported");
             }
+        }
+        
+        private async Task CreateOrUpdateSubscriptionAsync()
+        {
+            var subscriptionProperties = await GetSubscriptionAsync();
+            if (subscriptionProperties is null)
+            {
+                await CreateSubscriptionAsync();
+            }
+            else if (SubscriptionSessionSettingsChanged(subscriptionProperties))
+            {
+                await DeleteSubscriptionAsync();
+                await CreateSubscriptionAsync();
+            }
+            else
+            {
+                if (!SubscriptionOptionsAreCorrect(subscriptionProperties))
+                {
+                    await UpdateSubscriptionAsync(subscriptionProperties);
+                }
+            }
+        }
+
+        private async Task<SubscriptionProperties?> GetSubscriptionAsync()
+        {
+            SubscriptionProperties? subscription = null;
+            try
+            {
+                subscription = (await _serviceBusAdminClient.GetSubscriptionAsync(_createSubscriptionOptions.TopicName,
+                    _createSubscriptionOptions.SubscriptionName)).Value;
+            }
+            catch { }
+
+            return subscription;
+        }
+
+        private async Task<Azure.Response<SubscriptionProperties>> CreateSubscriptionAsync()
+            => await _serviceBusAdminClient.CreateSubscriptionAsync(_createSubscriptionOptions);
+
+        private bool SubscriptionSessionSettingsChanged(SubscriptionProperties subscriptionProperties)
+            => subscriptionProperties.RequiresSession != _createSubscriptionOptions.RequiresSession;
+        
+        private Task DeleteSubscriptionAsync()
+            => _serviceBusAdminClient.DeleteSubscriptionAsync(_createSubscriptionOptions.TopicName,
+                    _createSubscriptionOptions.SubscriptionName);
+
+        private bool SubscriptionOptionsAreCorrect(SubscriptionProperties subscriptionProperties)
+            => _createSubscriptionOptions == new CreateSubscriptionOptions(subscriptionProperties);
+        
+        private async Task UpdateSubscriptionAsync(SubscriptionProperties existingSubscriptionProperties)
+        {
+            var newSubscriptionProperties = CreateNewSubscriptionProperties(existingSubscriptionProperties);
+            await _serviceBusAdminClient.UpdateSubscriptionAsync(newSubscriptionProperties);
+        }
+
+        private SubscriptionProperties CreateNewSubscriptionProperties(SubscriptionProperties subscriptionProperties)
+        {
+            subscriptionProperties.AutoDeleteOnIdle = _createSubscriptionOptions.AutoDeleteOnIdle;
+            subscriptionProperties.DeadLetteringOnMessageExpiration = _createSubscriptionOptions.DeadLetteringOnMessageExpiration;
+            subscriptionProperties.DefaultMessageTimeToLive = _createSubscriptionOptions.DefaultMessageTimeToLive;
+            subscriptionProperties.EnableBatchedOperations = _createSubscriptionOptions.EnableBatchedOperations;
+            subscriptionProperties.EnableDeadLetteringOnFilterEvaluationExceptions = _createSubscriptionOptions.EnableDeadLetteringOnFilterEvaluationExceptions;
+            subscriptionProperties.ForwardDeadLetteredMessagesTo = _createSubscriptionOptions.ForwardDeadLetteredMessagesTo;
+            subscriptionProperties.ForwardTo = _createSubscriptionOptions.ForwardTo;
+            subscriptionProperties.LockDuration = _createSubscriptionOptions.LockDuration;
+            subscriptionProperties.MaxDeliveryCount = _createSubscriptionOptions.MaxDeliveryCount;
+            subscriptionProperties.RequiresSession = _createSubscriptionOptions.RequiresSession;
+
+            return subscriptionProperties;
         }
 
         private async Task UpdateRulesAsync(IEnumerable<MessageSubscription> messageSubscriptions)
@@ -106,7 +190,8 @@ namespace MessageBus.Microsoft.ServiceBus
         private async Task<List<RuleProperties>> GetExistingRulesAsync()
         {
             var existingRules = new List<RuleProperties>();
-            await foreach (var existingRule in _serviceBusAdminClient.GetRulesAsync(_topic, _subscription))
+            await foreach (var existingRule in _serviceBusAdminClient.GetRulesAsync(_createSubscriptionOptions.TopicName,
+                    _createSubscriptionOptions.SubscriptionName))
             {
                 existingRules.Add(existingRule);
             }
@@ -118,7 +203,8 @@ namespace MessageBus.Microsoft.ServiceBus
         {
             foreach (var existingRule in existingRules.Where(e => !ExistingRuleIsValid(newRules, e)))
             {
-                await _serviceBusAdminClient.DeleteRuleAsync(_topic, _subscription, existingRule.Name);
+                await _serviceBusAdminClient.DeleteRuleAsync(_createSubscriptionOptions.TopicName,
+                    _createSubscriptionOptions.SubscriptionName, existingRule.Name);
             }
         }
 
@@ -126,7 +212,8 @@ namespace MessageBus.Microsoft.ServiceBus
         {
             foreach (var newRule in newRules.Where(n => !NewRuleExists(existingRules, n)))
             {
-                await _serviceBusAdminClient.CreateRuleAsync(_topic, _subscription, newRule);
+                await _serviceBusAdminClient.CreateRuleAsync(_createSubscriptionOptions.TopicName,
+                    _createSubscriptionOptions.SubscriptionName, newRule);
             }
         }
 
@@ -162,18 +249,6 @@ namespace MessageBus.Microsoft.ServiceBus
             {
                 filter.ApplicationProperties.Add(_messageVersionPropertyName, messageVersion.Version);
             }
-        }
-
-        private async Task<bool> SubscriptionExistsAsync()
-        {
-            SubscriptionProperties? subscription = null;
-            try
-            {
-                subscription = (await _serviceBusAdminClient.GetSubscriptionAsync(_topic, _subscription)).Value;
-            }
-            catch { }
-            var subscriptionExists = subscription != null;
-            return subscriptionExists;
         }
 
         private static bool ExistingRuleIsValid(List<CreateRuleOptions> newRules, RuleProperties existingRule) => 
