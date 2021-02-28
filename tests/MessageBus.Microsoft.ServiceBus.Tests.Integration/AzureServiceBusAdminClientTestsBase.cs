@@ -102,7 +102,20 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             }
         }
 
-        protected async Task DeleteSubscriptionAsync(string subscription) 
-            => await _serviceBusAdminClient.DeleteSubscriptionAsync(_topic, subscription);
+        protected async Task DeleteSubscriptionAsync(string subscription)
+        {
+            SubscriptionProperties existingSubscription = null;
+
+            try
+            {
+                existingSubscription = await _serviceBusAdminClient.GetSubscriptionAsync(_topic, subscription);
+            }
+            catch { }
+
+            if (existingSubscription is not null)
+            {
+                await _serviceBusAdminClient.DeleteSubscriptionAsync(_topic, subscription);
+            }
+        }
     }
 }

@@ -1,6 +1,8 @@
+using Azure.Messaging.ServiceBus.Administration;
 using MessageBus.Abstractions;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
@@ -163,6 +165,93 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var isHealthy = await new AzureServiceBusAdminClient(_hostname, _topic, "invalidSubscription", _tenantId).CheckHealthAsync();
 
             Assert.False(isHealthy);
+        }
+
+        [Fact]
+        public async Task CreatesSubscriptionWithCustomOptionsMI()
+        {
+            var messageSubscriptions = new List<MessageSubscription>
+            {
+                new MessageSubscription(typeof(AircraftLanded), typeof(AircraftLandedHandler)),
+            };
+            
+            var subscription = nameof(CreatesSubscriptionWithCustomOptionsMI);
+            await DeleteSubscriptionAsync(subscription);
+            var createSubscriptionOptions = new CreateSubscriptionOptions(_topic, subscription)
+            {
+                LockDuration = TimeSpan.FromSeconds(60),
+                MaxDeliveryCount = 5,
+                DefaultMessageTimeToLive = TimeSpan.FromSeconds(300)
+            };
+            await new AzureServiceBusAdminClient(_hostname, _tenantId, createSubscriptionOptions).ConfigureAsync(messageSubscriptions,
+                new MessageBusOptions());
+
+            await AssertSubscriptionRules(typeof(AircraftLanded), subscription);
+            await AssertSubscriptionOptions(subscription, createSubscriptionOptions);
+        }
+        
+        [Fact]
+        public async Task CreatesSubscriptionWithCustomOptionsConnStr()
+        {
+            var messageSubscriptions = new List<MessageSubscription>
+            {
+                new MessageSubscription(typeof(AircraftLanded), typeof(AircraftLandedHandler)),
+            };
+            
+            var subscription = nameof(CreatesSubscriptionWithCustomOptionsConnStr);
+            await DeleteSubscriptionAsync(subscription);
+            var createSubscriptionOptions = new CreateSubscriptionOptions(_topic, subscription)
+            {
+                LockDuration = TimeSpan.FromSeconds(60),
+                MaxDeliveryCount = 5,
+                DefaultMessageTimeToLive = TimeSpan.FromSeconds(300)
+            };
+            await new AzureServiceBusAdminClient(_connectionString, createSubscriptionOptions).ConfigureAsync(messageSubscriptions,
+                new MessageBusOptions());
+
+            await AssertSubscriptionRules(typeof(AircraftLanded), subscription);
+            await AssertSubscriptionOptions(subscription, createSubscriptionOptions);
+        }
+
+        [Fact]
+        public async Task UpdatesSubscriptionCustomOptionsManagedIdentity()
+        {
+            var messageSubscriptions = new List<MessageSubscription>
+            {
+                new MessageSubscription(typeof(AircraftLanded), typeof(AircraftLandedHandler)),
+            };
+            var subscription = nameof(UpdatesSubscriptionCustomOptionsManagedIdentity);
+            await DeleteSubscriptionAsync(subscription);
+            var initialSubscriptionOptions = new CreateSubscriptionOptions(_topic, subscription)
+            {
+                LockDuration = TimeSpan.FromSeconds(60),
+                MaxDeliveryCount = 5,
+                DefaultMessageTimeToLive = TimeSpan.FromSeconds(300),
+                RequiresSession = false
+            };
+            var newSubscriptionOptions = new CreateSubscriptionOptions(_topic, subscription)
+            {
+                LockDuration = TimeSpan.FromSeconds(30),
+                MaxDeliveryCount = 5,
+                DefaultMessageTimeToLive = TimeSpan.FromSeconds(150),
+                RequiresSession = false
+            };
+
+            await new AzureServiceBusAdminClient(_hostname, _tenantId, initialSubscriptionOptions).ConfigureAsync(messageSubscriptions,
+                new MessageBusOptions());
+            await AssertSubscriptionOptions(subscription, initialSubscriptionOptions);
+            await new AzureServiceBusAdminClient(_hostname, _tenantId, newSubscriptionOptions).ConfigureAsync(messageSubscriptions,
+                new MessageBusOptions());
+
+            await AssertSubscriptionRules(typeof(AircraftLanded), subscription);
+            await AssertSubscriptionOptions(subscription, newSubscriptionOptions);
+        }
+
+        private async Task AssertSubscriptionOptions(string subscription, CreateSubscriptionOptions createSubscriptionOptions)
+        {
+            var subscriptionObject = await _serviceBusAdminClient.GetSubscriptionAsync(_topic, subscription);
+
+            Assert.Equal(createSubscriptionOptions, new CreateSubscriptionOptions(subscriptionObject.Value));
         }
     }
 }
