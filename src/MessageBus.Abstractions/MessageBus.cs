@@ -13,16 +13,19 @@ namespace MessageBus.Abstractions
         private readonly IMessageHandlerResolver _messageHandlerResolver;
         private readonly IMessageBusAdminClient _messageBusAdminClient;
         private readonly IMessageBusClient _messageBusClient;
+        private readonly IMessageProcessorResolver _messageProcessorResolver;
         private readonly string _messageTypePropertyName;
         private readonly MessageBusOptions _messageBusOptions;
 
         public MessageBus(IMessageHandlerResolver messageHandlerResolver,
             IMessageBusAdminClient messageBusAdmin, IMessageBusClient messageBusClient, 
+            IMessageProcessorResolver messageProcessorResolver,
             MessageBusOptions? messageBusOptions = null)
         {
             _messageHandlerResolver = messageHandlerResolver;
             _messageBusAdminClient = messageBusAdmin;
             _messageBusClient = messageBusClient;
+            _messageProcessorResolver = messageProcessorResolver;
             _messageBusOptions = messageBusOptions ?? new MessageBusOptions();
             _messageTypePropertyName = _messageBusOptions.MessageTypePropertyName;
         }
@@ -37,6 +40,7 @@ namespace MessageBus.Abstractions
         public async Task ConfigureAsync()
         {
             _messageHandlerResolver.Initialize();
+            _messageProcessorResolver.Initialize();
             await _messageBusAdminClient.ConfigureAsync(_messageHandlerResolver.GetMessageSubscriptions(),
                 _messageBusOptions);
         }
@@ -57,34 +61,58 @@ namespace MessageBus.Abstractions
             return this;
         }
 
+        public async Task PublishAsync(Message<IEvent> eventObject)
+        {
+            AddMessageProperties(eventObject);
+            await _messageBusClient.PublishAsync(eventObject);
+        }
+
+        public async Task SendAsync(Message<ICommand> command)
+        {
+            AddMessageProperties(command);
+            await _messageBusClient.SendAsync(command);
+        }
+
+        public IMessageBus AddMessagePreProcessor<T>() where T : class, IMessagePreProcessor
+        {
+            _messageProcessorResolver.AddMessagePreProcessor<T>();
+
+            return this;
+        }
+
+        public IMessageBus AddMessagePostProcessor<T>() where T : class, IMessagePostProcessor
+        {
+            _messageProcessorResolver.AddMessagePostProcessor<T>();
+
+            return this;
+        }
+
+        internal async Task OnErrorMessageReceived(MessageErrorReceivedEventArgs args)
+            => await Task.Run(() => throw new MessageReceivedException(args.Exception));
+
         internal async Task OnMessageReceived(MessageReceivedEventArgs args)
         {
-            const string handlerHandleMethodName = "HandleAsync";
+            var handler = GetMessageHandler(args);
+            var messageType = GetMessageTypeFromHandler(handler);
+            var messageContext = BuildMessageContext(args, messageType);
 
-            var handler = _messageHandlerResolver.Resolve(args.MessageProperties[_messageTypePropertyName]);
-            var result = handler?.GetType()?.GetMethod(handlerHandleMethodName)?.Invoke(handler, new object[] { BuildMessageContext(args, handler) });
-            var handlerTask = result as Task;
-            ThrowIfNullHandler(handler, handlerTask, args.MessageId);
-            
-            await handlerTask!;
+            await CallMessageProcessorsAsync(messageType, messageContext, _messageProcessorResolver.GetMessagePreProcessors());
+            await CallMessageHandlerAsync(args, handler, messageContext);
+            await CallMessageProcessorsAsync(messageType, messageContext, _messageProcessorResolver.GetMessagePostProcessors());
         }
 
-        private static void ThrowIfNullHandler(object? handler, Task? handlerTask, string messageId)
+        private object GetMessageHandler(MessageReceivedEventArgs args) =>
+            _messageHandlerResolver.Resolve(args.MessageProperties[_messageTypePropertyName])
+                ?? throw new MessageHandlerNotFoundException("Message handler not found or could not be awaited " +
+                    $"for MessageId: {args.MessageId}");
+
+        private object BuildMessageContext(MessageReceivedEventArgs args, Type messageTypeType)
         {
-            if (handlerTask is null || handler is null)
-            {
-                throw new MessageHandlerNotFoundException($"Message handler not found or could not be awaited for MessageId: {messageId}");
-            }
-        }
+            dynamic messageContext = Activator.CreateInstance(BuildMessageContextType(messageTypeType),
+                new object[] { args.Message, args.MessageObject, this })
+                    ?? throw new ApplicationException($"Unable to build message context for MessageId {args.MessageId}");
 
-        private object BuildMessageContext(MessageReceivedEventArgs args, object handler)
-        {
-            dynamic? messageContext = Activator.CreateInstance(BuildMessageContextType(handler),
-                new object[] { args.Message, args.MessageObject, this });
-
-            ThrowIfNullMessageContext(args.MessageId, messageContext);
-
-            messageContext!.MessageId = args.MessageId;
+            messageContext.MessageId = args.MessageId;
             messageContext.CorrelationId = args.CorrelationId;
             messageContext.Properties = args.MessageProperties;
             messageContext.DeliveryCount = args.DeliveryCount;
@@ -92,33 +120,30 @@ namespace MessageBus.Abstractions
             return messageContext;
         }
 
-        private static void ThrowIfNullMessageContext(string messageId, dynamic messageContext)
+        private async Task CallMessageProcessorsAsync(Type messageType, object messageContext, 
+            IEnumerable<IMessageProcessor> messageProcessors)
         {
-            if (messageContext is null)
+            foreach (var processor in messageProcessors)
             {
-                throw new ApplicationException($"Unable to build message context for MessageId {messageId}");
+                var result = processor.GetType().GetMethod("ProcessAsync")?.MakeGenericMethod(messageType)
+                    .Invoke(processor, new object[] { messageContext });
+                var processorTask = result as Task 
+                    ?? throw new TaskSchedulerException($"Could not await ProcessAsync method on {processor.GetType()}");
+                await processorTask;
             }
         }
-
-        private static Type BuildMessageContextType(object handler)
-            => typeof(MessageContext<>).MakeGenericType((Type)GetMessageTypeFromHandler(handler));
-
-        public async Task PublishAsync(Message<IEvent> eventObject)
+        
+        private static async Task CallMessageHandlerAsync(MessageReceivedEventArgs args, object handler, object messageContext)
         {
-            AddMessageProperties(eventObject);
-
-            await _messageBusClient.PublishAsync(eventObject);
+            const string handlerHandleMethodName = "HandleAsync";
+            var handlerResult = handler?.GetType()?.GetMethod(handlerHandleMethodName)?.Invoke(handler, new object[] { messageContext });
+            var handlerTask = handlerResult as Task
+                ?? throw new MessageHandlerNotFoundException($"Message handler could not be awaited for MessageId: {args.MessageId}");
+            await handlerTask;
         }
 
-        public async Task SendAsync(Message<ICommand> command)
-        {
-            AddMessageProperties(command);
-
-            await _messageBusClient.SendAsync(command);
-        }
-
-        internal async Task OnErrorMessageReceived(MessageErrorReceivedEventArgs args)
-            => await Task.Run(() => throw new MessageReceivedException(args.Exception));
+        private static Type BuildMessageContextType(Type messageTypeType)
+            => typeof(MessageContext<>).MakeGenericType(messageTypeType);
 
         private static Type GetMessageTypeFromHandler(object handler)
             => handler.GetType().GetInterfaces()

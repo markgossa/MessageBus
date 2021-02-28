@@ -50,13 +50,19 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 Timestamp = DateTime.Now
             };
 
-        protected async Task SendMessages(IMessage message, int count = 1, string messageType = null)
+        protected async Task SendMessages(IMessage message, int count = 1, string messageType = null,
+            string messageId = null)
         {
             var messages = new List<ServiceBusMessage>();
             for (var i = 0; i < count; i++)
             {
                 var serviceBusMessage = new ServiceBusMessage(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, message.GetType())));
                 serviceBusMessage.ApplicationProperties.Add("MessageType", messageType ?? message.GetType().Name);
+                if (messageId is not null)
+                {
+                    serviceBusMessage.MessageId = messageId;
+                }
+
                 messages.Add(serviceBusMessage);
             }
 

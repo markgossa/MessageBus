@@ -29,11 +29,14 @@ MessageBus is an abstraction layer for messaging technologies such as Azure Serv
     - [Get message context properties](#get-message-context-properties)
     - [Start listening for messages](#start-listening-for-messages)
     - [Dead lettering messages](#dead-lettering-messages)
+    - [Message Processors](#message-processors)
     - [Message Versioning](#message-versioning)
     - [Change the default properties (MessageType and MessageVersion)](#change-the-default-properties-messagetype-and-messageversion)
     - [Using custom message properties for subscription filters](#using-custom-message-properties-for-subscription-filters)
   - [Health checks](#health-checks)
-  - [Configuring Service Bus Processor options](#configuring-service-bus-processor-options)
+  - [Azure Service Bus](#azure-service-bus)
+    - [Configuring Service Bus Processor options](#configuring-service-bus-processor-options)
+    - [Configuring Service Bus Subscription Options](#configuring-service-bus-subscription-options)
   - [Programming model](#programming-model)
 
 ## Getting Started with MessageBus and Azure Service Bus
@@ -449,6 +452,89 @@ namespace ServiceBus1.Handlers
 }
 ```
 
+### Message Processors
+
+A message processor can be an `IMessagePreProcessor` which is called whenver any message is received or an `IMessagePostProcessor` which is called after any message handler has been called. You can add multiple pre-processors and post-processors.
+
+As these will apply to all messages, avoid having any business logic in your message processors. They are designed for logging or the inbox pattern.
+
+Example message pre-processor below simply logs the `MessageId` of the received message:
+
+```csharp
+using MessageBus.Abstractions;
+using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
+
+namespace MessageBus.HostedService.Example.Processors
+{
+    public class MessageReceivedLogger : IMessagePreProcessor
+    {
+        private readonly ILogger<MessageReceivedLogger> _logger;
+
+        public MessageReceivedLogger(ILogger<MessageReceivedLogger> logger)
+        {
+            _logger = logger;
+        }
+
+        public async Task ProcessAsync<T>(IMessageContext<T> context) where T : IMessage
+        {
+            _logger.LogInformation($"Message received with MessageId: {context.MessageId}");
+        }
+    }
+}
+```
+
+To add message processors, use the `AddMessagePreProcessor` and `AddMessagePostProcessor` methods as below. If adding more than one pre-processor or post-processor, these will be called in the order they are added.
+
+```csharp
+using MessageBus.Extensions.Microsoft.DependencyInjection;
+using MessageBus.Microsoft.ServiceBus;
+using MessageBus.HostedService.Example.Events;
+using MessageBus.HostedService.Example.Handlers;
+using MessageBus.HostedService.Example.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using MessageBus.HostedService.Example.Processors;
+
+namespace MessageBus.HostedService.Example
+{
+    public class Startup
+    {
+        public IConfiguration Configuration { get; }
+
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddHostedService<MessageBusHostedService>()
+                .AddSingleton<IDependency, SomeDependency>()
+                .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
+                        Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
+                        Configuration["ServiceBus:TenantId"]))
+                    .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>()
+                    .AddMessagePreProcessor<MessageReceivedLogger>()
+                    .AddMessagePostProcessor<MessageProcessedLogger>();
+            services.AddHealthChecks().AddCheck<MessageBusHealthCheck>("MessageBus");
+        }
+
+        public void Configure(IApplicationBuilder app)
+        {
+            app.UseRouting();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHealthChecks("/health");
+            });
+        }
+    }
+}
+
+```
+
 ### Message Versioning
 
 When making breaking changes to messages, you may want to pin message receivers to a particular message version so you don't need to update all receivers when your sender sends a new message version with a breaking change. To do this, you can use the `MessageVersion` attribute on the message and this will be added as a `MessageVersion` property on the message.
@@ -599,7 +685,9 @@ namespace MessageBus.HostedService.Example
 }
 ```
 
-## Configuring Service Bus Processor options
+## Azure Service Bus
+
+### Configuring Service Bus Processor options
 
 You can configure options such as `PrefetchCount` and `MaxConcurrentCalls` by using another override on the `AddMessageBus()` method which takes an `AzureServiceBusAdminClient` and `AzureServiceBusClient`. You then pass `ServiceBusProcessorOptions` as a parameter when building the `AzureServiceBusClient` which means all Service Bus processor options are available:
 
@@ -624,6 +712,75 @@ private static ServiceProvider ConfigureServices()
         .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>()
         .AddMessageBus(serviceBusAdminClient, serviceBusClient)
         .BuildServiceProvider();
+}
+```
+
+### Configuring Service Bus Subscription Options
+
+To set custom options such as `LockDuration` and `MaxDeliveryCount` on the Azure Service Bus subscription that is created by MessageBus, you can pass `CreateSubscriptionOptions` to the `AzureServiceBusAdminClient` when registering MessageBus.
+
+> :warning: RequireSession and Service Bus sessions are not supported in this version of MessageBus
+
+```csharp
+using MessageBus.Extensions.Microsoft.DependencyInjection;
+using MessageBus.Microsoft.ServiceBus;
+using MessageBus.HostedService.Example.Events;
+using MessageBus.HostedService.Example.Handlers;
+using MessageBus.HostedService.Example.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using MessageBus.HostedService.Example.Processors;
+using Azure.Messaging.ServiceBus.Administration;
+using System;
+
+namespace MessageBus.HostedService.Example
+{
+    public class Startup
+    {
+        public IConfiguration Configuration { get; }
+
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        public void ConfigureServices(IServiceCollection services)
+        {
+            var serviceBusClient = new AzureServiceBusClient(Configuration["ServiceBus:Hostname"],
+                        Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
+                        Configuration["ServiceBus:TenantId"]);
+
+            var createSubscriptionOptions = new CreateSubscriptionOptions(Configuration["ServiceBus:Topic"],
+                Configuration["ServiceBus:Subscription"])
+            {
+                LockDuration = TimeSpan.FromSeconds(30),
+                MaxDeliveryCount = 20,
+                RequiresSession = true
+            };
+            
+            var serviceBusAdminClient = new AzureServiceBusAdminClient(Configuration["ServiceBus:Hostname"],
+                Configuration["ServiceBus:Hostname"], createSubscriptionOptions);
+
+            services.AddHostedService<MessageBusHostedService>()
+                .AddSingleton<IDependency, SomeDependency>()
+                .AddMessageBus(serviceBusAdminClient, serviceBusClient)
+                    .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>()
+                    .AddMessagePreProcessor<MessageReceivedLogger>()
+                    .AddMessagePostProcessor<MessageProcessedLogger>();
+            services.AddHealthChecks().AddCheck<MessageBusHealthCheck>("MessageBus");
+        }
+
+        public void Configure(IApplicationBuilder app)
+        {
+            app.UseRouting();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHealthChecks("/health");
+            });
+        }
+    }
 }
 ```
 

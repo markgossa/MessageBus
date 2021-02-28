@@ -18,12 +18,14 @@ namespace MessageBus.Abstractions.Tests.Unit
 
         protected readonly Mock<IMessageBusAdminClient> _mockMessageBusAdminClient = new Mock<IMessageBusAdminClient>();
         protected readonly Mock<IMessageBusClient> _mockMessageBusClient = new Mock<IMessageBusClient>();
+        protected readonly Mock<IMessageProcessorResolver> _mockMessageProcessorResolver = new Mock<IMessageProcessorResolver>();
         protected MessageBus _sut;
 
         protected MessageBusTestsBase()
         {
             _mockMessageHandlerResolver.Setup(m => m.GetMessageSubscriptions()).Returns(_messageSubscriptions);
-            _sut = new MessageBus(_mockMessageHandlerResolver.Object, _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object);
+            _sut = new MessageBus(_mockMessageHandlerResolver.Object, _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object,
+                _mockMessageProcessorResolver.Object);
         }
 
         protected static BinaryData BuildAircraftTakenOffMessage(string aircraftId)

@@ -6,6 +6,7 @@ using MessageBus.HostedService.Example.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MessageBus.HostedService.Example.Processors;
 
 namespace MessageBus.HostedService.Example
 {
@@ -25,7 +26,9 @@ namespace MessageBus.HostedService.Example
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
                         Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
                         Configuration["ServiceBus:TenantId"]))
-                    .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
+                    .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>()
+                    .AddMessagePreProcessor<MessageReceivedLogger>()
+                    .AddMessagePostProcessor<MessageProcessedLogger>();
             services.AddHealthChecks().AddCheck<MessageBusHealthCheck>("MessageBus");
         }
 

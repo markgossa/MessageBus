@@ -73,10 +73,11 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var aircraftLandedHandler = new AircraftLandedHandler();
             var mockMessageHandlerResolver = new Mock<IMessageHandlerResolver>();
             mockMessageHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded))).Returns(aircraftLandedHandler);
+            var mockMessageProcessorResolver = new Mock<IMessageProcessorResolver>();
 
             var sut = new AzureServiceBusClient(_hostname, _topic, nameof(DeadLettersMessageWithoutReasonAsync), _tenantId);
             var messageBus = new Abstractions.MessageBus(mockMessageHandlerResolver.Object, new Mock<IMessageBusAdminClient>().Object,
-                sut);
+                sut, mockMessageProcessorResolver.Object);
 
             await messageBus.StartAsync();
 
@@ -96,10 +97,11 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var aircraftLandedHandler = new AircraftLandedHandler(deadLetterReason);
             var mockMessageHandlerResolver = new Mock<IMessageHandlerResolver>();
             mockMessageHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded))).Returns(aircraftLandedHandler);
+            var mockMessageProcessorResolver = new Mock<IMessageProcessorResolver>();
 
             var sut = new AzureServiceBusClient(_hostname, _topic, nameof(DeadLettersMessageWithReasonAsync), _tenantId);
             var messageBus = new Abstractions.MessageBus(mockMessageHandlerResolver.Object, new Mock<IMessageBusAdminClient>().Object,
-                sut);
+                sut, mockMessageProcessorResolver.Object);
 
             await messageBus.StartAsync();
 
