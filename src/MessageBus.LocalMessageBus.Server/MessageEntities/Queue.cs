@@ -3,13 +3,13 @@ using System.Collections.Concurrent;
 
 namespace MessageBus.LocalMessageBus.Server.MessageEntities
 {
-    public class MessageQueue
+    public class Queue : IQueue
     {
         private readonly ConcurrentQueue<LocalMessage> _queue = new ();
 
-        public void Enqueue(LocalMessage message) => _queue.Enqueue(message);
+        public void Send(LocalMessage message) => _queue.Enqueue(message);
 
-        public LocalMessage? Dequeue()
+        public LocalMessage? Receive()
         {
             var retryCount = 3;
             var successfulDequeue = false;

@@ -1,32 +1,29 @@
 using MessageBus.LocalMessageBus.Server.MessageEntities;
 using MessageBus.LocalMessageBus.Server.Models;
-using MessageBus.LocalMessageBus.Server.Tests.Unit.Events;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace MessageBus.LocalMessageBus.Server.Tests.Unit
 {
-    public class MessageQueueTests
+    public class MessageQueueTests : TestsBase
     {
         [Fact]
         public void EnqueuesAndDequeuesMessage()
         {
-            var sut = new MessageQueue();
+            var sut = new Queue();
             var passengerBoardedEvent = EnqueueMessages(sut).First();
-            var receivedMessage = sut.Dequeue();
+            var receivedMessage = sut.Receive();
 
             Assert.Equal(passengerBoardedEvent.Body, receivedMessage.Body);
         }
-        
+
         [Fact]
         public void ReturnsNullIfNoMessageToDequeue()
         {
-            var sut = new MessageQueue();
-            var receivedMessage = sut.Dequeue();
+            var sut = new Queue();
+            var receivedMessage = sut.Receive();
 
             Assert.Null(receivedMessage);
         }
@@ -34,14 +31,14 @@ namespace MessageBus.LocalMessageBus.Server.Tests.Unit
         [Fact]
         public void EnqueuesAndDequeuesMultipleMessages()
         {
-            var sut = new MessageQueue();
+            var sut = new Queue();
             var count = 10;
             var messages = EnqueueMessages(sut, count);
 
             var receivedMessages = new List<LocalMessage>();
             for (var i = 0; i < count; i++)
             {
-                receivedMessages.Add(sut.Dequeue());
+                receivedMessages.Add(sut.Receive());
             }
 
             Assert.Equal(count, receivedMessages.Count);
@@ -50,17 +47,17 @@ namespace MessageBus.LocalMessageBus.Server.Tests.Unit
                 Assert.Single(receivedMessages.Where(m => m.Body == message.Body));
             }
         }
-        
+
         [Fact]
         public async Task EnqueuesAndDequeuesMultipleMessagesMultiThreaded()
         {
-            var sut = new MessageQueue();
+            var sut = new Queue();
             var count = 200;
             var threads = 20;
             var tasks = new List<Task>();
             for (var i = 0; i < threads; i++)
             {
-                tasks.Add(Task.Run(() => EnqueueMessages(sut, count/threads)));
+                tasks.Add(Task.Run(() => EnqueueMessages(sut, count / threads)));
             }
 
             await Task.WhenAll(tasks);
@@ -68,25 +65,10 @@ namespace MessageBus.LocalMessageBus.Server.Tests.Unit
             var receivedMessages = new List<LocalMessage>();
             for (var i = 0; i < count; i++)
             {
-                receivedMessages.Add(sut.Dequeue());
+                receivedMessages.Add(sut.Receive());
             }
 
             Assert.Equal(count, receivedMessages.Count);
-        }
-
-        private static List<LocalMessage> EnqueueMessages(MessageQueue sut, int count = 1)
-        {
-            var messages = new List<LocalMessage>();
-            for (var i = 0; i < count; i++)
-            {
-                var passengerBoardedEvent = new PassengerBoarded { PassengerId = Guid.NewGuid() };
-                var passengerBoardedEventAsJson = JsonSerializer.Serialize(passengerBoardedEvent);
-                var message = new LocalMessage(passengerBoardedEventAsJson);
-                messages.Add(message);
-                sut.Enqueue(message);
-            }
-
-            return messages;
         }
     }
 }
