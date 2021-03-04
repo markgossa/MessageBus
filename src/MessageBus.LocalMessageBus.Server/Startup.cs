@@ -1,3 +1,4 @@
+using MessageBus.LocalMessageBus.Server.MessageEntities;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -20,6 +21,7 @@ namespace MessageBus.LocalMessageBus.Server
         {
 
             services.AddControllers();
+            services.AddSingleton<ITopic, Topic>();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "MessageBus.LocalMessageBus.Server", Version = "v1" });

@@ -19,7 +19,7 @@ namespace MessageBus.LocalMessageBus.Server.Tests.Unit
             mockQueue.Setup(m => m.Receive()).Returns(message);
 
             const string subscriptionName = "Subscription1";
-            var sut = new Subscription(mockQueue.Object, subscriptionName);
+            var sut = new Subscription(subscriptionName, mockQueue.Object);
             sut.Send(message);
 
             var receivedMessage = sut.Receive();
@@ -42,7 +42,7 @@ namespace MessageBus.LocalMessageBus.Server.Tests.Unit
             };
 
             var mockQueue = new Mock<IQueue>();
-            var sut = new Subscription(mockQueue.Object, "Subscription1")
+            var sut = new Subscription("Subscription1", mockQueue.Object)
             {
                 Label = "MyLabel"
             };
@@ -69,7 +69,7 @@ namespace MessageBus.LocalMessageBus.Server.Tests.Unit
                 }
             };
             var mockQueue = new Mock<IQueue>();
-            var sut = new Subscription(mockQueue.Object, "Subscription1")
+            var sut = new Subscription("Subscription1", mockQueue.Object)
             {
                 MessageProperties = new Dictionary<string, string>
                 {
@@ -95,7 +95,7 @@ namespace MessageBus.LocalMessageBus.Server.Tests.Unit
                 }
             };
             var mockQueue = new Mock<IQueue>();
-            var sut = new Subscription(mockQueue.Object, "Subscription1")
+            var sut = new Subscription("Subscription1", mockQueue.Object)
             {
                 MessageProperties = new Dictionary<string, string>
                 {
@@ -122,7 +122,7 @@ namespace MessageBus.LocalMessageBus.Server.Tests.Unit
                 }
             };
             var mockQueue = new Mock<IQueue>();
-            var sut = new Subscription(mockQueue.Object, "Subscription1")
+            var sut = new Subscription("Subscription1", mockQueue.Object)
             {
                 MessageProperties = new Dictionary<string, string>
                 {
@@ -151,7 +151,7 @@ namespace MessageBus.LocalMessageBus.Server.Tests.Unit
                 }
             };
             var mockQueue = new Mock<IQueue>();
-            var sut = new Subscription(mockQueue.Object, "Subscription1")
+            var sut = new Subscription("Subscription1", mockQueue.Object)
             {
                 MessageProperties = new Dictionary<string, string>
                 {

@@ -6,13 +6,17 @@ namespace MessageBus.LocalMessageBus.Server.MessageEntities
 {
     public class Subscription : ISubscription
     {
-        public string Name { get; private set; }
+        public string Name { get; set; }
         public string? Label { get; set; }
         public Dictionary<string, string> MessageProperties { get; set; }
 
-        private readonly IQueue _queue;
+        private readonly IQueue? _queue;
 
-        public Subscription(IQueue queue, string name)
+        public Subscription()
+        {
+        }
+
+        public Subscription(string name, IQueue? queue = null)
         {
             _queue = queue;
             MessageProperties = new();
@@ -27,7 +31,7 @@ namespace MessageBus.LocalMessageBus.Server.MessageEntities
             }
         }
 
-        public LocalMessage? Receive() => _queue.Receive();
+        public LocalMessage? Receive() => _queue?.Receive();
         
         private bool IsMatchingLabel(LocalMessage message) => message.Label == Label;
 

@@ -13,7 +13,7 @@ namespace MessageBus.LocalMessageBus.Server.Tests.Unit
         public void CreatesANewSubscriptionAndEnqueuesMessage()
         {
             var mockQueue = new Mock<IQueue>();
-            var subscription = new Subscription(mockQueue.Object, "Subscription1");
+            var subscription = new Subscription("Subscription1", mockQueue.Object);
             
             var sut = new Topic();
             sut.AddSubscription(subscription);
@@ -29,9 +29,9 @@ namespace MessageBus.LocalMessageBus.Server.Tests.Unit
         {
             var mockQueue1 = new Mock<IQueue>();
             var mockQueue2 = new Mock<IQueue>();
-            var subscription1 = new Subscription(mockQueue1.Object, "Subscription1");
-            var subscription2 = new Subscription(mockQueue2.Object, "Subscription2");
-            
+            var subscription1 = new Subscription("Subscription1", mockQueue1.Object);
+            var subscription2 = new Subscription("Subscription2", mockQueue2.Object);
+
             var sut = new Topic();
             sut.AddSubscription(subscription1);
             sut.AddSubscription(subscription2);
@@ -48,8 +48,8 @@ namespace MessageBus.LocalMessageBus.Server.Tests.Unit
         {
             var mockQueue1 = new Mock<IQueue>();
             var mockQueue2 = new Mock<IQueue>();
-            var subscription1 = new Subscription(mockQueue1.Object, "Subscription1");
-            var subscription2 = new Subscription(mockQueue2.Object, "Subscription2");
+            var subscription1 = new Subscription("Subscription1", mockQueue1.Object);
+            var subscription2 = new Subscription("Subscription2", mockQueue2.Object);
 
             var sut = new Topic();
             sut.AddSubscription(subscription1);
@@ -67,8 +67,8 @@ namespace MessageBus.LocalMessageBus.Server.Tests.Unit
         public void UpdatesExistingSubscription()
         {
             var mockQueue = new Mock<IQueue>();
-            var initialSubscription = new Subscription(mockQueue.Object, "Subscription1");
-            var newSubscription = new Subscription(mockQueue.Object, "Subscription1")
+            var initialSubscription = new Subscription("Subscription1", mockQueue.Object);
+            var newSubscription = new Subscription("Subscription1", mockQueue.Object)
             {
                 Label = "MyLabel",
                 MessageProperties = new()
@@ -103,7 +103,7 @@ namespace MessageBus.LocalMessageBus.Server.Tests.Unit
 
             Assert.Throws<InvalidOperationException>(() =>
             {
-                var subscription = new Subscription(new Queue(), "InvalidSubscripton");
+                var subscription = new Subscription("InvalidSubscripton", new Queue());
                 sut.UpdateSubsription(subscription, "InvalidSubscripton");
             });
         }
