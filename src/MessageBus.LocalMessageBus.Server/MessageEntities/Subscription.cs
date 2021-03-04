@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace MessageBus.LocalMessageBus.Server.MessageEntities
 {
-    public class Subscription : IQueue
+    public class Subscription : ISubscription
     {
         public string Name { get; private set; }
         public string? Label { get; set; }

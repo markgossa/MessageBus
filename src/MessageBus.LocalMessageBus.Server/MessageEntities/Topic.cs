@@ -1,16 +1,15 @@
-﻿using MessageBus.LocalMessageBus.Server.MessageEntities;
-using MessageBus.LocalMessageBus.Server.Models;
+﻿using MessageBus.LocalMessageBus.Server.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MessageBus.LocalMessageBus.Server.Services
+namespace MessageBus.LocalMessageBus.Server.MessageEntities
 {
-    public class Topic
+    public class Topic : ITopic
     {
-        private readonly List<Subscription> _subscriptions = new List<Subscription>();
+        private readonly List<ISubscription> _subscriptions = new List<ISubscription>();
 
-        public void AddSubscription(Subscription subscription) => _subscriptions.Add(subscription);
+        public void AddSubscription(ISubscription subscription) => _subscriptions.Add(subscription);
         public void RemoveSubscription(string name)
         {
             var subscription = _subscriptions.First(s => s.Name == name)
@@ -27,9 +26,9 @@ namespace MessageBus.LocalMessageBus.Server.Services
             }
         }
 
-        public List<Subscription> GetSubscriptions() => _subscriptions;
+        public List<ISubscription> GetSubscriptions() => _subscriptions;
 
-        public void UpdateSubsription(Subscription subscription, string name)
+        public void UpdateSubsription(ISubscription subscription, string name)
         {
             var subscriptionToUpdate = _subscriptions.FirstOrDefault(s => s.Name == name)
                 ?? ThrowIfSubscriptionNotFound(name);
@@ -38,7 +37,7 @@ namespace MessageBus.LocalMessageBus.Server.Services
             subscriptionToUpdate.MessageProperties = subscription.MessageProperties;
         }
 
-        private static Subscription ThrowIfSubscriptionNotFound(string name)
+        private static ISubscription ThrowIfSubscriptionNotFound(string name)
             => throw new InvalidOperationException($"Subscription {name} not found");
     }
 }

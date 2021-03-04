@@ -10,11 +10,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
+    <ProjectReference Include="..\MessageBus.Abstractions\MessageBus.Abstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MessageBus.Abstractions\MessageBus.Abstractions.csproj" />
+    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>

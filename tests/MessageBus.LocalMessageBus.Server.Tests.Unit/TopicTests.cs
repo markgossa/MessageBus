@@ -1,6 +1,5 @@
 ﻿using MessageBus.LocalMessageBus.Server.MessageEntities;
 using MessageBus.LocalMessageBus.Server.Models;
-using MessageBus.LocalMessageBus.Server.Services;
 using Moq;
 using System;
 using System.Linq;
