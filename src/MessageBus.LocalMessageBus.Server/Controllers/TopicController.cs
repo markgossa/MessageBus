@@ -16,24 +16,10 @@ namespace MessageBus.LocalMessageBus.Server.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddSubscription(SubscriptionRequest subscriptionRequest)
+        [Route(nameof(SendMessage))]
+        public IActionResult SendMessage(LocalMessage message)
         {
-            _topic.AddSubscription(new Subscription(subscriptionRequest.Name, new Queue())
-            {
-                Label = subscriptionRequest.Label,
-                MessageProperties = subscriptionRequest.MessageProperties
-            });
-
-            return Accepted();
-        }
-
-        [HttpGet]
-        public IActionResult GetSubscriptions() => new OkObjectResult(_topic.GetSubscriptions());
-
-        [HttpDelete]
-        public IActionResult DeleteSubscription(string name)
-        {
-            _topic.RemoveSubscription(name);
+            _topic.Send(message);
 
             return Ok();
         }

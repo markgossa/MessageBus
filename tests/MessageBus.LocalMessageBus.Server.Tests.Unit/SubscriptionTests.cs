@@ -83,6 +83,30 @@ namespace MessageBus.LocalMessageBus.Server.Tests.Unit
         }
         
         [Fact]
+        public void EnqueuesMessagesIfNoMessagePropertyFilter()
+        {
+            var passengerId = Guid.NewGuid();
+            var passengerBoardedEventAsJson = BuildPassengerBoardedEventJson(passengerId);
+            var message = new LocalMessage(passengerBoardedEventAsJson)
+            {
+                MessageProperties = new Dictionary<string, string>
+                {
+                    { "MessageType", "AircraftTakenOff" }
+                }
+            };
+            var mockQueue = new Mock<IQueue>();
+
+            var sut = new Subscription("Subscription1", mockQueue.Object)
+            {
+                MessageProperties = new Dictionary<string, string>()
+            };
+            sut.Send(message);
+
+            mockQueue.Verify(m => m.Send(message), Times.Once);
+            Assert.Null(sut.Receive());
+        }
+        
+        [Fact]
         public void EnqueuesMessagesWhichMatchTheMessageProperties()
         {
             var passengerId = Guid.NewGuid();

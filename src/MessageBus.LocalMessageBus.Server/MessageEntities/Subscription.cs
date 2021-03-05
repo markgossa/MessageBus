@@ -8,18 +8,24 @@ namespace MessageBus.LocalMessageBus.Server.MessageEntities
     {
         public string Name { get; set; }
         public string? Label { get; set; }
-        public Dictionary<string, string> MessageProperties { get; set; }
+        public Dictionary<string, string> MessageProperties
+        {
+            get => _messageProperties;
+            set => _messageProperties = value ?? new();
+        }
 
         private readonly IQueue? _queue;
+        private Dictionary<string, string> _messageProperties;
 
         public Subscription()
         {
+            MessageProperties = new();
         }
 
         public Subscription(string name, IQueue? queue = null)
         {
             _queue = queue;
-            MessageProperties = new();
+            MessageProperties = new Dictionary<string, string>();
             Name = name;
         }
 
@@ -27,7 +33,7 @@ namespace MessageBus.LocalMessageBus.Server.MessageEntities
         {
             if (IsMatchingLabel(message) && IsMatchingMessageProperties(message))
             {
-                _queue.Send(message);
+                _queue?.Send(message);
             }
         }
 
@@ -37,7 +43,12 @@ namespace MessageBus.LocalMessageBus.Server.MessageEntities
 
         private bool IsMatchingMessageProperties(LocalMessage message)
         {
-            var filterProperties = MessageProperties.AsEnumerable();
+            if (MessageProperties.Count == 0)
+            { 
+                return true; 
+            }    
+
+            var filterProperties = MessageProperties?.AsEnumerable();
             foreach (var filterProperty in filterProperties)
             {
                 if (!message.MessageProperties.TryGetValue(filterProperty.Key, out var value)

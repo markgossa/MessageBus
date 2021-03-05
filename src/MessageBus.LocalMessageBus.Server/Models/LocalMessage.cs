@@ -4,10 +4,15 @@ namespace MessageBus.LocalMessageBus.Server.Models
 {
     public class LocalMessage
     {
-        public string Body { get; }
-        public string? Label { get; init; }
-        public Dictionary<string, string> MessageProperties { get; init; }
+        public string Body { get; set; }
+        public string? Label { get; set; }
+        public Dictionary<string, string> MessageProperties { get; set; }
 
+        public LocalMessage()
+        {
+
+        }
+        
         public LocalMessage(string body)
         {
             Body = body;

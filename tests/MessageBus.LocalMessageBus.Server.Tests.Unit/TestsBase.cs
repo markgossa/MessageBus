@@ -16,6 +16,7 @@ namespace MessageBus.LocalMessageBus.Server.Tests.Unit
 {
     public class TestsBase
     {
+        private const string subscriptionControllerUri = "api/subscription";
 
         protected static string BuildPassengerBoardedEventJson(Guid passengerId)
         {
@@ -42,7 +43,7 @@ namespace MessageBus.LocalMessageBus.Server.Tests.Unit
             HttpClient httpClient = null)
         {
             var client = httpClient ?? new WebApplicationFactory<Startup>().CreateClient();
-            var response = await client.PostAsync("api/topic", new StringContent(JsonSerializer.Serialize(request),
+            var response = await client.PostAsync(subscriptionControllerUri, new StringContent(JsonSerializer.Serialize(request),
                 Encoding.UTF8, MediaTypeNames.Application.Json));
             response.EnsureSuccessStatusCode();
             
@@ -51,7 +52,7 @@ namespace MessageBus.LocalMessageBus.Server.Tests.Unit
 
         protected static async Task<IEnumerable<Subscription>> ExecuteGetSubscriptionsRequestAsync(HttpClient httpClient)
         {
-            var response = await httpClient.GetAsync("api/topic");
+            var response = await httpClient.GetAsync(subscriptionControllerUri);
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
 
@@ -81,6 +82,23 @@ namespace MessageBus.LocalMessageBus.Server.Tests.Unit
         }
 
         protected static async Task ExecuteDeleteSubscriptionRequestAsync(string name, HttpClient httpClient)
-            => await httpClient.DeleteAsync($"api/topic?name={name}");
+            => await httpClient.DeleteAsync($"{subscriptionControllerUri}?name={name}");
+
+        protected static LocalMessage BuildMessage()
+        {
+            var passengerId = Guid.NewGuid();
+            var passengerBoardedEventAsJson = BuildPassengerBoardedEventJson(passengerId);
+            var message = new LocalMessage(passengerBoardedEventAsJson)
+            {
+                MessageProperties = new Dictionary<string, string>
+                {
+                    { "MessageType", "AircraftTakenOff" },
+                    { "MessageVersion", "1" },
+                    { "Class", "Business" }
+                }
+            };
+
+            return message;
+        }
     }
 }
