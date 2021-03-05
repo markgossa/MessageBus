@@ -228,5 +228,91 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             Assert.Equal(aircraftId, matchingMessages.First().ApplicationProperties["AircraftId"]);
             Assert.Equal("Heavy", matchingMessages.First().ApplicationProperties["AircraftSize"]);
         }
+
+        [Fact]
+        public async Task PublishesEventsWithCustomMessageId()
+        {
+            var subscription = nameof(PublishesEventsWithCustomMessageId);
+            await CreateSubscriptionAsync(subscription);
+            var aircraftlandedEvent = new AircraftLanded { AircraftId = Guid.NewGuid().ToString() };
+            var messageId = Guid.NewGuid().ToString();
+            var message = new Message<IEvent>(aircraftlandedEvent)
+            {
+                MessageId = messageId
+            };
+
+            var sut = BuildAzureServiceBusClient(AuthenticationType.ManagedIdentity, subscription);
+            await sut.PublishAsync(message);
+
+            var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
+                .Where(m => IsMatchingAircraftId<AircraftLanded>(m, aircraftlandedEvent.AircraftId)
+                    && m.MessageId == messageId);
+            Assert.Single(matchingMessages);
+        }
+
+        [Fact]
+        public async Task SendsCommandsWithCustomMessageId()
+        {
+            var subscription = nameof(SendsCommandBody);
+            await CreateSubscriptionAsync(subscription);
+            var createNewFlightPlanCommand = new CreateNewFlightPlan { Destination = Guid.NewGuid().ToString() };
+            var messageId = Guid.NewGuid().ToString();
+            var message = new Message<ICommand>(createNewFlightPlanCommand)
+            {
+                MessageId = messageId
+            };
+
+            var sut = BuildAzureServiceBusClient(AuthenticationType.ManagedIdentity, subscription);
+            await sut.SendAsync(message);
+
+            var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
+                .Where(m => m.Body.ToObjectFromJson<CreateNewFlightPlan>().Destination ==
+                    createNewFlightPlanCommand.Destination
+                    && m.MessageId == messageId);
+            Assert.Single(matchingMessages);
+        }
+        
+        [Fact]
+        public async Task PublishesEventsWithCustomCorrelationId()
+        {
+            var subscription = nameof(PublishesEventsWithCustomMessageId);
+            await CreateSubscriptionAsync(subscription);
+            var aircraftlandedEvent = new AircraftLanded { AircraftId = Guid.NewGuid().ToString() };
+            var correlationId = Guid.NewGuid().ToString();
+            var message = new Message<IEvent>(aircraftlandedEvent)
+            {
+                CorrelationId = correlationId
+            };
+
+            var sut = BuildAzureServiceBusClient(AuthenticationType.ManagedIdentity, subscription);
+            await sut.PublishAsync(message);
+
+            var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
+                .Where(m => IsMatchingAircraftId<AircraftLanded>(m, aircraftlandedEvent.AircraftId)
+                    && m.CorrelationId == correlationId);
+            Assert.Single(matchingMessages);
+        }
+
+        [Fact]
+        public async Task SendsCommandsWithCustomCorrelationId()
+        {
+            var subscription = nameof(SendsCommandBody);
+            await CreateSubscriptionAsync(subscription);
+            var createNewFlightPlanCommand = new CreateNewFlightPlan { Destination = Guid.NewGuid().ToString() };
+            var correlationId = Guid.NewGuid().ToString();
+            var message = new Message<ICommand>(createNewFlightPlanCommand)
+            {
+                CorrelationId = correlationId
+            };
+
+            var sut = BuildAzureServiceBusClient(AuthenticationType.ManagedIdentity, subscription);
+            await sut.SendAsync(message);
+
+            var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
+                .Where(m => m.Body.ToObjectFromJson<CreateNewFlightPlan>().Destination ==
+                    createNewFlightPlanCommand.Destination
+                    && m.CorrelationId == correlationId);
+            Assert.Single(matchingMessages);
+        }
     }
 }

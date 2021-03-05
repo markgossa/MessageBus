@@ -60,6 +60,7 @@ namespace MessageBus.HostedService.Example.Handlers
             var changeFrequencyCommand = new Message<ICommand>(changeFrequency)
             {
                 MessageId = $"MyMessageId-{context.Message.AircraftId}",
+                CorrelationId = $"MyCorrelationId-{context.Message.AircraftId}",
                 MessageProperties = new Dictionary<string, string>
                 {
                     { "AircraftId", context.Message.AircraftId }
