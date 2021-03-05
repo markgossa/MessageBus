@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Mime;
 using System.Text;
@@ -83,15 +84,24 @@ namespace MessageBus.LocalMessageBus.Server.Tests.Unit
 
             var httpClient = await ExecuteAddSubscriptionRequestAsync(subscriptionRequest);
             await ExecuteSendMessageRequestAsync(messageToSend, httpClient);
-            var receivedMessage = await ExecuteRetrieveMessageRequestAsync(httpClient, subscriptionRequest.Name);
+            var receivedMessage = await ExecuteRetrieveMessageRequestAsync(subscriptionRequest.Name, httpClient);
 
             Assert.Equal(messageToSend.Body, receivedMessage.Body);
             Assert.Equal(messageToSend.Label, receivedMessage.Label);
             Assert.True(IsMatchingDictionary(messageToSend.MessageProperties, receivedMessage.MessageProperties));
         }
+        
+        [Fact]
+        public async Task ReceivesMessagesReturnsNotFoundIfSubscriptionDoesNotExist()
+        {
+            var ex = await Assert.ThrowsAsync<HttpRequestException>(async ()
+                => await ExecuteRetrieveMessageRequestAsync("invalidSubscription"));
 
-        private static async Task<LocalMessage> ExecuteRetrieveMessageRequestAsync(HttpClient httpClient,
-            string subscription)
+            Assert.Equal(HttpStatusCode.NotFound, ex.StatusCode);
+        }
+
+        private static async Task<LocalMessage> ExecuteRetrieveMessageRequestAsync(string subscription,
+            HttpClient httpClient = null)
         {
             var client = httpClient ?? new WebApplicationFactory<Startup>().CreateClient();
             var response = await client.GetAsync($"api/subscription/receivemessage?subscription={subscription}");

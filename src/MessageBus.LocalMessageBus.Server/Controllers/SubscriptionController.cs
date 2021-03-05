@@ -43,8 +43,11 @@ namespace MessageBus.LocalMessageBus.Server.Controllers
         [Route(nameof(ReceiveMessage))]
         public IActionResult ReceiveMessage(string subscription)
         {
-            var message = _topic.GetSubscriptions().First(n => n.Name == subscription).Receive();
-            return new OkObjectResult(message);
+            var message = _topic.GetSubscriptions().FirstOrDefault(n => n.Name == subscription)?.Receive();
+
+            return message is not null
+                ? new OkObjectResult(message)
+                : NotFound();
         }
     }
 }
