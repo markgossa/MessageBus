@@ -15,7 +15,7 @@ namespace MessageBus.LocalMessageBus.Server.MessageEntities
         }
 
         private readonly IQueue? _queue;
-        private Dictionary<string, string> _messageProperties;
+        private Dictionary<string, string> _messageProperties = new();
 
         public Subscription()
         {
