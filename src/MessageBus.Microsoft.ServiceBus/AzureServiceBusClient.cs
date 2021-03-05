@@ -65,6 +65,8 @@ namespace MessageBus.Microsoft.ServiceBus
         {
             var message = new ServiceBusMessage(BuildMessageBody(eventMessage));
             AddMessageProperties(eventMessage, message);
+            AddMessageId(eventMessage, message);
+            AddCorrelationId(eventMessage, message);
 
             await _serviceBusSender.SendMessageAsync(message);
         }
@@ -148,6 +150,17 @@ namespace MessageBus.Microsoft.ServiceBus
             foreach (var property in message.MessageProperties)
             {
                 serviceBusMessage.ApplicationProperties.Add(property.Key, property.Value);
+            }
+        }
+
+        private static void AddMessageId<T>(Message<T> eventMessage, ServiceBusMessage message) where T : IMessage 
+            => message.MessageId = eventMessage.MessageId;
+
+        private void AddCorrelationId<T>(Message<T> eventMessage, ServiceBusMessage message) where T : IMessage
+        {
+            if (!string.IsNullOrWhiteSpace(eventMessage.CorrelationId))
+            {
+                message.CorrelationId = eventMessage.CorrelationId;
             }
         }
     }
