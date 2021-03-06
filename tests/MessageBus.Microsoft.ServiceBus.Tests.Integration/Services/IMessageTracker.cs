@@ -2,7 +2,7 @@
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Services
 {
-    public interface ISomeDependency
+    public interface IMessageTracker
     {
         List<string> Ids { get; set; }
     }

@@ -8,17 +8,17 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers
 {
     public class AircraftTakenOffHandler : IMessageHandler<AircraftTakenOff>
     {
-        private readonly ISomeDependency _dependency;
+        private readonly IMessageTracker _messageTracker;
         public List<string> AircraftIds = new List<string>();
 
-        public AircraftTakenOffHandler(ISomeDependency dependency)
+        public AircraftTakenOffHandler(IMessageTracker messageTracker)
         {
-            _dependency = dependency;
+            _messageTracker = messageTracker;
         }
 
         public async Task HandleAsync(IMessageContext<AircraftTakenOff> context)
         {
-            _dependency.Ids.Add(context.Message.AircraftId);
+            _messageTracker.Ids.Add(context.Message.AircraftId);
 
             var message = new Message<IEvent>(new AircraftLeftAirspace { AircraftIdentifier = context.Message.AircraftId });
             await context.PublishAsync(message);

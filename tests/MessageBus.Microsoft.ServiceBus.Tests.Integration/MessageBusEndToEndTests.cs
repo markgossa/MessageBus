@@ -23,7 +23,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
             var services = new ServiceCollection();
             services.AddHostedService<MessageBusHostedService>()
-                .AddSingleton<ISomeDependency, SomeDependency>()
+                .AddSingleton<IMessageTracker, MessageTracker>()
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
                         Configuration["Topic"], inputSubscription, Configuration["TenantId"]))
                 .SubscribeToMessage<AircraftLeftRunway, AircraftLeftRunwayHandler>();
@@ -48,7 +48,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
             var services = new ServiceCollection();
             services.AddHostedService<MessageBusHostedService>()
-                .AddSingleton<ISomeDependency, SomeDependency>()
+                .AddSingleton<IMessageTracker, MessageTracker>()
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
                         Configuration["Topic"], inputSubscription, Configuration["TenantId"]))
                 .SubscribeToMessage<AircraftLeftRunway, AircraftLeftRunwayHandler>(new Dictionary<string, string> { { "MessageType", "ALR" } });
@@ -73,7 +73,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
             var services = new ServiceCollection();
             services.AddHostedService<MessageBusHostedService>()
-                .AddSingleton<ISomeDependency, SomeDependency>()
+                .AddSingleton<IMessageTracker, MessageTracker>()
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
                         Configuration["Topic"], inputSubscription, Configuration["TenantId"]))
                 .SubscribeToMessage<SetAutopilot, SetAutopilotHandler>();
@@ -98,7 +98,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
             var services = new ServiceCollection();
             services.AddHostedService<MessageBusHostedService>()
-                .AddSingleton<ISomeDependency, SomeDependency>()
+                .AddSingleton<IMessageTracker, MessageTracker>()
                 .AddSingleton<ISendingService, SendingService>()
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
                         Configuration["Topic"], subscription, Configuration["TenantId"]));
@@ -119,7 +119,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
             var services = new ServiceCollection();
             services.AddHostedService<MessageBusHostedService>()
-                .AddSingleton<ISomeDependency, SomeDependency>()
+                .AddSingleton<IMessageTracker, MessageTracker>()
                 .AddSingleton<IPublishingService, PublishingService>()
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
                         Configuration["Topic"], subscription, Configuration["TenantId"]));
@@ -141,7 +141,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
             var services = new ServiceCollection();
             services.AddHostedService<MessageBusHostedService>()
-                .AddSingleton<ISomeDependency, SomeDependency>()
+                .AddSingleton<IMessageTracker, MessageTracker>()
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
                         Configuration["Topic"], inputSubscription, Configuration["TenantId"]))
                 .SubscribeToMessage<AircraftLeftRunway, AircraftLeftRunwayHandlerDeadLetter>();
@@ -166,7 +166,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
             var services = new ServiceCollection();
             services.AddHostedService<MessageBusHostedService>()
-                .AddSingleton<ISomeDependency, SomeDependency>()
+                .AddSingleton<IMessageTracker, MessageTracker>()
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
                         Configuration["Topic"], subscription, Configuration["TenantId"]))
                 .SubscribeToMessage<CreateNewFlightPlan, CreateNewFlightPlanHandlerDeadLetter>();
@@ -190,7 +190,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
             var services = new ServiceCollection();
             services.AddHostedService<MessageBusHostedService>()
-                .AddSingleton<ISomeDependency, SomeDependency>()
+                .AddSingleton<IMessageTracker, MessageTracker>()
                 .AddMessageBus(new AzureServiceBusAdminClient(Configuration["Hostname"],
                     Configuration["Topic"], inputSubscription, Configuration["TenantId"]),
                     CreateHighPerformanceClient(inputSubscription))
@@ -240,7 +240,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
             var services = new ServiceCollection();
             services.AddHostedService<MessageBusHostedService>()
-                .AddSingleton<ISomeDependency, SomeDependency>()
+                .AddSingleton<IMessageTracker, MessageTracker>()
                 .AddSingleton<ISendingService, SendingService>()
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
                         Configuration["Topic"], subscription, Configuration["TenantId"]))
@@ -269,7 +269,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
             var services = new ServiceCollection();
             services.AddHostedService<MessageBusHostedService>()
-                .AddSingleton<ISomeDependency, SomeDependency>()
+                .AddSingleton<IMessageTracker, MessageTracker>()
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
                         Configuration["Topic"], inputSubscription, Configuration["TenantId"]))
                 .SubscribeToMessage<AircraftLeftRunway, AircraftLeftRunwayHandlerWithCopy>();
