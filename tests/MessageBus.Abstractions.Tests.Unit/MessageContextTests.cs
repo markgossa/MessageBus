@@ -128,5 +128,13 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             Assert.Equal(expectedCorrelationId, callbackEvent.CorrelationId);
         }
+
+        [Fact]
+        public async Task PublishesEventCopyWithoutDelay()
+        {
+            await _sut.SendMessageCopyAsync();
+
+            _mockMessageBus.Verify(m => m.SendMessageCopyAsync(_messageObject), Times.Once);
+        }
     }
 }

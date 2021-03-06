@@ -504,5 +504,14 @@ namespace MessageBus.Abstractions.Tests.Unit
             _mockMessageProcessorResolver.Verify(m => m.AddMessagePreProcessor<TestPreProcessor1>(), Times.Once);
             _mockMessageProcessorResolver.Verify(m => m.AddMessagePostProcessor<TestPostProcessor1>(), Times.Once);
         }
+
+        [Fact]
+        public async Task PublishesEventCopyWithoutDelay()
+        {
+            var messageObject = new object();
+            await _sut.SendMessageCopyAsync(messageObject);
+
+            _mockMessageBusClient.Verify(m => m.SendMessageCopyAsync(messageObject), Times.Once);
+        }
     }
 }

@@ -260,5 +260,30 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 m.ApplicationProperties["MessageType"].ToString() == nameof(SetAutopilot)
                 && m.Body.ToObjectFromJson<SetAutopilot>().AutopilotId == messageId));
         }
+
+        [Fact]
+        public async Task ReceivesAndSendsEventCopy()
+        {
+            var inputSubscription = nameof(ReceivesAndSendsEventCopy);
+            await CreateEndToEndTestSubscriptions(inputSubscription);
+
+            var services = new ServiceCollection();
+            services.AddHostedService<MessageBusHostedService>()
+                .AddSingleton<ISomeDependency, SomeDependency>()
+                .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
+                        Configuration["Topic"], inputSubscription, Configuration["TenantId"]))
+                .SubscribeToMessage<AircraftLeftRunway, AircraftLeftRunwayHandlerWithCopy>();
+            var serviceProvider = services.BuildServiceProvider();
+            await StartMessageBusHostedService(serviceProvider);
+
+            var aircraftLeftRunwayEvent = new AircraftLeftRunway { RunwayId = Guid.NewGuid().ToString() };
+            await SendMessages(aircraftLeftRunwayEvent);
+            await Task.Delay(TimeSpan.FromSeconds(4));
+            Assert.DoesNotContain(await ReceiveMessagesForSubscriptionAsync(inputSubscription),
+                m => m.Body.ToObjectFromJson<AircraftTakenOff>().AircraftId == aircraftLeftRunwayEvent.RunwayId);
+            Assert.Equal(2, (await ReceiveMessagesForSubscriptionAsync($"{inputSubscription}-Output")).Count(m => 
+                m.ApplicationProperties["MessageType"].ToString() == nameof(AircraftReachedGate)
+                && m.Body.ToObjectFromJson<AircraftReachedGate>().AirlineId == aircraftLeftRunwayEvent.RunwayId));
+        }
     }
 }

@@ -8,7 +8,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-[assembly: InternalsVisibleTo("MessageBus.microsoft.ServiceBus.Tests.Unit")]
+[assembly: InternalsVisibleTo("MessageBus.Microsoft.ServiceBus.Tests.Unit")]
 
 namespace MessageBus.Microsoft.ServiceBus
 {
@@ -60,6 +60,14 @@ namespace MessageBus.Microsoft.ServiceBus
         public async Task PublishAsync(Message<IEvent> eventMessage) => await SendMessageAsync(eventMessage);
 
         public async Task SendAsync(Message<ICommand> command) => await SendMessageAsync(command);
+
+        public async Task SendMessageCopyAsync(object messageObject)
+        {
+            var originalMessage = ((ProcessMessageEventArgs)messageObject).Message;
+            
+            var messageCopy = new ServiceBusMessage(originalMessage);
+            await _serviceBusSender.SendMessageAsync(messageCopy);
+        }
 
         private async Task SendMessageAsync<T>(Message<T> eventMessage) where T : IMessage
         {
