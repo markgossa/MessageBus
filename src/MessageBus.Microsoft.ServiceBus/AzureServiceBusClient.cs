@@ -61,11 +61,13 @@ namespace MessageBus.Microsoft.ServiceBus
 
         public async Task SendAsync(Message<ICommand> command) => await SendMessageAsync(command);
 
-        public async Task SendMessageCopyAsync(object messageObject)
+        public async Task SendMessageCopyAsync(object messageObject, int delayInSeconds = 0)
         {
             var originalMessage = ((ProcessMessageEventArgs)messageObject).Message;
-            
+
             var messageCopy = new ServiceBusMessage(originalMessage);
+            AddMessageDelay(delayInSeconds, messageCopy);
+
             await _serviceBusSender.SendMessageAsync(messageCopy);
         }
 
@@ -169,6 +171,14 @@ namespace MessageBus.Microsoft.ServiceBus
             if (!string.IsNullOrWhiteSpace(eventMessage.CorrelationId))
             {
                 message.CorrelationId = eventMessage.CorrelationId;
+            }
+        }
+
+        private static void AddMessageDelay(int delayInSeconds, ServiceBusMessage messageCopy)
+        {
+            if (delayInSeconds > 0)
+            {
+                messageCopy.ScheduledEnqueueTime = DateTimeOffset.Now.AddSeconds(delayInSeconds);
             }
         }
     }

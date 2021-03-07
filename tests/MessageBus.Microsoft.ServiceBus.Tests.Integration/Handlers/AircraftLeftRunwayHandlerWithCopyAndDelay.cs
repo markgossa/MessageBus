@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers
 {
-    public class AircraftLeftRunwayHandlerWithCopy : IMessageHandler<AircraftLeftRunway>
+    public class AircraftLeftRunwayHandlerWithCopyAndDelay : IMessageHandler<AircraftLeftRunway>
     {
         private readonly IMessageTracker _messageTracker;
 
-        public AircraftLeftRunwayHandlerWithCopy(IMessageTracker messageTracker)
+        public AircraftLeftRunwayHandlerWithCopyAndDelay(IMessageTracker messageTracker)
         {
             _messageTracker = messageTracker;
         }
@@ -20,9 +20,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers
             AddMessageIdToMessageTracker(context);
             await PublishAircraftReachedGate(context);
 
-            if (_messageTracker.Ids.Count(i => i == context.MessageId) <= 2)
+            if (_messageTracker.Ids.Count(i => i == context.MessageId) < 2)
             {
-                await context.SendMessageCopyAsync();
+                await context.SendMessageCopyAsync(delayInSeconds: 10);
             }
         }
 

@@ -17,6 +17,6 @@ namespace MessageBus.Abstractions
         Task SendAsync(Message<ICommand> message);
         IMessageBus AddMessagePreProcessor<T>() where T : class, IMessagePreProcessor;
         IMessageBus AddMessagePostProcessor<T>() where T : class, IMessagePostProcessor;
-        Task SendMessageCopyAsync(object messageObject);
+        Task SendMessageCopyAsync(object messageObject, int delayInSeconds = 0);
     }
 }

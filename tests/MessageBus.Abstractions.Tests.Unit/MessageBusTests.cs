@@ -511,7 +511,18 @@ namespace MessageBus.Abstractions.Tests.Unit
             var messageObject = new object();
             await _sut.SendMessageCopyAsync(messageObject);
 
-            _mockMessageBusClient.Verify(m => m.SendMessageCopyAsync(messageObject), Times.Once);
+            _mockMessageBusClient.Verify(m => m.SendMessageCopyAsync(messageObject, 0), Times.Once);
+        }
+        
+        [Theory]
+        [InlineData(5)]
+        [InlineData(10)]
+        public async Task PublishesEventCopyWithDelay(int delayInSeconds)
+        {
+            var messageObject = new object();
+            await _sut.SendMessageCopyAsync(messageObject, delayInSeconds);
+
+            _mockMessageBusClient.Verify(m => m.SendMessageCopyAsync(messageObject, delayInSeconds), Times.Once);
         }
     }
 }

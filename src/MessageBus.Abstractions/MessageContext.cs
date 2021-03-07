@@ -39,6 +39,7 @@ namespace MessageBus.Abstractions
             await _messageBus.SendAsync(command);
         }
 
-        public async Task SendMessageCopyAsync() => await _messageBus.SendMessageCopyAsync(_messageObject);
+        public async Task SendMessageCopyAsync(int delayInSeconds = 0) 
+            => await _messageBus.SendMessageCopyAsync(_messageObject, delayInSeconds);
     }
 }

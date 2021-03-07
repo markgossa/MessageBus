@@ -134,7 +134,17 @@ namespace MessageBus.Abstractions.Tests.Unit
         {
             await _sut.SendMessageCopyAsync();
 
-            _mockMessageBus.Verify(m => m.SendMessageCopyAsync(_messageObject), Times.Once);
+            _mockMessageBus.Verify(m => m.SendMessageCopyAsync(_messageObject, 0), Times.Once);
+        }
+        
+        [Theory]
+        [InlineData(5)]
+        [InlineData(10)]
+        public async Task PublishesEventCopyWithDelayInSeconds(int delayInSeconds)
+        {
+            await _sut.SendMessageCopyAsync(delayInSeconds);
+
+            _mockMessageBus.Verify(m => m.SendMessageCopyAsync(_messageObject, delayInSeconds), Times.Once);
         }
     }
 }
