@@ -63,10 +63,16 @@ namespace MessageBus.Microsoft.ServiceBus
 
         public async Task SendMessageCopyAsync(object messageObject, int delayInSeconds = 0)
         {
-            var originalMessage = ((ProcessMessageEventArgs)messageObject).Message;
+            var messageCopy = CreateMessageCopy(messageObject);
+            AddMessageDelayInSeconds(delayInSeconds, messageCopy);
 
-            var messageCopy = new ServiceBusMessage(originalMessage);
-            AddMessageDelay(delayInSeconds, messageCopy);
+            await _serviceBusSender.SendMessageAsync(messageCopy);
+        }
+
+        public async Task SendMessageCopyAsync(object messageObject, DateTimeOffset enqueueTime)
+        {
+            var messageCopy = CreateMessageCopy(messageObject);
+            AddMessageDelay(enqueueTime, messageCopy);
 
             await _serviceBusSender.SendMessageAsync(messageCopy);
         }
@@ -174,12 +180,21 @@ namespace MessageBus.Microsoft.ServiceBus
             }
         }
 
-        private static void AddMessageDelay(int delayInSeconds, ServiceBusMessage messageCopy)
+        private static void AddMessageDelayInSeconds(int delayInSeconds, ServiceBusMessage messageCopy)
         {
             if (delayInSeconds > 0)
             {
                 messageCopy.ScheduledEnqueueTime = DateTimeOffset.Now.AddSeconds(delayInSeconds);
             }
         }
+
+        private static ServiceBusMessage CreateMessageCopy(object messageObject)
+        {
+            var originalMessage = ((ProcessMessageEventArgs)messageObject).Message;
+            return new ServiceBusMessage(originalMessage);
+        }
+
+        private void AddMessageDelay(DateTimeOffset enqueueTime, ServiceBusMessage messageCopy)
+           => messageCopy.ScheduledEnqueueTime = enqueueTime;
     }
 }

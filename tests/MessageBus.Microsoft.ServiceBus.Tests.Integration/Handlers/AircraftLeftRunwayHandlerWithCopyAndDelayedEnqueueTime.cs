@@ -1,16 +1,17 @@
 ﻿using MessageBus.Abstractions;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Services;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers
 {
-    public class AircraftLeftRunwayHandlerWithCopyAndDelay : IMessageHandler<AircraftLeftRunway>
+    public class AircraftLeftRunwayHandlerWithCopyAndDelayedEnqueueTime : IMessageHandler<AircraftLeftRunway>
     {
         private readonly IMessageTracker _messageTracker;
 
-        public AircraftLeftRunwayHandlerWithCopyAndDelay(IMessageTracker messageTracker)
+        public AircraftLeftRunwayHandlerWithCopyAndDelayedEnqueueTime(IMessageTracker messageTracker)
         {
             _messageTracker = messageTracker;
         }
@@ -22,7 +23,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers
 
             if (_messageTracker.Ids.Count(i => i == context.MessageId) < 2)
             {
-                await context.SendMessageCopyAsync(delayInSeconds: 10);
+                await context.SendMessageCopyAsync(enqueueTime: DateTimeOffset.Now.AddSeconds(10));
             }
         }
 

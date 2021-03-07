@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MessageBus.Abstractions
@@ -18,5 +19,6 @@ namespace MessageBus.Abstractions
         IMessageBus AddMessagePreProcessor<T>() where T : class, IMessagePreProcessor;
         IMessageBus AddMessagePostProcessor<T>() where T : class, IMessagePostProcessor;
         Task SendMessageCopyAsync(object messageObject, int delayInSeconds = 0);
+        Task SendMessageCopyAsync(object messageObject, DateTimeOffset enqueueTime);
     }
 }

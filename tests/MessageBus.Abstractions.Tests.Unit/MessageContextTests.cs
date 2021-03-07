@@ -130,7 +130,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         }
 
         [Fact]
-        public async Task PublishesEventCopyWithoutDelay()
+        public async Task SendsMessageCopyWithoutDelay()
         {
             await _sut.SendMessageCopyAsync();
 
@@ -140,11 +140,22 @@ namespace MessageBus.Abstractions.Tests.Unit
         [Theory]
         [InlineData(5)]
         [InlineData(10)]
-        public async Task PublishesEventCopyWithDelayInSeconds(int delayInSeconds)
+        public async Task SendsMessageCopyWithDelayInSeconds(int delayInSeconds)
         {
             await _sut.SendMessageCopyAsync(delayInSeconds);
 
             _mockMessageBus.Verify(m => m.SendMessageCopyAsync(_messageObject, delayInSeconds), Times.Once);
+        }
+        
+        [Theory]
+        [InlineData(5)]
+        [InlineData(10)]
+        public async Task SendsMessageCopyWithEnqueueTime(int delayInSeconds)
+        {
+            var enqueueTime = DateTimeOffset.Now.AddSeconds(delayInSeconds);
+            await _sut.SendMessageCopyAsync(enqueueTime);
+
+            _mockMessageBus.Verify(m => m.SendMessageCopyAsync(_messageObject, enqueueTime), Times.Once);
         }
     }
 }

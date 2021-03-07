@@ -13,5 +13,6 @@ namespace MessageBus.Abstractions
         Task PublishAsync(Message<IEvent> eventObject);
         Task SendAsync(Message<ICommand> command);
         Task SendMessageCopyAsync(object messageObject, int delayInSeconds = 0);
+        Task SendMessageCopyAsync(object messageObject, DateTimeOffset enqueueTime);
     }
 }

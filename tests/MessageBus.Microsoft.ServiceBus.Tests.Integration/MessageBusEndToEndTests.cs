@@ -267,14 +267,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var inputSubscription = nameof(SendsMessageCopy);
             await CreateEndToEndTestSubscriptions(inputSubscription);
 
-            var services = new ServiceCollection();
-            services.AddHostedService<MessageBusHostedService>()
-                .AddSingleton<IMessageTracker, MessageTracker>()
-                .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
-                        Configuration["Topic"], inputSubscription, Configuration["TenantId"]))
-                .SubscribeToMessage<AircraftLeftRunway, AircraftLeftRunwayHandlerWithCopy>();
-            var serviceProvider = services.BuildServiceProvider();
-            await StartMessageBusHostedService(serviceProvider);
+            await StartSendMessageCopyTestService<AircraftLeftRunwayHandlerWithCopy>(inputSubscription);
 
             var aircraftLeftRunwayEvent = new AircraftLeftRunway { RunwayId = Guid.NewGuid().ToString() };
             await SendMessages(aircraftLeftRunwayEvent);
@@ -285,34 +278,25 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         }
 
         [Fact]
-        public async Task SendsMessageCopyWithDelay()
+        public async Task SendsMessageCopyWithDelayInSeconds()
         {
-            var inputSubscription = nameof(SendsMessageCopyWithDelay);
+            var inputSubscription = nameof(SendsMessageCopyWithDelayInSeconds);
             await CreateEndToEndTestSubscriptions(inputSubscription);
 
-            var services = new ServiceCollection();
-            services.AddHostedService<MessageBusHostedService>()
-                .AddSingleton<IMessageTracker, MessageTracker>()
-                .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
-                        Configuration["Topic"], inputSubscription, Configuration["TenantId"]))
-                .SubscribeToMessage<AircraftLeftRunway, AircraftLeftRunwayHandlerWithCopyAndDelay>();
-            var serviceProvider = services.BuildServiceProvider();
-            await StartMessageBusHostedService(serviceProvider);
+            await StartSendMessageCopyTestService<AircraftLeftRunwayHandlerWithCopyAndDelayInSeconds>(inputSubscription);
 
-            var aircraftLeftRunwayEvent = new AircraftLeftRunway { RunwayId = Guid.NewGuid().ToString() };
-            await SendMessages(aircraftLeftRunwayEvent);
-            await Task.Delay(TimeSpan.FromSeconds(4));
-            Assert.DoesNotContain(await ReceiveMessagesForSubscriptionAsync(inputSubscription),
-                m => m.Body.ToObjectFromJson<AircraftTakenOff>().AircraftId == aircraftLeftRunwayEvent.RunwayId);
-            Assert.Equal(1, await FindAircraftReachedGateEventCount(inputSubscription, aircraftLeftRunwayEvent));
-            await Task.Delay(TimeSpan.FromSeconds(12));
-            Assert.Equal(1, await FindAircraftReachedGateEventCount(inputSubscription, aircraftLeftRunwayEvent));
+            await AssertSendsMessageCopyWithDelay(inputSubscription);
         }
+        
+        [Fact]
+        public async Task SendsMessageCopyWithDelayedEnqueueTime()
+        {
+            var inputSubscription = nameof(SendsMessageCopyWithDelayedEnqueueTime);
+            await CreateEndToEndTestSubscriptions(inputSubscription);
 
-        private async Task<int> FindAircraftReachedGateEventCount(string inputSubscription, AircraftLeftRunway aircraftLeftRunwayEvent)
-            => (await ReceiveMessagesForSubscriptionAsync($"{inputSubscription}-Output")).Count(m =>
-                    m.ApplicationProperties["MessageType"].ToString() == nameof(AircraftReachedGate)
-                    && m.Body.ToObjectFromJson<AircraftReachedGate>().AirlineId == aircraftLeftRunwayEvent.RunwayId);
+            await StartSendMessageCopyTestService<AircraftLeftRunwayHandlerWithCopyAndDelayedEnqueueTime>(inputSubscription);
 
+            await AssertSendsMessageCopyWithDelay(inputSubscription);
+        }
     }
 }

@@ -90,6 +90,9 @@ namespace MessageBus.Abstractions
         public async Task SendMessageCopyAsync(object messageObject, int delayInSeconds = 0) 
             => await _messageBusClient.SendMessageCopyAsync(messageObject, delayInSeconds);
 
+        public async Task SendMessageCopyAsync(object messageObject, DateTimeOffset enqueueTime)
+            => await _messageBusClient.SendMessageCopyAsync(messageObject, enqueueTime);
+
         internal async Task OnErrorMessageReceived(MessageErrorReceivedEventArgs args)
             => await Task.Run(() => throw new MessageReceivedException(args.Exception));
 
