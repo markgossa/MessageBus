@@ -195,10 +195,10 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             return serviceBusClient;
         }
 
-        protected async Task AssertSendsMessageCopyWithDelay(string inputSubscription)
+        protected async Task AssertSendsMessageCopyWithDelay(string inputSubscription, string messageType)
         {
             var aircraftLeftRunwayEvent = new AircraftLeftRunway { RunwayId = Guid.NewGuid().ToString() };
-            await SendMessages(aircraftLeftRunwayEvent);
+            await SendMessages(aircraftLeftRunwayEvent, 1, messageType);
             await Task.Delay(TimeSpan.FromSeconds(4));
             Assert.DoesNotContain(await ReceiveMessagesForSubscriptionAsync(inputSubscription),
                 m => m.Body.ToObjectFromJson<AircraftTakenOff>().AircraftId == aircraftLeftRunwayEvent.RunwayId);
@@ -212,7 +212,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                     m.ApplicationProperties["MessageType"].ToString() == nameof(AircraftReachedGate)
                     && m.Body.ToObjectFromJson<AircraftReachedGate>().AirlineId == aircraftLeftRunwayEvent.RunwayId);
 
-        protected async Task StartSendMessageCopyTestService<T>(string inputSubscription)
+        protected async Task StartSendMessageCopyTestService<T>(string inputSubscription, Dictionary<string, string> messageProperties)
             where T : IMessageHandler<AircraftLeftRunway>
         {
             var services = new ServiceCollection();
@@ -220,8 +220,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 .AddSingleton<IMessageTracker, MessageTracker>()
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
                         Configuration["Topic"], inputSubscription, Configuration["TenantId"]))
-                .SubscribeToMessage<AircraftLeftRunway, T>();
-            var serviceProvider = services.BuildServiceProvider();
+                .SubscribeToMessage<AircraftLeftRunway, T>(messageProperties);
+            using var serviceProvider = services.BuildServiceProvider();
             await StartMessageBusHostedService(serviceProvider);
         }
     }
