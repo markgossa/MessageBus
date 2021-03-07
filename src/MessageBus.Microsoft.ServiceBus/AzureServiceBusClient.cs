@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace MessageBus.Microsoft.ServiceBus
 {
-    public class AzureServiceBusClient : IMessageBusClient
+    public class AzureServiceBusClient : IMessageBusClient, IDisposable, IAsyncDisposable
     {
         private readonly ServiceBusProcessor _serviceBusProcessor;
         private readonly ServiceBusSender _serviceBusSender;
@@ -75,6 +75,14 @@ namespace MessageBus.Microsoft.ServiceBus
             AddMessageDelay(enqueueTime, messageCopy);
 
             await _serviceBusSender.SendMessageAsync(messageCopy);
+        }
+
+        public void Dispose() => DisposeAsync().AsTask().Wait();
+
+        public async ValueTask DisposeAsync()
+        {
+            await _serviceBusProcessor.DisposeAsync();
+            await _serviceBusSender.DisposeAsync();
         }
 
         private async Task SendMessageAsync<T>(Message<T> eventMessage) where T : IMessage

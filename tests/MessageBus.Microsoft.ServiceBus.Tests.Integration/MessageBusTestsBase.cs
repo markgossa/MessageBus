@@ -20,7 +20,7 @@ using Xunit;
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 {
-    public class MessageBusTestsBase
+    public class MessageBusTestsBase : IDisposable, IAsyncDisposable
     {
         protected readonly IConfiguration Configuration = new Settings().Configuration;
         protected readonly string _tenantId;
@@ -30,11 +30,23 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         protected readonly string _subscription = nameof(MessageBusTestsBase);
         protected readonly ServiceBusClient _serviceBusClient;
         protected readonly ServiceBusAdministrationClient _serviceBusAdminClient;
+        protected ServiceProvider _serviceProvider;
+        protected AzureServiceBusClient _azureServiceBusClient;
+        protected readonly Mock<ITestHandler> mockTestHandler = new Mock<ITestHandler>();
         private readonly ServiceBusSender _serviceBusSender;
-        
+
         public MessageBusTestsBase()
         {
-            _serviceBusClient = new ServiceBusClient(Configuration["ConnectionString"]);
+            var options = new ServiceBusClientOptions
+            {
+                RetryOptions = new()
+                {
+                    MaxRetries = 10,
+                    Mode = ServiceBusRetryMode.Exponential,
+                    MaxDelay = TimeSpan.FromSeconds(10)
+                }
+            };
+            _serviceBusClient = new ServiceBusClient(Configuration["ConnectionString"], options);
             _serviceBusAdminClient = new ServiceBusAdministrationClient(Configuration["ConnectionString"]);
             _tenantId = Configuration["TenantId"];
             _topic = Configuration["Topic"];
@@ -195,10 +207,10 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             return serviceBusClient;
         }
 
-        protected async Task AssertSendsMessageCopyWithDelay(string inputSubscription, string messageType)
+        protected async Task AssertSendsMessageCopyWithDelay(string inputSubscription)
         {
             var aircraftLeftRunwayEvent = new AircraftLeftRunway { RunwayId = Guid.NewGuid().ToString() };
-            await SendMessages(aircraftLeftRunwayEvent, 1, messageType);
+            await SendMessages(aircraftLeftRunwayEvent, 1);
             await Task.Delay(TimeSpan.FromSeconds(4));
             Assert.DoesNotContain(await ReceiveMessagesForSubscriptionAsync(inputSubscription),
                 m => m.Body.ToObjectFromJson<AircraftTakenOff>().AircraftId == aircraftLeftRunwayEvent.RunwayId);
@@ -212,7 +224,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                     m.ApplicationProperties["MessageType"].ToString() == nameof(AircraftReachedGate)
                     && m.Body.ToObjectFromJson<AircraftReachedGate>().AirlineId == aircraftLeftRunwayEvent.RunwayId);
 
-        protected async Task StartSendMessageCopyTestService<T>(string inputSubscription, Dictionary<string, string> messageProperties)
+        protected async Task<ServiceProvider> StartSendMessageCopyTestService<T>(string inputSubscription)
             where T : IMessageHandler<AircraftLeftRunway>
         {
             var services = new ServiceCollection();
@@ -220,9 +232,31 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 .AddSingleton<IMessageTracker, MessageTracker>()
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
                         Configuration["Topic"], inputSubscription, Configuration["TenantId"]))
-                .SubscribeToMessage<AircraftLeftRunway, T>(messageProperties);
-            using var serviceProvider = services.BuildServiceProvider();
+                .SubscribeToMessage<AircraftLeftRunway, T>();
+            var serviceProvider = services.BuildServiceProvider();
             await StartMessageBusHostedService(serviceProvider);
+
+            return serviceProvider;
+        }
+
+        public void Dispose()
+        {
+            DisposeAsync().AsTask().Wait();
+            GC.SuppressFinalize(this);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (_serviceProvider is not null)
+            {
+                await _serviceProvider?.GetService<IHostedService>()?.StopAsync(new CancellationToken());
+            }
+
+            if (_azureServiceBusClient is not null)
+            {
+                await _azureServiceBusClient.StopAsync();
+                await _azureServiceBusClient.DisposeAsync().AsTask();
+            }
         }
     }
 }

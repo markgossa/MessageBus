@@ -27,8 +27,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
                         Configuration["Topic"], inputSubscription, Configuration["TenantId"]))
                 .SubscribeToMessage<AircraftLeftRunway, AircraftLeftRunwayHandler>();
-            var serviceProvider = services.BuildServiceProvider();
-            await StartMessageBusHostedService(serviceProvider);
+            _serviceProvider = services.BuildServiceProvider();
+            await StartMessageBusHostedService(_serviceProvider);
 
             var aircraftLeftRunwayEvent = new AircraftLeftRunway { RunwayId = Guid.NewGuid().ToString() };
             await SendMessages(aircraftLeftRunwayEvent);
@@ -52,8 +52,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
                         Configuration["Topic"], inputSubscription, Configuration["TenantId"]))
                 .SubscribeToMessage<AircraftLeftRunway, AircraftLeftRunwayHandler>(new Dictionary<string, string> { { "MessageType", "ALR" } });
-            var serviceProvider = services.BuildServiceProvider();
-            await StartMessageBusHostedService(serviceProvider);
+            _serviceProvider = services.BuildServiceProvider();
+            await StartMessageBusHostedService(_serviceProvider);
 
             var aircraftLeftRunwayEvent = new AircraftLeftRunway { RunwayId = Guid.NewGuid().ToString() };
             await SendMessages(aircraftLeftRunwayEvent, 1, "ALR");
@@ -77,8 +77,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
                         Configuration["Topic"], inputSubscription, Configuration["TenantId"]))
                 .SubscribeToMessage<SetAutopilot, SetAutopilotHandler>();
-            var serviceProvider = services.BuildServiceProvider();
-            await StartMessageBusHostedService(serviceProvider);
+            _serviceProvider = services.BuildServiceProvider();
+            await StartMessageBusHostedService(_serviceProvider);
 
             var setAutopilotCommand = new SetAutopilot { AutopilotId = Guid.NewGuid().ToString() };
             await SendMessages(setAutopilotCommand);
@@ -102,9 +102,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 .AddSingleton<ISendingService, SendingService>()
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
                         Configuration["Topic"], subscription, Configuration["TenantId"]));
-            var serviceProvider = services.BuildServiceProvider();
+            _serviceProvider = services.BuildServiceProvider();
             var setAutopilotCommand = new SetAutopilot { AutopilotId = Guid.NewGuid().ToString() };
-            await serviceProvider.GetRequiredService<ISendingService>().SendAsync(setAutopilotCommand);
+            await _serviceProvider.GetRequiredService<ISendingService>().SendAsync(setAutopilotCommand);
 
             Assert.Single(await ReceiveMessagesForSubscriptionAsync($"{subscription}-Output"),
                 m => m.ApplicationProperties["MessageType"].ToString() == nameof(SetAutopilot)
@@ -123,9 +123,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 .AddSingleton<IPublishingService, PublishingService>()
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
                         Configuration["Topic"], subscription, Configuration["TenantId"]));
-            var serviceProvider = services.BuildServiceProvider();
+            _serviceProvider = services.BuildServiceProvider();
             var aircraftTakenOffEvent = new AircraftTakenOff { AircraftId = Guid.NewGuid().ToString() };
-            await serviceProvider.GetRequiredService<IPublishingService>().PublishAsync(aircraftTakenOffEvent);
+            await _serviceProvider.GetRequiredService<IPublishingService>().PublishAsync(aircraftTakenOffEvent);
 
             Assert.Single(await ReceiveMessagesForSubscriptionAsync($"{subscription}-Output"),
                m => m.ApplicationProperties["MessageType"].ToString() == nameof(AircraftTakenOff)
@@ -145,8 +145,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
                         Configuration["Topic"], inputSubscription, Configuration["TenantId"]))
                 .SubscribeToMessage<AircraftLeftRunway, AircraftLeftRunwayHandlerDeadLetter>();
-            var serviceProvider = services.BuildServiceProvider();
-            await StartMessageBusHostedService(serviceProvider);
+            _serviceProvider = services.BuildServiceProvider();
+            await StartMessageBusHostedService(_serviceProvider);
 
             await SendMessages(aircraftLeftRunwayEvent);
             await Task.Delay(TimeSpan.FromSeconds(4));
@@ -170,8 +170,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
                         Configuration["Topic"], subscription, Configuration["TenantId"]))
                 .SubscribeToMessage<CreateNewFlightPlan, CreateNewFlightPlanHandlerDeadLetter>();
-            var serviceProvider = services.BuildServiceProvider();
-            await StartMessageBusHostedService(serviceProvider);
+            _serviceProvider = services.BuildServiceProvider();
+            await StartMessageBusHostedService(_serviceProvider);
 
             await SendMessages(createNewFlightPlan);
             await Task.Delay(TimeSpan.FromSeconds(4));
@@ -197,8 +197,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 .SubscribeToMessage<CreateNewFlightPlan, CreateNewFlightPlanHandler>()
                 .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>()
                 .SubscribeToMessage<AircraftLeftRunway, AircraftLeftRunwayHandlerDeadLetter>();
-            var serviceProvider = services.BuildServiceProvider();
-            await StartMessageBusHostedService(serviceProvider);
+            _serviceProvider = services.BuildServiceProvider();
+            await StartMessageBusHostedService(_serviceProvider);
 
             var count = 25;
             var createNewFlightPlanCommand = new CreateNewFlightPlan { Destination = Guid.NewGuid().ToString() };
@@ -247,8 +247,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                     .SubscribeToMessage<AircraftLeftRunway, AircraftLeftRunwayHandler>()
                     .AddMessagePreProcessor<TestMessageProcessor>()
                     .AddMessagePostProcessor<TestMessageProcessor>();
-            var serviceProvider = services.BuildServiceProvider();
-            await StartMessageBusHostedService(serviceProvider);
+            _serviceProvider = services.BuildServiceProvider();
+            await StartMessageBusHostedService(_serviceProvider);
 
             var aircraftLeftRunwayEvent = new AircraftLeftRunway { RunwayId = Guid.NewGuid().ToString() };
             var messageId = Guid.NewGuid().ToString();
@@ -266,16 +266,11 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             var inputSubscription = nameof(SendsMessageCopy);
             await CreateEndToEndTestSubscriptions(inputSubscription);
-            var messageType = inputSubscription;
-            var messageProperties = new Dictionary<string, string>
-            {
-                { "MessageType", messageType }
-            };
 
-            await StartSendMessageCopyTestService<AircraftLeftRunwayHandlerWithCopy>(inputSubscription, messageProperties);
+            _serviceProvider = await StartSendMessageCopyTestService<AircraftLeftRunwayHandlerWithCopy>(inputSubscription);
 
             var aircraftLeftRunwayEvent = new AircraftLeftRunway { RunwayId = Guid.NewGuid().ToString() };
-            await SendMessages(aircraftLeftRunwayEvent, 1, messageType);
+            await SendMessages(aircraftLeftRunwayEvent, 1);
             await Task.Delay(TimeSpan.FromSeconds(4));
             Assert.DoesNotContain(await ReceiveMessagesForSubscriptionAsync(inputSubscription),
                 m => m.Body.ToObjectFromJson<AircraftLeftRunway>().RunwayId == aircraftLeftRunwayEvent.RunwayId);
@@ -287,15 +282,10 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             var inputSubscription = nameof(SendsMessageCopyWithDelayInSeconds);
             await CreateEndToEndTestSubscriptions(inputSubscription);
-            var messageType = inputSubscription;
-            var messageProperties = new Dictionary<string, string>
-            {
-                { "MessageType", messageType }
-            };
+            
+            _serviceProvider = await StartSendMessageCopyTestService<AircraftLeftRunwayHandlerWithCopyAndDelayInSeconds>(inputSubscription);
 
-            await StartSendMessageCopyTestService<AircraftLeftRunwayHandlerWithCopyAndDelayInSeconds>(inputSubscription, messageProperties);
-
-            await AssertSendsMessageCopyWithDelay(inputSubscription, messageType);
+            await AssertSendsMessageCopyWithDelay(inputSubscription);
         }
         
         [Fact]
@@ -303,15 +293,10 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             var inputSubscription = nameof(SendsMessageCopyWithDelayedEnqueueTime);
             await CreateEndToEndTestSubscriptions(inputSubscription);
-            var messageType = inputSubscription;
-            var messageProperties = new Dictionary<string, string>
-            {
-                { "MessageType", messageType }
-            };
+            
+            _serviceProvider = await StartSendMessageCopyTestService<AircraftLeftRunwayHandlerWithCopyAndDelayedEnqueueTime>(inputSubscription);
 
-            await StartSendMessageCopyTestService<AircraftLeftRunwayHandlerWithCopyAndDelayedEnqueueTime>(inputSubscription, messageProperties);
-
-            await AssertSendsMessageCopyWithDelay(inputSubscription, messageType);
+            await AssertSendsMessageCopyWithDelay(inputSubscription);
         }
     }
 }
