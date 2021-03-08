@@ -267,13 +267,15 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var inputSubscription = nameof(SendsMessageCopy);
             await CreateEndToEndTestSubscriptions(inputSubscription);
 
-            _serviceProvider = await StartSendMessageCopyTestService<AircraftLeftRunwayHandlerWithCopy>(inputSubscription);
+            var messageType = inputSubscription;
+            _serviceProvider = await StartSendMessageCopyTestService<AircraftLeftRunwayHandlerWithCopy>(inputSubscription, messageType);
 
             var aircraftLeftRunwayEvent = new AircraftLeftRunway { RunwayId = Guid.NewGuid().ToString() };
-            await SendMessages(aircraftLeftRunwayEvent, 1);
+            await SendMessages(aircraftLeftRunwayEvent, 1, messageType);
             await Task.Delay(TimeSpan.FromSeconds(4));
             Assert.DoesNotContain(await ReceiveMessagesForSubscriptionAsync(inputSubscription),
-                m => m.Body.ToObjectFromJson<AircraftLeftRunway>().RunwayId == aircraftLeftRunwayEvent.RunwayId);
+                m => m.Body.ToObjectFromJson<AircraftLeftRunway>().RunwayId == aircraftLeftRunwayEvent.RunwayId
+                    && m.ApplicationProperties["MessageType"].ToString() == messageType);
             Assert.Equal(3, await FindAircraftReachedGateEventCount(inputSubscription, aircraftLeftRunwayEvent));
         }
 
@@ -283,9 +285,10 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var inputSubscription = nameof(SendsMessageCopyWithDelayInSeconds);
             await CreateEndToEndTestSubscriptions(inputSubscription);
             
-            _serviceProvider = await StartSendMessageCopyTestService<AircraftLeftRunwayHandlerWithCopyAndDelayInSeconds>(inputSubscription);
+            var messageType = inputSubscription;
+            _serviceProvider = await StartSendMessageCopyTestService<AircraftLeftRunwayHandlerWithCopyAndDelayInSeconds>(inputSubscription, messageType);
 
-            await AssertSendsMessageCopyWithDelay(inputSubscription);
+            await AssertSendsMessageCopyWithDelay(inputSubscription, messageType);
         }
         
         [Fact]
@@ -293,10 +296,11 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             var inputSubscription = nameof(SendsMessageCopyWithDelayedEnqueueTime);
             await CreateEndToEndTestSubscriptions(inputSubscription);
-            
-            _serviceProvider = await StartSendMessageCopyTestService<AircraftLeftRunwayHandlerWithCopyAndDelayedEnqueueTime>(inputSubscription);
 
-            await AssertSendsMessageCopyWithDelay(inputSubscription);
+            var messageType = inputSubscription;
+            _serviceProvider = await StartSendMessageCopyTestService<AircraftLeftRunwayHandlerWithCopyAndDelayedEnqueueTime>(inputSubscription, messageType);
+
+            await AssertSendsMessageCopyWithDelay(inputSubscription, messageType);
         }
 
         [Fact]
