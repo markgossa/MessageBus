@@ -68,6 +68,9 @@ namespace MessageBus.HostedService.Example.Handlers
             };
 
             await context.SendAsync(changeFrequencyCommand);
+            var now = DateTimeOffset.Now;
+
+            await context.SendMessageCopyAsync(enqueueTime: DateTimeOffset.Parse("08/03/2021 20:18"));
             Console.WriteLine();
         }
     }

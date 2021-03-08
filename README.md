@@ -23,6 +23,7 @@ MessageBus is an abstraction layer for messaging technologies such as Azure Serv
     - [Send commands or publish events from a message handler](#send-commands-or-publish-events-from-a-message-handler)
     - [Send commands or publish events from a service](#send-commands-or-publish-events-from-a-service)
     - [Set custom properties on messages](#set-custom-properties-on-messages)
+    - [Send message copy with optional delay](#send-message-copy-with-optional-delay)
   - [Working with messages](#working-with-messages)
     - [Deserializing messages](#deserializing-messages)
     - [Get message properties](#get-message-properties)
@@ -379,6 +380,45 @@ public async Task SendMessages()
     };
 
     await _messageBus.PublishAsync(eventObject);
+}
+```
+
+### Send message copy with optional delay
+
+From within a message handler, you can send a message copy which is an exact copy of the received message and you can also specify a delay in seconds or specify a time for the message to appear on the subscription which is quite useful if you want to retry the message at a later stage.
+
+Note that with Service Bus, the message copy feature does not increment the dequeue count. All message properties and data remain the same.
+
+If the message enqueue time has already passed then the message will be sent immediately.
+
+```csharp
+using MessageBus.Abstractions;
+using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
+using System.Threading.Tasks;
+
+namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers
+{
+    public class AircraftLeftRunwayHandlerWithCopy : IMessageHandler<AircraftLeftRunway>
+    {
+        public async Task HandleAsync(IMessageContext<AircraftLeftRunway> context)
+        {
+            try
+            {
+                // do something
+            }
+            catch
+            {
+                // Send a message copy which is queued immediately
+                await context.SendMessageCopyAsync();
+
+                // Send a message copy which is queued in 10 seconds
+                await context.SendMessageCopyAsync(delayInSeconds: 10);
+
+                // Send a message copy which is queued at a specific time
+                await context.SendMessageCopyAsync(enqueueTime: DateTimeOffset.Parse("08/03/2021 20:15"));
+            }
+        }
+    }
 }
 ```
 
