@@ -112,9 +112,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         }
 
         [Fact]
-        public async Task SendsEvent()
+        public async Task PublishesEvent()
         {
-            var subscription = nameof(SendsEvent);
+            var subscription = nameof(PublishesEvent);
             await CreateEndToEndTestSubscriptions(subscription);
 
             var services = new ServiceCollection();
@@ -297,6 +297,48 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             _serviceProvider = await StartSendMessageCopyTestService<AircraftLeftRunwayHandlerWithCopyAndDelayedEnqueueTime>(inputSubscription);
 
             await AssertSendsMessageCopyWithDelay(inputSubscription);
+        }
+
+        [Fact]
+        public async Task SendsCommandWithScheduledEnqueueTime()
+        {
+            var subscription = nameof(SendsCommandWithScheduledEnqueueTime);
+            await CreateEndToEndTestSubscriptions(subscription);
+
+            var services = new ServiceCollection();
+            services.AddHostedService<MessageBusHostedService>()
+                .AddSingleton<IMessageTracker, MessageTracker>()
+                .AddSingleton<ISendingService, SendingServiceWithDelay>()
+                .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
+                        Configuration["Topic"], subscription, Configuration["TenantId"]));
+            _serviceProvider = services.BuildServiceProvider();
+            var setAutopilotCommand = new SetAutopilot { AutopilotId = Guid.NewGuid().ToString() };
+            await _serviceProvider.GetRequiredService<ISendingService>().SendAsync(setAutopilotCommand);
+
+            Assert.Empty(await FindSetAutopilotCommands(subscription, setAutopilotCommand));
+            await Task.Delay(TimeSpan.FromSeconds(11));
+            Assert.Single(await FindSetAutopilotCommands(subscription, setAutopilotCommand));
+        }
+
+        [Fact]
+        public async Task PublishesEventWithScheduledEnqueueTime()
+        {
+            var subscription = nameof(PublishesEventWithScheduledEnqueueTime);
+            await CreateEndToEndTestSubscriptions(subscription);
+
+            var services = new ServiceCollection();
+            services.AddHostedService<MessageBusHostedService>()
+                .AddSingleton<IMessageTracker, MessageTracker>()
+                .AddSingleton<IPublishingService, PublishingServiceWithDelay>()
+                .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
+                        Configuration["Topic"], subscription, Configuration["TenantId"]));
+            _serviceProvider = services.BuildServiceProvider();
+            var aircraftTakenOffEvent = new AircraftTakenOff { AircraftId = Guid.NewGuid().ToString() };
+            await _serviceProvider.GetRequiredService<IPublishingService>().PublishAsync(aircraftTakenOffEvent);
+
+            Assert.Empty(await FindAircraftTakenOffEvents(subscription, aircraftTakenOffEvent));
+            await Task.Delay(TimeSpan.FromSeconds(11));
+            Assert.Single(await FindAircraftTakenOffEvents(subscription, aircraftTakenOffEvent));
         }
     }
 }

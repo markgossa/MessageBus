@@ -91,6 +91,7 @@ namespace MessageBus.Microsoft.ServiceBus
             AddMessageProperties(eventMessage, message);
             AddMessageId(eventMessage, message);
             AddCorrelationId(eventMessage, message);
+            AddMessageDelay(eventMessage.ScheduledEnqueueTime, message);
 
             await _serviceBusSender.SendMessageAsync(message);
         }
@@ -202,7 +203,7 @@ namespace MessageBus.Microsoft.ServiceBus
             return new ServiceBusMessage(originalMessage);
         }
 
-        private void AddMessageDelay(DateTimeOffset enqueueTime, ServiceBusMessage messageCopy)
-           => messageCopy.ScheduledEnqueueTime = enqueueTime;
+        private void AddMessageDelay(DateTimeOffset enqueueTime, ServiceBusMessage message)
+           => message.ScheduledEnqueueTime = enqueueTime;
     }
 }

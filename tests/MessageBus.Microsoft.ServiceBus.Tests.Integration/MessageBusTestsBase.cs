@@ -258,5 +258,16 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 await _azureServiceBusClient.DisposeAsync().AsTask();
             }
         }
+
+        protected async Task<IEnumerable<ServiceBusReceivedMessage>> FindSetAutopilotCommands(string subscription, SetAutopilot setAutopilotCommand)
+            => (await ReceiveMessagesForSubscriptionAsync($"{subscription}-Output")).Where(
+                m => m.ApplicationProperties["MessageType"].ToString() == nameof(SetAutopilot)
+                    && m.Body.ToObjectFromJson<SetAutopilot>().AutopilotId == setAutopilotCommand.AutopilotId);
+
+        protected async Task<IEnumerable<ServiceBusReceivedMessage>> FindAircraftTakenOffEvents(string subscription, 
+            AircraftTakenOff aircraftTakenOffEvent) 
+                => (await ReceiveMessagesForSubscriptionAsync($"{subscription}-Output")).Where(
+                    m => m.ApplicationProperties["MessageType"].ToString() == nameof(AircraftTakenOff)
+                        && m.Body.ToObjectFromJson<AircraftTakenOff>().AircraftId == aircraftTakenOffEvent.AircraftId);
     }
 }

@@ -24,6 +24,7 @@ MessageBus is an abstraction layer for messaging technologies such as Azure Serv
     - [Send commands or publish events from a service](#send-commands-or-publish-events-from-a-service)
     - [Set custom properties on messages](#set-custom-properties-on-messages)
     - [Send message copy with optional delay](#send-message-copy-with-optional-delay)
+    - [Sending messages with delay](#sending-messages-with-delay)
   - [Working with messages](#working-with-messages)
     - [Deserializing messages](#deserializing-messages)
     - [Get message properties](#get-message-properties)
@@ -417,6 +418,39 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers
                 // Send a message copy which is queued at a specific time
                 await context.SendMessageCopyAsync(enqueueTime: DateTimeOffset.Parse("08/03/2021 20:15"));
             }
+        }
+    }
+}
+```
+
+### Sending messages with delay
+
+You can schedule when a message gets queued by setting the `ScheduledEnqueueTime` property on the `Message<T>` object. 
+
+See below for how to publish an event with a delay of 10 seconds from now. The same is when sending a command, i.e. you set the same `ScheduledEnqueueTime` property on the `Message<T>` object.
+
+```csharp
+using MessageBus.Abstractions;
+using System;
+using System.Threading.Tasks;
+
+namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Services
+{
+    internal class PublishingServiceWithDelay : IPublishingService
+    {
+        private readonly IMessageTracker _messageTracker;
+        private readonly IMessageBus _messageBus;
+
+        public PublishingServiceWithDelay(IMessageBus messageBus, IMessageTracker messageTracker)
+        {
+            _messageTracker = messageTracker;
+            _messageBus = messageBus;
+        }
+
+        public async Task PublishAsync(IEvent message)
+        {
+            _messageTracker.Ids.Add(Guid.NewGuid().ToString());
+            await _messageBus.PublishAsync(new Message<IEvent>(message) { ScheduledEnqueueTime = DateTimeOffset.Now.AddSeconds(10) });
         }
     }
 }
