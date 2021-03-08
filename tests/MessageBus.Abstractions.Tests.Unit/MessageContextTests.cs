@@ -157,5 +157,49 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             _mockMessageBus.Verify(m => m.SendMessageCopyAsync(_messageObject, enqueueTime), Times.Once);
         }
+        
+        [Theory]
+        [InlineData(5)]
+        [InlineData(10)]
+        public async Task PublishesEventWithScheduledEnqueueTime(int delayInSeconds)
+        {
+
+            var aircraftLandedEvent = new AircraftLanded() { AircraftId = Guid.NewGuid().ToString() };
+            var expectedEnqueueTime = DateTimeOffset.Now.AddSeconds(delayInSeconds);
+            var message = new Message<IEvent>(aircraftLandedEvent)
+            {
+                ScheduledEnqueueTime = expectedEnqueueTime
+            };
+            Message<IEvent> callbackEvent = null;
+            _mockMessageBus.Setup(m => m.PublishAsync(It.Is<Message<IEvent>>(e
+                => (e.Body as AircraftLanded).AircraftId == aircraftLandedEvent.AircraftId)))
+                    .Callback<Message<IEvent>>(e => callbackEvent = e);
+            
+            await _sut.PublishAsync(message);
+
+            Assert.Equal(expectedEnqueueTime, callbackEvent.ScheduledEnqueueTime);
+        }
+        
+        [Theory]
+        [InlineData(5)]
+        [InlineData(10)]
+        public async Task SendsCommandWithScheduledEnqueueTime(int delayInSeconds)
+        {
+
+            var createNewFlightPlanCommand = new CreateNewFlightPlan() { Destination = Guid.NewGuid().ToString() };
+            var expectedEnqueueTime = DateTimeOffset.Now.AddSeconds(delayInSeconds);
+            var message = new Message<ICommand>(createNewFlightPlanCommand)
+            {
+                ScheduledEnqueueTime = expectedEnqueueTime
+            };
+            Message<ICommand> callbackEvent = null;
+            _mockMessageBus.Setup(m => m.SendAsync(It.Is<Message<ICommand>>(e
+                => (e.Body as CreateNewFlightPlan).Destination == createNewFlightPlanCommand.Destination)))
+                    .Callback<Message<ICommand>>(e => callbackEvent = e);
+
+            await _sut.SendAsync(message);
+
+            Assert.Equal(expectedEnqueueTime, callbackEvent.ScheduledEnqueueTime);
+        }
     }
 }

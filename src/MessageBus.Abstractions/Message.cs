@@ -11,6 +11,7 @@ namespace MessageBus.Abstractions
         public string MessageId { get; set; }
         public Dictionary<string, string> MessageProperties { get; set; }
         public bool OverrideDefaultMessageProperties { get; set; }
+        public DateTimeOffset ScheduledEnqueueTime { get; set; }
 
         public Message(T body, string? correlationId = null, string? messageId = null,
             Dictionary<string, string>? messageProperties = null) : this(correlationId, 

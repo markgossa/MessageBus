@@ -207,13 +207,14 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             return serviceBusClient;
         }
 
-        protected async Task AssertSendsMessageCopyWithDelay(string inputSubscription)
+        protected async Task AssertSendsMessageCopyWithDelay(string inputSubscription, string messageType)
         {
             var aircraftLeftRunwayEvent = new AircraftLeftRunway { RunwayId = Guid.NewGuid().ToString() };
-            await SendMessages(aircraftLeftRunwayEvent, 1);
+            await SendMessages(aircraftLeftRunwayEvent, 1, messageType);
             await Task.Delay(TimeSpan.FromSeconds(4));
             Assert.DoesNotContain(await ReceiveMessagesForSubscriptionAsync(inputSubscription),
-                m => m.Body.ToObjectFromJson<AircraftTakenOff>().AircraftId == aircraftLeftRunwayEvent.RunwayId);
+                m => m.Body.ToObjectFromJson<AircraftTakenOff>().AircraftId == aircraftLeftRunwayEvent.RunwayId
+                    && m.ApplicationProperties["MessageType"].ToString() == messageType);
             Assert.Equal(1, await FindAircraftReachedGateEventCount(inputSubscription, aircraftLeftRunwayEvent));
             await Task.Delay(TimeSpan.FromSeconds(12));
             Assert.Equal(1, await FindAircraftReachedGateEventCount(inputSubscription, aircraftLeftRunwayEvent));
@@ -224,7 +225,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                     m.ApplicationProperties["MessageType"].ToString() == nameof(AircraftReachedGate)
                     && m.Body.ToObjectFromJson<AircraftReachedGate>().AirlineId == aircraftLeftRunwayEvent.RunwayId);
 
-        protected async Task<ServiceProvider> StartSendMessageCopyTestService<T>(string inputSubscription)
+        protected async Task<ServiceProvider> StartSendMessageCopyTestService<T>(string inputSubscription, string messageType)
             where T : IMessageHandler<AircraftLeftRunway>
         {
             var services = new ServiceCollection();
@@ -232,7 +233,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 .AddSingleton<IMessageTracker, MessageTracker>()
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
                         Configuration["Topic"], inputSubscription, Configuration["TenantId"]))
-                .SubscribeToMessage<AircraftLeftRunway, T>();
+                .SubscribeToMessage<AircraftLeftRunway, T>(new Dictionary<string, string> { { "MessageType", messageType } });
             var serviceProvider = services.BuildServiceProvider();
             await StartMessageBusHostedService(serviceProvider);
 
@@ -258,5 +259,16 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 await _azureServiceBusClient.DisposeAsync().AsTask();
             }
         }
+
+        protected async Task<IEnumerable<ServiceBusReceivedMessage>> FindSetAutopilotCommands(string subscription, SetAutopilot setAutopilotCommand)
+            => (await ReceiveMessagesForSubscriptionAsync($"{subscription}-Output")).Where(
+                m => m.ApplicationProperties["MessageType"].ToString() == nameof(SetAutopilot)
+                    && m.Body.ToObjectFromJson<SetAutopilot>().AutopilotId == setAutopilotCommand.AutopilotId);
+
+        protected async Task<IEnumerable<ServiceBusReceivedMessage>> FindAircraftTakenOffEvents(string subscription, 
+            AircraftTakenOff aircraftTakenOffEvent) 
+                => (await ReceiveMessagesForSubscriptionAsync($"{subscription}-Output")).Where(
+                    m => m.ApplicationProperties["MessageType"].ToString() == nameof(AircraftTakenOff)
+                        && m.Body.ToObjectFromJson<AircraftTakenOff>().AircraftId == aircraftTakenOffEvent.AircraftId);
     }
 }
