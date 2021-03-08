@@ -8,11 +8,11 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-[assembly: InternalsVisibleTo("MessageBus.microsoft.ServiceBus.Tests.Unit")]
+[assembly: InternalsVisibleTo("MessageBus.Microsoft.ServiceBus.Tests.Unit")]
 
 namespace MessageBus.Microsoft.ServiceBus
 {
-    public class AzureServiceBusClient : IMessageBusClient
+    public class AzureServiceBusClient : IMessageBusClient, IDisposable, IAsyncDisposable
     {
         private readonly ServiceBusProcessor _serviceBusProcessor;
         private readonly ServiceBusSender _serviceBusSender;
@@ -60,6 +60,30 @@ namespace MessageBus.Microsoft.ServiceBus
         public async Task PublishAsync(Message<IEvent> eventMessage) => await SendMessageAsync(eventMessage);
 
         public async Task SendAsync(Message<ICommand> command) => await SendMessageAsync(command);
+
+        public async Task SendMessageCopyAsync(object messageObject, int delayInSeconds = 0)
+        {
+            var messageCopy = CreateMessageCopy(messageObject);
+            AddMessageDelayInSeconds(delayInSeconds, messageCopy);
+
+            await _serviceBusSender.SendMessageAsync(messageCopy);
+        }
+
+        public async Task SendMessageCopyAsync(object messageObject, DateTimeOffset enqueueTime)
+        {
+            var messageCopy = CreateMessageCopy(messageObject);
+            AddMessageDelay(enqueueTime, messageCopy);
+
+            await _serviceBusSender.SendMessageAsync(messageCopy);
+        }
+
+        public void Dispose() => DisposeAsync().AsTask().Wait();
+
+        public async ValueTask DisposeAsync()
+        {
+            await _serviceBusProcessor.DisposeAsync();
+            await _serviceBusSender.DisposeAsync();
+        }
 
         private async Task SendMessageAsync<T>(Message<T> eventMessage) where T : IMessage
         {
@@ -163,5 +187,22 @@ namespace MessageBus.Microsoft.ServiceBus
                 message.CorrelationId = eventMessage.CorrelationId;
             }
         }
+
+        private static void AddMessageDelayInSeconds(int delayInSeconds, ServiceBusMessage messageCopy)
+        {
+            if (delayInSeconds > 0)
+            {
+                messageCopy.ScheduledEnqueueTime = DateTimeOffset.Now.AddSeconds(delayInSeconds);
+            }
+        }
+
+        private static ServiceBusMessage CreateMessageCopy(object messageObject)
+        {
+            var originalMessage = ((ProcessMessageEventArgs)messageObject).Message;
+            return new ServiceBusMessage(originalMessage);
+        }
+
+        private void AddMessageDelay(DateTimeOffset enqueueTime, ServiceBusMessage messageCopy)
+           => messageCopy.ScheduledEnqueueTime = enqueueTime;
     }
 }

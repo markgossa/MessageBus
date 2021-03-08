@@ -128,5 +128,34 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             Assert.Equal(expectedCorrelationId, callbackEvent.CorrelationId);
         }
+
+        [Fact]
+        public async Task SendsMessageCopyWithoutDelay()
+        {
+            await _sut.SendMessageCopyAsync();
+
+            _mockMessageBus.Verify(m => m.SendMessageCopyAsync(_messageObject, 0), Times.Once);
+        }
+        
+        [Theory]
+        [InlineData(5)]
+        [InlineData(10)]
+        public async Task SendsMessageCopyWithDelayInSeconds(int delayInSeconds)
+        {
+            await _sut.SendMessageCopyAsync(delayInSeconds);
+
+            _mockMessageBus.Verify(m => m.SendMessageCopyAsync(_messageObject, delayInSeconds), Times.Once);
+        }
+        
+        [Theory]
+        [InlineData(5)]
+        [InlineData(10)]
+        public async Task SendsMessageCopyWithEnqueueTime(int delayInSeconds)
+        {
+            var enqueueTime = DateTimeOffset.Now.AddSeconds(delayInSeconds);
+            await _sut.SendMessageCopyAsync(enqueueTime);
+
+            _mockMessageBus.Verify(m => m.SendMessageCopyAsync(_messageObject, enqueueTime), Times.Once);
+        }
     }
 }

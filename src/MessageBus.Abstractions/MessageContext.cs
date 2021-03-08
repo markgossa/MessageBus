@@ -38,5 +38,11 @@ namespace MessageBus.Abstractions
             command.CorrelationId ??= CorrelationId;
             await _messageBus.SendAsync(command);
         }
+
+        public async Task SendMessageCopyAsync(int delayInSeconds = 0) 
+            => await _messageBus.SendMessageCopyAsync(_messageObject, delayInSeconds);
+
+        public async Task SendMessageCopyAsync(DateTimeOffset enqueueTime)
+            => await _messageBus.SendMessageCopyAsync(_messageObject, enqueueTime);
     }
 }

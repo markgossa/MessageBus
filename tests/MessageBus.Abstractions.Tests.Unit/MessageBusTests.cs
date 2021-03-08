@@ -504,5 +504,37 @@ namespace MessageBus.Abstractions.Tests.Unit
             _mockMessageProcessorResolver.Verify(m => m.AddMessagePreProcessor<TestPreProcessor1>(), Times.Once);
             _mockMessageProcessorResolver.Verify(m => m.AddMessagePostProcessor<TestPostProcessor1>(), Times.Once);
         }
+
+        [Fact]
+        public async Task SendsMessageCopyWithoutDelay()
+        {
+            var messageObject = new object();
+            await _sut.SendMessageCopyAsync(messageObject);
+
+            _mockMessageBusClient.Verify(m => m.SendMessageCopyAsync(messageObject, 0), Times.Once);
+        }
+        
+        [Theory]
+        [InlineData(5)]
+        [InlineData(10)]
+        public async Task SendsMessageCopyWithDelayInSeconds(int delayInSeconds)
+        {
+            var messageObject = new object();
+            await _sut.SendMessageCopyAsync(messageObject, delayInSeconds);
+
+            _mockMessageBusClient.Verify(m => m.SendMessageCopyAsync(messageObject, delayInSeconds), Times.Once);
+        }
+        
+        [Theory]
+        [InlineData(5)]
+        [InlineData(10)]
+        public async Task SendsMessageCopyWithEnqueueTime(int delayInSeconds)
+        {
+            var messageObject = new object();
+            var enqueueTime = DateTimeOffset.Now.AddSeconds(delayInSeconds);
+            await _sut.SendMessageCopyAsync(messageObject, enqueueTime);
+
+            _mockMessageBusClient.Verify(m => m.SendMessageCopyAsync(messageObject, enqueueTime), Times.Once);
+        }
     }
 }

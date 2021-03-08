@@ -13,8 +13,6 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
     [Collection("IntegrationTests")]
     public class AzureServiceBusClientTests : MessageBusTestsBase
     {
-        private readonly Mock<ITestHandler> mockTestHandler = new Mock<ITestHandler>();
-
         [Fact]
         public async Task CallsCorrectMessageHandlerUsingConnectionString()
         {
@@ -22,9 +20,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var subscription = nameof(CallsCorrectMessageHandlerUsingConnectionString);
             var aircraftTakenOffEvent = await CreateSubscriptionAndSendAircraftTakenOffEvent(subscription);
 
-            var sut = new AzureServiceBusClient(_connectionString, _topic, subscription);
-            AddHandlers(mockTestHandler, sut);
-            await sut.StartAsync();
+            _azureServiceBusClient = new AzureServiceBusClient(_connectionString, _topic, subscription);
+            AddHandlers(mockTestHandler, _azureServiceBusClient);
+            await _azureServiceBusClient.StartAsync();
 
             await Task.Delay(TimeSpan.FromSeconds(5));
             mockTestHandler.Verify(m => m.MessageHandler(It.Is<MessageReceivedEventArgs>(m =>
@@ -39,9 +37,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var subscription = nameof(CallsCorrectMessageHandlerUsingConnectionString);
             var aircraftTakenOffEvent = await CreateSubscriptionAndSendAircraftTakenOffEvent(subscription);
 
-            var sut = new AzureServiceBusClient(_connectionString, _topic, subscription);
-            sut.AddErrorMessageHandler(mockTestHandler.Object.ErrorMessageHandler); 
-            await sut.StartAsync();
+            _azureServiceBusClient = new AzureServiceBusClient(_connectionString, _topic, subscription);
+            _azureServiceBusClient.AddErrorMessageHandler(mockTestHandler.Object.ErrorMessageHandler); 
+            await _azureServiceBusClient.StartAsync();
 
             await Task.Delay(TimeSpan.FromSeconds(10));
             mockTestHandler.Verify(m => m.ErrorMessageHandler(It.Is<MessageErrorReceivedEventArgs>(m =>
@@ -55,9 +53,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var subscription = nameof(CallsCorrectMessageHandlerUsingManagedIdentity);
             var aircraftlandedEvent = await CreateSubscriptionAndSendAircraftLandedEvent(subscription);
 
-            var sut = new AzureServiceBusClient(_hostname, _topic, subscription, _tenantId);
-            AddHandlers(mockTestHandler, sut);
-            await sut.StartAsync();
+            _azureServiceBusClient = new AzureServiceBusClient(_hostname, _topic, subscription, _tenantId);
+            AddHandlers(mockTestHandler, _azureServiceBusClient);
+            await _azureServiceBusClient.StartAsync();
 
             await Task.Delay(TimeSpan.FromSeconds(5));
             mockTestHandler.Verify(m => m.MessageHandler(It.Is<MessageReceivedEventArgs>(m =>
@@ -75,9 +73,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             mockMessageHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded))).Returns(aircraftLandedHandler);
             var mockMessageProcessorResolver = new Mock<IMessageProcessorResolver>();
 
-            var sut = new AzureServiceBusClient(_hostname, _topic, nameof(DeadLettersMessageWithoutReasonAsync), _tenantId);
+            _azureServiceBusClient = new AzureServiceBusClient(_hostname, _topic, nameof(DeadLettersMessageWithoutReasonAsync), _tenantId);
             var messageBus = new Abstractions.MessageBus(mockMessageHandlerResolver.Object, new Mock<IMessageBusAdminClient>().Object,
-                sut, mockMessageProcessorResolver.Object);
+                _azureServiceBusClient, mockMessageProcessorResolver.Object);
 
             await messageBus.StartAsync();
 
@@ -99,9 +97,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             mockMessageHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded))).Returns(aircraftLandedHandler);
             var mockMessageProcessorResolver = new Mock<IMessageProcessorResolver>();
 
-            var sut = new AzureServiceBusClient(_hostname, _topic, nameof(DeadLettersMessageWithReasonAsync), _tenantId);
+            _azureServiceBusClient = new AzureServiceBusClient(_hostname, _topic, nameof(DeadLettersMessageWithReasonAsync), _tenantId);
             var messageBus = new Abstractions.MessageBus(mockMessageHandlerResolver.Object, new Mock<IMessageBusAdminClient>().Object,
-                sut, mockMessageProcessorResolver.Object);
+                _azureServiceBusClient, mockMessageProcessorResolver.Object);
 
             await messageBus.StartAsync();
 
@@ -129,8 +127,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             }
             };
 
-            var sut = BuildAzureServiceBusClient(authenticationType, subscription);
-            await sut.PublishAsync(message);
+            _azureServiceBusClient = BuildAzureServiceBusClient(authenticationType, subscription);
+            await _azureServiceBusClient.PublishAsync(message);
 
             var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
                 .Where(m => IsMatchingAircraftId<AircraftLanded>(m, aircraftlandedEvent.AircraftId));
@@ -157,8 +155,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             }
             };
 
-            var sut = BuildAzureServiceBusClient(AuthenticationType.ManagedIdentity, subscription);
-            await sut.PublishAsync(message);
+            _azureServiceBusClient = BuildAzureServiceBusClient(AuthenticationType.ManagedIdentity, subscription);
+            await _azureServiceBusClient.PublishAsync(message);
 
             var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
                 .Where(m => m.Body.ToString() == messageString
@@ -187,8 +185,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             }
             };
 
-            var sut = BuildAzureServiceBusClient(authenticationType, subscription);
-            await sut.SendAsync(message);
+            _azureServiceBusClient = BuildAzureServiceBusClient(authenticationType, subscription);
+            await _azureServiceBusClient.SendAsync(message);
 
             var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
                 .Where(m => m.Body.ToObjectFromJson<CreateNewFlightPlan>().Destination == 
@@ -216,8 +214,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             }
             };
 
-            var sut = BuildAzureServiceBusClient(AuthenticationType.ManagedIdentity, subscription);
-            await sut.SendAsync(message);
+            _azureServiceBusClient = BuildAzureServiceBusClient(AuthenticationType.ManagedIdentity, subscription);
+            await _azureServiceBusClient.SendAsync(message);
 
             var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
                 .Where(m => m.Body.ToString() == messageString
@@ -241,8 +239,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 MessageId = messageId
             };
 
-            var sut = BuildAzureServiceBusClient(AuthenticationType.ManagedIdentity, subscription);
-            await sut.PublishAsync(message);
+            _azureServiceBusClient = BuildAzureServiceBusClient(AuthenticationType.ManagedIdentity, subscription);
+            await _azureServiceBusClient.PublishAsync(message);
 
             var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
                 .Where(m => IsMatchingAircraftId<AircraftLanded>(m, aircraftlandedEvent.AircraftId)
@@ -262,8 +260,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 MessageId = messageId
             };
 
-            var sut = BuildAzureServiceBusClient(AuthenticationType.ManagedIdentity, subscription);
-            await sut.SendAsync(message);
+            _azureServiceBusClient = BuildAzureServiceBusClient(AuthenticationType.ManagedIdentity, subscription);
+            await _azureServiceBusClient.SendAsync(message);
 
             var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
                 .Where(m => m.Body.ToObjectFromJson<CreateNewFlightPlan>().Destination ==
@@ -284,8 +282,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 CorrelationId = correlationId
             };
 
-            var sut = BuildAzureServiceBusClient(AuthenticationType.ManagedIdentity, subscription);
-            await sut.PublishAsync(message);
+            _azureServiceBusClient = BuildAzureServiceBusClient(AuthenticationType.ManagedIdentity, subscription);
+            await _azureServiceBusClient.PublishAsync(message);
 
             var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
                 .Where(m => IsMatchingAircraftId<AircraftLanded>(m, aircraftlandedEvent.AircraftId)
@@ -305,8 +303,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 CorrelationId = correlationId
             };
 
-            var sut = BuildAzureServiceBusClient(AuthenticationType.ManagedIdentity, subscription);
-            await sut.SendAsync(message);
+            _azureServiceBusClient = BuildAzureServiceBusClient(AuthenticationType.ManagedIdentity, subscription);
+            await _azureServiceBusClient.SendAsync(message);
 
             var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
                 .Where(m => m.Body.ToObjectFromJson<CreateNewFlightPlan>().Destination ==
