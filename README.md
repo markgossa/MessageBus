@@ -447,10 +447,21 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Services
             _messageBus = messageBus;
         }
 
-        public async Task PublishAsync(IEvent message)
+        public async Task DoSomething()
         {
             _messageTracker.Ids.Add(Guid.NewGuid().ToString());
-            await _messageBus.PublishAsync(new Message<IEvent>(message) { ScheduledEnqueueTime = DateTimeOffset.Now.AddSeconds(10) });
+
+            var aircraftTakenOffEvent = new AircraftTakenOff 
+            {
+                AircraftId = Guid.NewGuid().ToString() 
+            };
+
+            var message = new Message<IEvent>(aircraftTakenOffEvent)
+            {
+                ScheduledEnqueueTime = DateTimeOffset.Now.AddSeconds(10)
+            };
+            
+            await context.PublishAsync(message);
         }
     }
 }
