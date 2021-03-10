@@ -250,11 +250,22 @@ namespace MessageBus.Abstractions.Tests.Unit
         [Fact]
         public void SubscribesToMessagesWithCustomProperties()
         {
-            var messageProperties = new Dictionary<string, string>();
+            var messageProperties = new Dictionary<string, string>
+            {
+                { "MessageType", "AL" }
+            };
+
             _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(messageProperties);
 
             _mockMessageHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(messageProperties), 
                 Times.Once);
+        }
+        
+        [Fact]
+        public void SubscribesToMessagesWithCustomPropertiesThrowsIfMissingMessageType()
+        {
+            var messageProperties = new Dictionary<string, string>();
+            Assert.Throws<ArgumentException>(() => _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(messageProperties));
         }
 
         [Fact]

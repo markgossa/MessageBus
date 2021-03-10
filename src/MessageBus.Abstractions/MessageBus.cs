@@ -56,6 +56,8 @@ namespace MessageBus.Abstractions
             where TMessage : IMessage
             where TMessageHandler : IMessageHandler<TMessage>
         {
+            ValidateCustomMessageProperties(messageProperties);
+
             _messageHandlerResolver.SubcribeToMessage<TMessage, TMessageHandler>(messageProperties);
 
             return this;
@@ -155,6 +157,15 @@ namespace MessageBus.Abstractions
             => handler.GetType().GetInterfaces()
                 .First(i => i.Name.Contains(typeof(IMessageHandler<>).Name))
                 .GenericTypeArguments.First();
+
+        private void ValidateCustomMessageProperties(Dictionary<string, string>? messageProperties)
+        {
+            if (messageProperties != null && !messageProperties.TryGetValue(_messageBusOptions.MessageTypePropertyName,
+                out _))
+            {
+                throw new ArgumentException($"{_messageBusOptions.MessageTypePropertyName} not found in custom subscription filter");
+            }
+        }
 
         private void AddMessageProperties<T>(Message<T> message) where T : IMessage
         {

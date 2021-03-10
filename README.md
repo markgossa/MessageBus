@@ -2,7 +2,7 @@
 
 ## Overview
 
-MessageBus is an abstraction layer for messaging technologies such as Azure Service Bus and RabbitMQ and provides message routing to message handlers based on the type of the message which is set as a message property.
+MessageBus is an abstraction layer for messaging technologies such as Azure Service Bus and RabbitMQ and provides message routing to message handlers based on the type of the message which is set in the message label or a message property.
 
 - [MessageBus](#messagebus)
   - [Overview](#overview)
@@ -33,8 +33,8 @@ MessageBus is an abstraction layer for messaging technologies such as Azure Serv
     - [Dead lettering messages](#dead-lettering-messages)
     - [Message Processors](#message-processors)
     - [Message Versioning](#message-versioning)
-    - [Change the default properties (MessageType and MessageVersion)](#change-the-default-properties-messagetype-and-messageversion)
-    - [Using custom message properties for subscription filters](#using-custom-message-properties-for-subscription-filters)
+    - [Change the default properties (MessageVersion)](#change-the-default-properties-messageversion)
+    - [Using custom subscription filters](#using-custom-subscription-filters)
   - [Health checks](#health-checks)
   - [Azure Service Bus](#azure-service-bus)
     - [Configuring Service Bus Processor options](#configuring-service-bus-processor-options)
@@ -43,7 +43,7 @@ MessageBus is an abstraction layer for messaging technologies such as Azure Serv
 
 ## Getting Started with MessageBus and Azure Service Bus
 
-MessageBus calls the message handler for the message type that is received based on the `MessageType` property on the message. For example, when a message is received with a `MessageType` property set to `AircraftTakenOff`, the `HandleAsync()` method on the handler is called.
+MessageBus calls the message handler for the message type that is received based on the `Label` of the message. For example, when a message is received with a `Label` set to `AircraftTakenOff`, the `HandleAsync()` method on the handler for that message type is called.
 
 For a full example, see `MessageBus.HostedService.Example` project in the `examples` folder.
 
@@ -276,9 +276,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Services
 
 ## Sending messages
 
-You can either publish an IEvent or send an ICommand. In either case, the Type of the message being sent is automatically used as the `MessageType` property on the sent message. In addition, if you have set the `MessageVersion` attribute on the message class that you are sending, this is automatically added as the `MessageVersion` property on the sent message.
-
-When publishing or sending messages, you can either override or add to the default message properties of the sent message by setting the message properties on the `Message<IEvent>` or `Message<ICommand>` that you are sending. This does not add the `MessageType` or `MessageVersion` properties to the message.
+You can either publish an IEvent or send an ICommand. In either case, the Type of the message being sent is automatically used as the `Label` on the sent message.
 
 You can publish an IEvent or simple string. Likewise, you can either send an ICommand or a simple string.
 
@@ -361,7 +359,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Services
 
 ### Set custom properties on messages
 
-You can set custom message properties on messages that are sent and you can also specify whether the default message properties (`MessageType` and `MessageVersion`) are removed so you can get maximum flexibility. 
+You can set custom message properties on messages that are sent.
 
 `MessageId` and `CorrelationId` can also be overridden. By default `MessageId` defaults to a new Guid. `CorrelationId` defaults to null if sending from an injected instance of `IMessageBus` but defaults to the `CorrelationId` of the received message when sending using `MessageContext<T>` within a message handler.
 
@@ -460,7 +458,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Services
             {
                 ScheduledEnqueueTime = DateTimeOffset.Now.AddSeconds(10)
             };
-            
+
             await context.PublishAsync(message);
         }
     }
@@ -640,9 +638,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Models.V2
 }
 ```
 
-### Change the default properties (MessageType and MessageVersion)
+### Change the default properties (MessageVersion)
 
-If using Azure Service Bus, the `AzureServiceBusAdminClient` is used to create and configure the subscription. By default, the message property that determines the message type is called `MessageType` and the property that determines the message version is called `MessageVersion` however these can be configured by passing `MessageBusOptions` into `AddMessageBus()`.
+If using Azure Service Bus, the `AzureServiceBusAdminClient` is used to create and configure the subscription. By default, the message property that determines the message version is called `MessageVersion` however this can be configured by passing `MessageBusOptions` into `AddMessageBus()`.
 
 ```csharp
 using MessageBus.Abstractions;
@@ -675,7 +673,6 @@ namespace MessageBus.Example
         {
             var options = new MessageBusOptions
             {
-                MessageTypePropertyName = "MyMessageType",
                 MessageVersionPropertyName = "MyMessageVersion"
             };
 
@@ -692,11 +689,9 @@ namespace MessageBus.Example
 }
 ```
 
-### Using custom message properties for subscription filters
+### Using custom subscription filters
 
-To do this, simply create a `Dictionary<string, string>` to hold the custom message subscription properties and then pass this to the `SubscribeToMessage()` method. Note that specifying custom message properties will mean that the defaults of `MessageType` and `MessageVersion` will not be added so you will need to add these yourself.
-
-Note that in this current version, custom message properties must include the `MessageType` property as this is required to route the message to the correct handler.
+To do this, simply create a `SubscriptionFilter` and pass this to the `SubscribeToMessage()` method. Note that specifying custom message properties will mean that `MessageVersion` will not be added so you will need to add this yourself.
 
 ```csharp
 private static ServiceProvider ConfigureServices()
