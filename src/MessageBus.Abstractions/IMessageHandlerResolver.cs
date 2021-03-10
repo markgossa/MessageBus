@@ -4,7 +4,7 @@ namespace MessageBus.Abstractions
 {
     public interface IMessageHandlerResolver
     {
-        void SubcribeToMessage<TMessage, TMessageHandler>(Dictionary<string, string>? messageProperties = null)
+        void SubcribeToMessage<TMessage, TMessageHandler>(SubscriptionFilter? subscriptionFilter = null)
             where TMessage : IMessage
             where TMessageHandler : IMessageHandler<TMessage>;
 

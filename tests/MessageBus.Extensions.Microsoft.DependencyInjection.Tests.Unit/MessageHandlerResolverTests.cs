@@ -25,11 +25,11 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
             Assert.NotNull(handler);
             Assert.IsType<AircraftLandedHandler>(handler);
 
-            var messageContext = new MessageContext<AircraftLanded>(new BinaryData("Hello world!"), new object(), 
+            var messageContext = new MessageContext<AircraftLanded>(new BinaryData("Hello world!"), new object(),
                 new Mock<IMessageBus>().Object);
             typeof(AircraftLandedHandler).GetMethod("HandleAsync").Invoke(handler, new object[] { messageContext });
         }
-        
+
         [Fact]
         public void MessageHandlerResolverThrowsIfCannotFindMessageHandler()
         {
@@ -40,28 +40,39 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
         [Fact]
         public void AddMessageSubscriptionAddsAMessageSubscription()
         {
-            var messageProperties = new Dictionary<string, string>
+            var subscriptionFilter = new SubscriptionFilter
             {
-                { "AircraftType", "Commercial" }
+                MessageProperties = new Dictionary<string, string>
+                    {
+                        { "AircraftType", "Commercial" }
+                    }
             };
 
             var sut = new MessageHandlerResolver(new ServiceCollection());
             sut.SubcribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
-            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(messageProperties);
+            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter);
             var messageSubscriptions = sut.GetMessageSubscriptions();
 
             Assert.Equal(2, messageSubscriptions.Count());
             Assert.Single(messageSubscriptions.Where(m => m.MessageHandlerType == typeof(AircraftLandedHandler)));
             Assert.Single(messageSubscriptions.Where(m => m.MessageHandlerType == typeof(AircraftTakenOffHandler)));
-            Assert.Equal(messageProperties, messageSubscriptions.First(m => m.MessageHandlerType == typeof(AircraftLandedHandler)).CustomSubscriptionFilterProperties);
+            Assert.Equal(subscriptionFilter.MessageProperties, messageSubscriptions.First(m => m.MessageHandlerType == typeof(AircraftLandedHandler)).CustomSubscriptionFilterProperties);
         }
 
         [Fact]
         public void MessageHandlerResolverReturnsMessageHandlerInstanceForCustomSubscriptionFilterProperties()
         {
+            var subscriptionFilter = new SubscriptionFilter
+            {
+                MessageProperties = new Dictionary<string, string>
+                    {
+                        { "MessageType", "AL" }
+                    }
+            };
+
             var services = new ServiceCollection();
             var sut = new MessageHandlerResolver(services);
-            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(new Dictionary<string, string> { { "MessageType", "AL" } });
+            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter);
             sut.Initialize();
             var handler = sut.Resolve("AL");
 
@@ -72,13 +83,21 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
                 new Mock<IMessageBus>().Object);
             typeof(AircraftLandedHandler).GetMethod("HandleAsync").Invoke(handler, new object[] { messageContext });
         }
-        
+
         [Fact]
         public void MessageHandlerResolverThrowsIfNoMessageTypeInCustomSubscriptionFilterProperties()
         {
+            var subscriptionFilter = new SubscriptionFilter
+            {
+                MessageProperties = new Dictionary<string, string>
+                    {
+                        { "SomethingElse", "AL" }
+                    }
+            };
+
             var services = new ServiceCollection();
             var sut = new MessageHandlerResolver(services);
-            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(new Dictionary<string, string> { { "SomethingElse", "AL" } });
+            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter);
             sut.Initialize();
 
             object testCode() => sut.Resolve("AL");

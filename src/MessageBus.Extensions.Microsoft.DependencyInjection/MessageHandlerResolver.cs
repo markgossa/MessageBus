@@ -34,13 +34,13 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
 
         public IEnumerable<MessageSubscription> GetMessageSubscriptions() => _messageSubscriptions.Values;
 
-        public void SubcribeToMessage<TMessage, TMessageHandler>(Dictionary<string, string>? messageProperties = null)
+        public void SubcribeToMessage<TMessage, TMessageHandler>(SubscriptionFilter? subscriptionFilter = null)
             where TMessage : IMessage
             where TMessageHandler : IMessageHandler<TMessage>
         {
             _services.AddTransient(typeof(IMessageHandler<>).MakeGenericType(typeof(TMessage)), typeof(TMessageHandler));
-            _messageSubscriptions.Add(GetMessageType<TMessage>(messageProperties), new MessageSubscription(typeof(TMessage), 
-                typeof(TMessageHandler), messageProperties));
+            _messageSubscriptions.Add(GetMessageType<TMessage>(subscriptionFilter.MessageProperties), new MessageSubscription(typeof(TMessage), 
+                typeof(TMessageHandler), subscriptionFilter.MessageProperties));
         }
 
         private static string GetMessageType<TMessage>(Dictionary<string, string>? messageProperties) where TMessage : IMessage

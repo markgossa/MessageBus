@@ -21,7 +21,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             _mockMessageProcessorResolver.Verify(m => m.Initialize(), Times.Once);
             _mockMessageBusAdminClient.Verify(m => m.ConfigureAsync(_messageSubscriptions, It.IsAny<MessageBusOptions>()), Times.Once);
         }
-        
+
         [Fact]
         public async Task ConfiguresMessageBusWithOptionsAsync()
         {
@@ -31,7 +31,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             await sut.ConfigureAsync();
 
             _mockMessageHandlerResolver.Verify(m => m.Initialize(), Times.Once);
-            _mockMessageBusAdminClient.Verify(m => m.ConfigureAsync(_messageSubscriptions, It.Is<MessageBusOptions>(m => 
+            _mockMessageBusAdminClient.Verify(m => m.ConfigureAsync(_messageSubscriptions, It.Is<MessageBusOptions>(m =>
                 m.MessageTypePropertyName == messageTypePropertyName)), Times.Once);
         }
 
@@ -61,7 +61,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.Equal(aircraftId, mockAircraftTakenOffHandler.AircraftId);
             Assert.Equal(1, mockAircraftTakenOffHandler.MessageCount);
         }
-        
+
         [Fact]
         public async Task CallsCorrectMessageHandler2()
         {
@@ -98,8 +98,8 @@ namespace MessageBus.Abstractions.Tests.Unit
             mockMessagePostProcessor1.Setup(m => m.ProcessAsync(It.IsAny<IMessageContext<AircraftTakenOff>>()))
                 .Callback(() => Assert.Equal(4, ++order));
             var mockMessagePostProcessor2 = new Mock<IMessagePostProcessor>();
-                mockMessagePostProcessor2.Setup(m => m.ProcessAsync(It.IsAny<IMessageContext<AircraftTakenOff>>()))
-                .Callback(() => Assert.Equal(5, ++order));
+            mockMessagePostProcessor2.Setup(m => m.ProcessAsync(It.IsAny<IMessageContext<AircraftTakenOff>>()))
+            .Callback(() => Assert.Equal(5, ++order));
             _mockMessageProcessorResolver.Setup(m => m.GetMessagePreProcessors())
                 .Returns(new List<IMessagePreProcessor> { mockMessagePreProcessor1.Object, mockMessagePreProcessor2.Object });
             _mockMessageProcessorResolver.Setup(m => m.GetMessagePostProcessors())
@@ -109,13 +109,13 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             await _sut.OnMessageReceived(args);
 
-            mockMessagePreProcessor1.Verify(m => m.ProcessAsync(It.Is<IMessageContext<AircraftTakenOff>>(c => 
+            mockMessagePreProcessor1.Verify(m => m.ProcessAsync(It.Is<IMessageContext<AircraftTakenOff>>(c =>
                 c.MessageId == args.MessageId)), Times.Once);
-            mockMessagePreProcessor2.Verify(m => m.ProcessAsync(It.Is<IMessageContext<AircraftTakenOff>>(c => 
+            mockMessagePreProcessor2.Verify(m => m.ProcessAsync(It.Is<IMessageContext<AircraftTakenOff>>(c =>
                 c.MessageId == args.MessageId)), Times.Once);
-            mockMessagePostProcessor1.Verify(m => m.ProcessAsync(It.Is<IMessageContext<AircraftTakenOff>>(c => 
+            mockMessagePostProcessor1.Verify(m => m.ProcessAsync(It.Is<IMessageContext<AircraftTakenOff>>(c =>
                 c.MessageId == args.MessageId)), Times.Once);
-            mockMessagePostProcessor2.Verify(m => m.ProcessAsync(It.Is<IMessageContext<AircraftTakenOff>>(c => 
+            mockMessagePostProcessor2.Verify(m => m.ProcessAsync(It.Is<IMessageContext<AircraftTakenOff>>(c =>
                 c.MessageId == args.MessageId)), Times.Once);
         }
 
@@ -128,8 +128,8 @@ namespace MessageBus.Abstractions.Tests.Unit
             var aircraftId = Guid.NewGuid().ToString();
             var messageId = Guid.NewGuid().ToString();
             var correlationId = Guid.NewGuid().ToString();
-            var messageProperties = new Dictionary<string, string> 
-            { 
+            var messageProperties = new Dictionary<string, string>
+            {
                 { "MessageType", nameof(AircraftLanded) },
                 { "MessageVersion", "1" }
             };
@@ -173,7 +173,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.Equal(aircraftId, mockAircraftTakenOffHandler.AircraftId);
             Assert.Equal(1, mockAircraftTakenOffHandler.MessageCount);
         }
-        
+
         [Fact]
         public async Task ThrowsIfMessageHandlerNotFound()
         {
@@ -201,7 +201,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             var errorMessageEventArgs = new MessageErrorReceivedEventArgs(new ApplicationException(
                 errorMessage));
 
-            var exception = await Assert.ThrowsAsync<MessageReceivedException>(async () 
+            var exception = await Assert.ThrowsAsync<MessageReceivedException>(async ()
                 => await _sut.OnErrorMessageReceived(errorMessageEventArgs));
 
             Assert.Equal(errorMessage, exception.InnerException.Message);
@@ -235,10 +235,10 @@ namespace MessageBus.Abstractions.Tests.Unit
         public async Task StopAsyncStopsMessageBusClient()
         {
             await _sut.StopAsync();
-            
+
             _mockMessageBusClient.Verify(m => m.StopAsync(), Times.Once);
         }
-        
+
         [Fact]
         public void SubscribesToMessages()
         {
@@ -246,26 +246,36 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             _mockMessageHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(null), Times.Once);
         }
-        
+
         [Fact]
         public void SubscribesToMessagesWithCustomProperties()
         {
-            var messageProperties = new Dictionary<string, string>
+            var subscriptionFilter = new SubscriptionFilter
             {
-                { "MessageType", "AL" }
+                MessageProperties = new Dictionary<string, string>
+                    {
+                        { "MessageType", "AL" }
+                    }
             };
 
-            _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(messageProperties);
+            _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter);
 
-            _mockMessageHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(messageProperties), 
-                Times.Once);
+            _mockMessageHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(
+                subscriptionFilter), Times.Once);
         }
-        
+
         [Fact]
         public void SubscribesToMessagesWithCustomPropertiesThrowsIfMissingMessageType()
         {
-            var messageProperties = new Dictionary<string, string>();
-            Assert.Throws<ArgumentException>(() => _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(messageProperties));
+            var subscriptionFilter = new SubscriptionFilter
+            {
+                MessageProperties = new Dictionary<string, string>
+                    {
+                        { "SomethingElse", "AL" }
+                    }
+            };
+
+            Assert.Throws<ArgumentException>(() => _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter));
         }
 
         [Fact]
@@ -274,7 +284,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             var aircraftId = Guid.NewGuid().ToString();
             var aircraftLandedEvent = new AircraftLanded { AircraftId = aircraftId };
             var eventToSend = new Message<IEvent>(aircraftLandedEvent);
-            
+
             await _sut.PublishAsync(eventToSend);
 
             _mockMessageBusClient.Verify(m => m.PublishAsync(eventToSend), Times.Once);
@@ -288,17 +298,17 @@ namespace MessageBus.Abstractions.Tests.Unit
         {
             var aircraftlandedEvent = new AircraftLanded { AircraftId = Guid.NewGuid().ToString() };
             var eventObject = new Message<IEvent>(aircraftlandedEvent);
-            
+
             Message<IEvent> callbackEvent = null;
             _mockMessageBusClient.Setup(m => m.PublishAsync(eventObject)).Callback<Message<IEvent>>(a => callbackEvent = a);
-            
+
             var options = new MessageBusOptions();
             if (messageTypePropertyName is not null)
             {
                 options.MessageTypePropertyName = messageTypePropertyName;
             }
 
-            var sut = new MessageBus(_mockMessageHandlerResolver.Object, _mockMessageBusAdminClient.Object, 
+            var sut = new MessageBus(_mockMessageHandlerResolver.Object, _mockMessageBusAdminClient.Object,
                 _mockMessageBusClient.Object, _mockMessageProcessorResolver.Object, options);
             await sut.PublishAsync(eventObject);
 
@@ -524,7 +534,7 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             _mockMessageBusClient.Verify(m => m.SendMessageCopyAsync(messageObject, 0), Times.Once);
         }
-        
+
         [Theory]
         [InlineData(5)]
         [InlineData(10)]
@@ -535,7 +545,7 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             _mockMessageBusClient.Verify(m => m.SendMessageCopyAsync(messageObject, delayInSeconds), Times.Once);
         }
-        
+
         [Theory]
         [InlineData(5)]
         [InlineData(10)]

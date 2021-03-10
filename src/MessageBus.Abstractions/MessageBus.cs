@@ -52,13 +52,13 @@ namespace MessageBus.Abstractions
 
         public Task StopAsync() => _messageBusClient.StopAsync();
 
-        public IMessageBus SubscribeToMessage<TMessage, TMessageHandler>(Dictionary<string, string>? messageProperties = null)
+        public IMessageBus SubscribeToMessage<TMessage, TMessageHandler>(SubscriptionFilter? subscriptionFilter = null)
             where TMessage : IMessage
             where TMessageHandler : IMessageHandler<TMessage>
         {
-            ValidateCustomMessageProperties(messageProperties);
+            ValidateCustomMessageProperties(subscriptionFilter.MessageProperties);
 
-            _messageHandlerResolver.SubcribeToMessage<TMessage, TMessageHandler>(messageProperties);
+            _messageHandlerResolver.SubcribeToMessage<TMessage, TMessageHandler>(subscriptionFilter);
 
             return this;
         }
