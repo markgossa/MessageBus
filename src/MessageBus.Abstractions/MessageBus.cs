@@ -56,7 +56,7 @@ namespace MessageBus.Abstractions
             where TMessage : IMessage
             where TMessageHandler : IMessageHandler<TMessage>
         {
-            ValidateCustomMessageProperties(subscriptionFilter.MessageProperties);
+            ValidateCustomMessageProperties(subscriptionFilter?.MessageProperties);
 
             _messageHandlerResolver.SubcribeToMessage<TMessage, TMessageHandler>(subscriptionFilter);
 
