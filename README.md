@@ -870,9 +870,12 @@ namespace MessageBus.HostedService.Example
 
 ### Version 1.x.x to 2.x.x
 * Incoming messages: 
-  * In version 2.x.x, the default is to use the `Label` field rather than the `MessageType` message property to identify messages. This means that Message Subscriptions will look at the `Label` on the message to identify the message and route it to the correct handler. If you need to still use the `MessageType` property or custom properties, this is still possible by now passing a `SubscriptionFilter` to `IMessageBus.SubscribeToMessage()`.
-  * The `SubscriptionFilter` filters inbound messages on the subscription and is linked to a handler by using `IMessageBus.SubscribeToMessage()`. Matching messages are routed through the that message handler.
-  * Inbound messages are routed by searching for a message handler that handles a message , the message type used in the subscription filter will be identified using the following order: `Label`, `MessageType` property then the name of the event (based on the name of the Type of the message).
+  * In version 2.x.x, the default is to use the `Label` field rather than the `MessageType` message property to identify messages. This means that Message Subscriptions will look at the `Label` on the message to identify the message and route it to the correct handler. 
+  * If you need to still use the `MessageType` property to route messages to their handler, this is still possible by now passing a `SubscriptionFilter` to `IMessageBus.SubscribeToMessage()`. For instances where you need to specify a custom `MessageTypePropertyName`, this is still possible using `MessageBusOptions`.
+  * The `SubscriptionFilter` filters inbound messages on the subscription and is linked to a handler by using `IMessageBus.SubscribeToMessage()`
+  * Matching messages are routed through to their registered message handler by first looking for the message type in the following order of precedence:
+    1. `Label`
+    2. `MessageType` property (or custom `MessageType` property name)
 
 ## Programming model
 

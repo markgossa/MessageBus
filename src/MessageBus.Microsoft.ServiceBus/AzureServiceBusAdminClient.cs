@@ -52,13 +52,13 @@ namespace MessageBus.Microsoft.ServiceBus
             _serviceBusAdminClient = BuildServiceBusAdminClient();
         }
 
-        public async Task ConfigureAsync(IEnumerable<MessageHandlerMapping> messageSubscriptions, 
+        public async Task ConfigureAsync(IEnumerable<MessageHandlerMapping> messageHandlerMappings, 
             MessageBusOptions options)
         {
             _messageTypePropertyName = options?.MessageTypePropertyName;
             _messageVersionPropertyName = options?.MessageVersionPropertyName;
             await CreateOrUpdateSubscriptionAsync();
-            await UpdateRulesAsync(messageSubscriptions);
+            await UpdateRulesAsync(messageHandlerMappings);
         }
 
         public async Task<bool> CheckHealthAsync()
@@ -164,19 +164,19 @@ namespace MessageBus.Microsoft.ServiceBus
             return subscriptionProperties;
         }
 
-        private async Task UpdateRulesAsync(IEnumerable<MessageHandlerMapping> messageSubscriptions)
+        private async Task UpdateRulesAsync(IEnumerable<MessageHandlerMapping> messageHandlerMappings)
         {
-            var newRules = BuildListOfNewRules(messageSubscriptions);
+            var newRules = BuildListOfNewRules(messageHandlerMappings);
             var existingRules = await GetExistingRulesAsync();
 
             await DeleteInvalidRulesAsync(newRules, existingRules);
             await AddNewRulesAsync(newRules, existingRules);
         }
 
-        private List<CreateRuleOptions> BuildListOfNewRules(IEnumerable<MessageHandlerMapping> messageSubscriptions)
+        private List<CreateRuleOptions> BuildListOfNewRules(IEnumerable<MessageHandlerMapping> messageHandlerMappings)
         {
             var newRules = new List<CreateRuleOptions>();
-            foreach (var messageSubscription in messageSubscriptions)
+            foreach (var messageSubscription in messageHandlerMappings)
             {
                 var messageType = messageSubscription.MessageType;
                 var filter = new CorrelationRuleFilter();

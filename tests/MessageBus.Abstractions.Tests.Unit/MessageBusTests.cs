@@ -286,9 +286,10 @@ namespace MessageBus.Abstractions.Tests.Unit
         [Fact]
         public void SubscribeToMessageUsesLabelIfBothLabelAndMessageTypeSpecified()
         {
+            const string expectedMessageType = "AircraftTakenOff";
             var subscriptionFilter = new SubscriptionFilter
             {
-                Label = "AircraftTakenOff",
+                Label = expectedMessageType,
                 MessageProperties = new Dictionary<string, string>
                 {
                     { "MessageType", "AircraftLanded" }
@@ -297,7 +298,7 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter);
 
-            _mockMessageHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>("AircraftTakenOff",
+            _mockMessageHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(expectedMessageType,
                 subscriptionFilter), Times.Once);
         }
 
@@ -324,16 +325,17 @@ namespace MessageBus.Abstractions.Tests.Unit
         [InlineData("AircraftLanded")]
         public void SubscribeToMessageUsesCustomMessageTypeIfLabelNull(string messageType)
         {
+            const string customMessageTypeProperty = "MyCustomMessageType";
             var subscriptionFilter = new SubscriptionFilter
             {
                 MessageProperties = new Dictionary<string, string>
                 {
-                    { "MyCustomMessageType", messageType }
+                    { customMessageTypeProperty, messageType }
                 }
             };
 
             var sut = new MessageBus(_mockMessageHandlerResolver.Object, _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object,
-                _mockMessageProcessorResolver.Object, new MessageBusOptions { MessageTypePropertyName = "MyCustomMessageType" });
+                _mockMessageProcessorResolver.Object, new MessageBusOptions { MessageTypePropertyName = customMessageTypeProperty });
 
             sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter);
 
@@ -344,17 +346,18 @@ namespace MessageBus.Abstractions.Tests.Unit
         [Fact]
         public void SubscribesToMessagesWithCustomProperties()
         {
+            const string expectedMessageType = "AL";
             var subscriptionFilter = new SubscriptionFilter
             {
                 MessageProperties = new Dictionary<string, string>
                     {
-                        { "MessageType", "AL" }
+                        { "MessageType", expectedMessageType }
                     }
             };
 
             _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter);
 
-            _mockMessageHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>("AL",
+            _mockMessageHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(expectedMessageType,
                 subscriptionFilter), Times.Once);
         }
 
