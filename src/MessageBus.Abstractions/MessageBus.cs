@@ -56,9 +56,10 @@ namespace MessageBus.Abstractions
             where TMessage : IMessage
             where TMessageHandler : IMessageHandler<TMessage>
         {
-            ValidateCustomMessageProperties(subscriptionFilter?.MessageProperties);
+            ThrowIfInvalidSubscriptionFilter(subscriptionFilter);
 
-            _messageHandlerResolver.SubcribeToMessage<TMessage, TMessageHandler>(subscriptionFilter);
+            _messageHandlerResolver.SubcribeToMessage<TMessage, TMessageHandler>(GetMessageType<TMessage>(subscriptionFilter), 
+                subscriptionFilter);
 
             return this;
         }
@@ -158,13 +159,32 @@ namespace MessageBus.Abstractions
                 .First(i => i.Name.Contains(typeof(IMessageHandler<>).Name))
                 .GenericTypeArguments.First();
 
-        private void ValidateCustomMessageProperties(Dictionary<string, string>? messageProperties)
+        private void ThrowIfInvalidSubscriptionFilter(SubscriptionFilter? subscriptionFilter)
         {
-            if (messageProperties != null && !messageProperties.TryGetValue(_messageBusOptions.MessageTypePropertyName,
-                out _))
+            if (subscriptionFilter != null 
+                && MessageTypePropertyNotFound(subscriptionFilter) 
+                && string.IsNullOrWhiteSpace(subscriptionFilter?.Label))
             {
-                throw new ArgumentException($"{_messageBusOptions.MessageTypePropertyName} not found in custom subscription filter");
+                throw new ArgumentNullException($"Subscription Filter label or {_messageBusOptions.MessageTypePropertyName} must be specified");
             }
+        }
+
+        private string GetMessageType<TMessage>(SubscriptionFilter? subscriptionFilter) where TMessage : IMessage
+        {
+            string? messageTypeProperty = null;
+            subscriptionFilter?.MessageProperties.TryGetValue(_messageBusOptions.MessageTypePropertyName, out messageTypeProperty);
+            
+            return subscriptionFilter?.Label
+                    ?? messageTypeProperty
+                    ?? typeof(TMessage).Name;
+        }
+
+        private bool MessageTypePropertyNotFound(SubscriptionFilter? subscriptionFilter)
+        {
+            string? messageType = null;
+            return (subscriptionFilter?.MessageProperties != null
+                    && !subscriptionFilter.MessageProperties.TryGetValue(_messageBusOptions.MessageTypePropertyName, out messageType))
+                    || string.IsNullOrWhiteSpace(messageType);
         }
 
         private void AddMessageProperties<T>(Message<T> message) where T : IMessage

@@ -34,7 +34,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
 
         public IEnumerable<MessageSubscription> GetMessageSubscriptions() => _messageSubscriptions.Values;
 
-        public void SubcribeToMessage<TMessage, TMessageHandler>(SubscriptionFilter? subscriptionFilter = null)
+        public void SubcribeToMessage<TMessage, TMessageHandler>(string messageType, SubscriptionFilter? subscriptionFilter = null)
             where TMessage : IMessage
             where TMessageHandler : IMessageHandler<TMessage>
         {

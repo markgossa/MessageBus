@@ -228,12 +228,17 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         protected async Task<ServiceProvider> StartSendMessageCopyTestService<T>(string inputSubscription, string messageType)
             where T : IMessageHandler<AircraftLeftRunway>
         {
+            var subscriptionFilter = new SubscriptionFilter
+            {
+                MessageProperties = new Dictionary<string, string> { { "MessageType", messageType } }
+            };
+
             var services = new ServiceCollection();
             services.AddHostedService<MessageBusHostedService>()
                 .AddSingleton<IMessageTracker, MessageTracker>()
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
                         Configuration["Topic"], inputSubscription, Configuration["TenantId"]))
-                .SubscribeToMessage<AircraftLeftRunway, T>(new Dictionary<string, string> { { "MessageType", messageType } });
+                .SubscribeToMessage<AircraftLeftRunway, T>(subscriptionFilter);
             var serviceProvider = services.BuildServiceProvider();
             await StartMessageBusHostedService(serviceProvider);
 

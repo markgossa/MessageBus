@@ -244,7 +244,101 @@ namespace MessageBus.Abstractions.Tests.Unit
         {
             _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>();
 
-            _mockMessageHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(null), Times.Once);
+            _mockMessageHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(nameof(AircraftLanded), null), 
+                Times.Once);
+        }
+
+        [Theory]
+        [InlineData("AircraftTakenOff")]
+        [InlineData("AircraftLanded")]
+        public void SubscribeToMessageUsesLabelIfNoMessageTypeSpecified(string label)
+        {
+            var subscriptionFilter = new SubscriptionFilter
+            {
+                Label = label
+            };
+
+            _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter);
+
+            _mockMessageHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(label,
+                subscriptionFilter), Times.Once);
+        }
+
+        [Theory]
+        [InlineData("AircraftTakenOff")]
+        [InlineData("AircraftLanded")]
+        public void SubscribeToMessageUsesMessageTypeIfLabelNull(string messageType)
+        {
+            var subscriptionFilter = new SubscriptionFilter
+            {
+                MessageProperties = new Dictionary<string, string>
+                {
+                    { "MessageType", messageType }
+                }
+            };
+
+            _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter);
+
+            _mockMessageHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(messageType,
+                subscriptionFilter), Times.Once);
+        }
+
+        [Fact]
+        public void SubscribeToMessageUsesLabelIfBothLabelAndMessageTypeSpecified()
+        {
+            var subscriptionFilter = new SubscriptionFilter
+            {
+                Label = "AircraftTakenOff",
+                MessageProperties = new Dictionary<string, string>
+                {
+                    { "MessageType", "AircraftLanded" }
+                }
+            };
+
+            _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter);
+
+            _mockMessageHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>("AircraftTakenOff",
+                subscriptionFilter), Times.Once);
+        }
+
+        [Theory]
+        [InlineData(null, null)]
+        [InlineData("", "")]
+        [InlineData(" ", " ")]
+        public void SubscribeToMessageThrowsIfBothLabelAndMessageTypeMissingOrNull(string label, string messageType)
+        {
+            var subscriptionFilter = new SubscriptionFilter
+            {
+                Label = label,
+                MessageProperties = new Dictionary<string, string>
+                {
+                    { "MessageType", messageType }
+                }
+            };
+
+            Assert.Throws<ArgumentNullException>(() => _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter));
+        }
+
+        [Theory]
+        [InlineData("AircraftTakenOff")]
+        [InlineData("AircraftLanded")]
+        public void SubscribeToMessageUsesCustomMessageTypeIfLabelNull(string messageType)
+        {
+            var subscriptionFilter = new SubscriptionFilter
+            {
+                MessageProperties = new Dictionary<string, string>
+                {
+                    { "MyCustomMessageType", messageType }
+                }
+            };
+
+            var sut = new MessageBus(_mockMessageHandlerResolver.Object, _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object,
+                _mockMessageProcessorResolver.Object, new MessageBusOptions { MessageTypePropertyName = "MyCustomMessageType" });
+
+            sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter);
+
+            _mockMessageHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(messageType,
+                subscriptionFilter), Times.Once);
         }
 
         [Fact]
@@ -260,7 +354,7 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter);
 
-            _mockMessageHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(
+            _mockMessageHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>("AL",
                 subscriptionFilter), Times.Once);
         }
 
@@ -275,7 +369,7 @@ namespace MessageBus.Abstractions.Tests.Unit
                     }
             };
 
-            Assert.Throws<ArgumentException>(() => _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter));
+            Assert.Throws<ArgumentNullException>(() => _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter));
         }
 
         [Fact]

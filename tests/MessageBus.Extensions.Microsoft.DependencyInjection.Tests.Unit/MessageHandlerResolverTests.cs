@@ -17,8 +17,8 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
         {
             var services = new ServiceCollection();
             var sut = new MessageHandlerResolver(services);
-            sut.SubcribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
-            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>();
+            sut.SubcribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>(nameof(AircraftTakenOff));
+            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(nameof(AircraftLanded));
             sut.Initialize();
             var handler = sut.Resolve(nameof(AircraftLanded));
 
@@ -49,8 +49,8 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
             };
 
             var sut = new MessageHandlerResolver(new ServiceCollection());
-            sut.SubcribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
-            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter);
+            sut.SubcribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>(nameof(AircraftTakenOff));
+            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(nameof(AircraftLanded), subscriptionFilter);
             var messageSubscriptions = sut.GetMessageSubscriptions();
 
             Assert.Equal(2, messageSubscriptions.Count());
@@ -72,7 +72,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
 
             var services = new ServiceCollection();
             var sut = new MessageHandlerResolver(services);
-            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter);
+            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(null, subscriptionFilter);
             sut.Initialize();
             var handler = sut.Resolve("AL");
 
@@ -97,7 +97,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
 
             var services = new ServiceCollection();
             var sut = new MessageHandlerResolver(services);
-            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter);
+            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(null, subscriptionFilter);
             sut.Initialize();
 
             object testCode() => sut.Resolve("AL");

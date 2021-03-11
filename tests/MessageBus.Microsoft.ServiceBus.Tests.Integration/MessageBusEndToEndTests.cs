@@ -1,4 +1,5 @@
-﻿using MessageBus.Extensions.Microsoft.DependencyInjection;
+﻿using MessageBus.Abstractions;
+using MessageBus.Extensions.Microsoft.DependencyInjection;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Processors;
@@ -41,17 +42,22 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         }
 
         [Fact]
-        public async Task ReceivesAndSendsEventBasedOnCustomFilter()
+        public async Task ReceivesAndSendsEventBasedOnMessagePropertyFilter()
         {
-            var inputSubscription = nameof(ReceivesAndSendsEventBasedOnCustomFilter);
+            var inputSubscription = nameof(ReceivesAndSendsEventBasedOnMessagePropertyFilter);
             await CreateEndToEndTestSubscriptions(inputSubscription);
+
+            var subscriptionFilter = new SubscriptionFilter
+            {
+                MessageProperties = new Dictionary<string, string> { { "MessageType", "ALR" } }
+            };
 
             var services = new ServiceCollection();
             services.AddHostedService<MessageBusHostedService>()
                 .AddSingleton<IMessageTracker, MessageTracker>()
                 .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["Hostname"],
                         Configuration["Topic"], inputSubscription, Configuration["TenantId"]))
-                .SubscribeToMessage<AircraftLeftRunway, AircraftLeftRunwayHandler>(new Dictionary<string, string> { { "MessageType", "ALR" } });
+                .SubscribeToMessage<AircraftLeftRunway, AircraftLeftRunwayHandler>(subscriptionFilter);
             _serviceProvider = services.BuildServiceProvider();
             await StartMessageBusHostedService(_serviceProvider);
 
