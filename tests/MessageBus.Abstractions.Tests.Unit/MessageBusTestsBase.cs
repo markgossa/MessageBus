@@ -11,9 +11,9 @@ namespace MessageBus.Abstractions.Tests.Unit
     public class MessageBusTestsBase
     {
         protected readonly Mock<IMessageHandlerResolver> _mockMessageHandlerResolver = new Mock<IMessageHandlerResolver>();
-        protected readonly List<MessageSubscription> _messageSubscriptions = new List<MessageSubscription>
+        protected readonly List<MessageHandlerMapping> _messageSubscriptions = new List<MessageHandlerMapping>
         {
-            new MessageSubscription(typeof(AircraftLandedHandler), typeof(AircraftTakenOffHandler))
+            new MessageHandlerMapping(typeof(AircraftLandedHandler), typeof(AircraftTakenOffHandler))
         };
 
         protected readonly Mock<IMessageBusAdminClient> _mockMessageBusAdminClient = new Mock<IMessageBusAdminClient>();

@@ -52,7 +52,7 @@ namespace MessageBus.Microsoft.ServiceBus
             _serviceBusAdminClient = BuildServiceBusAdminClient();
         }
 
-        public async Task ConfigureAsync(IEnumerable<MessageSubscription> messageSubscriptions, 
+        public async Task ConfigureAsync(IEnumerable<MessageHandlerMapping> messageSubscriptions, 
             MessageBusOptions options)
         {
             _messageTypePropertyName = options?.MessageTypePropertyName;
@@ -164,7 +164,7 @@ namespace MessageBus.Microsoft.ServiceBus
             return subscriptionProperties;
         }
 
-        private async Task UpdateRulesAsync(IEnumerable<MessageSubscription> messageSubscriptions)
+        private async Task UpdateRulesAsync(IEnumerable<MessageHandlerMapping> messageSubscriptions)
         {
             var newRules = BuildListOfNewRules(messageSubscriptions);
             var existingRules = await GetExistingRulesAsync();
@@ -173,7 +173,7 @@ namespace MessageBus.Microsoft.ServiceBus
             await AddNewRulesAsync(newRules, existingRules);
         }
 
-        private List<CreateRuleOptions> BuildListOfNewRules(IEnumerable<MessageSubscription> messageSubscriptions)
+        private List<CreateRuleOptions> BuildListOfNewRules(IEnumerable<MessageHandlerMapping> messageSubscriptions)
         {
             var newRules = new List<CreateRuleOptions>();
             foreach (var messageSubscription in messageSubscriptions)
@@ -217,7 +217,7 @@ namespace MessageBus.Microsoft.ServiceBus
             }
         }
 
-        private void AddMessageFilterProperties(MessageSubscription messageSubscription, Type messageType,
+        private void AddMessageFilterProperties(MessageHandlerMapping messageSubscription, Type messageType,
             CorrelationRuleFilter filter)
         {
             if (messageSubscription.CustomSubscriptionFilterProperties.Count > 0)
@@ -231,7 +231,7 @@ namespace MessageBus.Microsoft.ServiceBus
             }
         }
 
-        private static void AddCustomMessageProperties(MessageSubscription messageSubscription, CorrelationRuleFilter filter)
+        private static void AddCustomMessageProperties(MessageHandlerMapping messageSubscription, CorrelationRuleFilter filter)
         {
             foreach (var property in messageSubscription.CustomSubscriptionFilterProperties)
             {

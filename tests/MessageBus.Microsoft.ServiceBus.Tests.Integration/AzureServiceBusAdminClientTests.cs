@@ -14,9 +14,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         [Fact]
         public async Task UpdatesSubscriptionRulesAsync()
         {
-            var messageSubscriptions = new List<MessageSubscription>
+            var messageSubscriptions = new List<MessageHandlerMapping>
             {
-                new MessageSubscription(typeof(AircraftLanded), typeof(AircraftLandedHandler)),
+                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler)),
             };
 
             var subscription = nameof(UpdatesSubscriptionRulesAsync);
@@ -31,9 +31,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         public async Task UpdatesRulesCustomMessageIdentifierAsync()
         {
             const string messagePropertyName = "MessageIdentifier";
-            var messageSubscriptions = new List<MessageSubscription>
+            var messageSubscriptions = new List<MessageHandlerMapping>
             {
-                new MessageSubscription(typeof(AircraftLanded), typeof(AircraftLandedHandler))
+                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler))
             };
 
             var subscription = nameof(UpdatesRulesCustomMessageIdentifierAsync);
@@ -52,10 +52,10 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         [Fact]
         public async Task UpdatesRulesWithMultipleHandlersAsync()
         {
-            var messageSubscriptions = new List<MessageSubscription>
+            var messageSubscriptions = new List<MessageHandlerMapping>
             {
-                new MessageSubscription(typeof(AircraftLanded), typeof(AircraftLandedHandler)),
-                new MessageSubscription(typeof(AircraftTakenOff), typeof(AircraftTakenOffHandler))
+                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler)),
+                new MessageHandlerMapping(typeof(AircraftTakenOff), typeof(AircraftTakenOffHandler))
             };
 
             var subscription = nameof(UpdatesRulesWithMultipleHandlersAsync);
@@ -70,10 +70,10 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         [Fact]
         public async Task UpdatesRulesWithMessageVersionDefaultPropertyAsync()
         {
-            var messageSubscriptions = new List<MessageSubscription>
+            var messageSubscriptions = new List<MessageHandlerMapping>
             {
-                new MessageSubscription(typeof(Models.V2.AircraftLanded), typeof(AircraftLandedHandlerV2)),
-                new MessageSubscription(typeof(AircraftTakenOff), typeof(AircraftTakenOffHandler))
+                new MessageHandlerMapping(typeof(Models.V2.AircraftLanded), typeof(AircraftLandedHandlerV2)),
+                new MessageHandlerMapping(typeof(AircraftTakenOff), typeof(AircraftTakenOffHandler))
             };
 
             var subscription = nameof(UpdatesRulesWithMessageVersionDefaultPropertyAsync);
@@ -91,10 +91,10 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         [InlineData("MyMessageVersion")]
         public async Task UpdatesRulesWithMessageVersionCustomPropertyAsync(string messageVersionPropertyName)
         {
-            var messageSubscriptions = new List<MessageSubscription>
+            var messageSubscriptions = new List<MessageHandlerMapping>
             {
-                new MessageSubscription(typeof(Models.V2.AircraftLanded), typeof(AircraftLandedHandlerV2)),
-                new MessageSubscription(typeof(AircraftTakenOff), typeof(AircraftTakenOffHandler))
+                new MessageHandlerMapping(typeof(Models.V2.AircraftLanded), typeof(AircraftLandedHandlerV2)),
+                new MessageHandlerMapping(typeof(AircraftTakenOff), typeof(AircraftTakenOffHandler))
             };
 
             var subscription = nameof(UpdatesRulesWithMessageVersionCustomPropertyAsync);
@@ -120,10 +120,10 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 { "AircraftType", "Commercial" }
             };
 
-            var messageSubscriptions = new List<MessageSubscription>
+            var messageSubscriptions = new List<MessageHandlerMapping>
             {
-                new MessageSubscription(typeof(Models.V2.AircraftLanded), typeof(AircraftLandedHandlerV2), customSubscriptionFilterProperties),
-                new MessageSubscription(typeof(AircraftTakenOff), typeof(AircraftTakenOffHandler))
+                new MessageHandlerMapping(typeof(Models.V2.AircraftLanded), typeof(AircraftLandedHandlerV2), customSubscriptionFilterProperties),
+                new MessageHandlerMapping(typeof(AircraftTakenOff), typeof(AircraftTakenOffHandler))
             };
 
             var subscription = nameof(UpdatesRulesWithMessageCustomPropertyAsync);
@@ -169,9 +169,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         [Fact]
         public async Task CreatesSubscriptionWithCustomOptionsMI()
         {
-            var messageSubscriptions = new List<MessageSubscription>
+            var messageSubscriptions = new List<MessageHandlerMapping>
             {
-                new MessageSubscription(typeof(AircraftLanded), typeof(AircraftLandedHandler)),
+                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler)),
             };
             
             var subscription = nameof(CreatesSubscriptionWithCustomOptionsMI);
@@ -192,9 +192,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         [Fact]
         public async Task CreatesSubscriptionWithCustomOptionsConnStr()
         {
-            var messageSubscriptions = new List<MessageSubscription>
+            var messageSubscriptions = new List<MessageHandlerMapping>
             {
-                new MessageSubscription(typeof(AircraftLanded), typeof(AircraftLandedHandler)),
+                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler)),
             };
             
             var subscription = nameof(CreatesSubscriptionWithCustomOptionsConnStr);
@@ -215,9 +215,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         [Fact]
         public async Task UpdatesSubscriptionCustomOptions()
         {
-            var messageSubscriptions = new List<MessageSubscription>
+            var messageSubscriptions = new List<MessageHandlerMapping>
             {
-                new MessageSubscription(typeof(AircraftLanded), typeof(AircraftLandedHandler)),
+                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler)),
             };
             var subscription = nameof(UpdatesSubscriptionCustomOptions);
             await DeleteSubscriptionAsync(subscription);

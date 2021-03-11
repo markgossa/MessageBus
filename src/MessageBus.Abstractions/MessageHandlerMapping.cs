@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 namespace MessageBus.Abstractions
 {
-    public class MessageSubscription
+    public class MessageHandlerMapping
     {
         public Type MessageType { get; }
         public Type MessageHandlerType { get; }
         public Dictionary<string, string> CustomSubscriptionFilterProperties { get; }
 
-        public MessageSubscription(Type messageType, Type messageHandlerType, 
+        public MessageHandlerMapping(Type messageType, Type messageHandlerType, 
             Dictionary<string, string>? customSubscriptionFilterProperties = null)
         {
             MessageType = messageType;

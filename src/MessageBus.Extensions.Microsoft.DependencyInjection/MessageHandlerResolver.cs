@@ -9,7 +9,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
     {
         private readonly IServiceCollection _services;
         private ServiceProvider? _serviceProvider;
-        private readonly Dictionary<string, MessageSubscription> _messageSubscriptions = new Dictionary<string, MessageSubscription>();
+        private readonly Dictionary<string, MessageHandlerMapping> _messageSubscriptions = new Dictionary<string, MessageHandlerMapping>();
 
         public MessageHandlerResolver(IServiceCollection services)
         {
@@ -32,14 +32,14 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
             }
         }
 
-        public IEnumerable<MessageSubscription> GetMessageSubscriptions() => _messageSubscriptions.Values;
+        public IEnumerable<MessageHandlerMapping> GetMessageSubscriptions() => _messageSubscriptions.Values;
 
         public void SubcribeToMessage<TMessage, TMessageHandler>(string messageType, SubscriptionFilter? subscriptionFilter = null)
             where TMessage : IMessage
             where TMessageHandler : IMessageHandler<TMessage>
         {
             _services.AddTransient(typeof(IMessageHandler<>).MakeGenericType(typeof(TMessage)), typeof(TMessageHandler));
-            _messageSubscriptions.Add(GetMessageType<TMessage>(subscriptionFilter?.MessageProperties), new MessageSubscription(typeof(TMessage), 
+            _messageSubscriptions.Add(GetMessageType<TMessage>(subscriptionFilter?.MessageProperties), new MessageHandlerMapping(typeof(TMessage), 
                 typeof(TMessageHandler), subscriptionFilter?.MessageProperties));
         }
 

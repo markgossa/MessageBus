@@ -13,7 +13,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             var messageProperties = new Dictionary<string, string>();
             var messageType = typeof(AircraftLanded);
             var messageHandlerType = typeof(AircraftLandedHandler);
-            var sut = new MessageSubscription(messageType, messageHandlerType, messageProperties);
+            var sut = new MessageHandlerMapping(messageType, messageHandlerType, messageProperties);
 
             Assert.Equal(messageType.FullName, sut.MessageType.FullName);
             Assert.Equal(messageHandlerType.FullName, sut.MessageHandlerType.FullName);
@@ -25,7 +25,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         {
             var messageType = typeof(AircraftLanded);
             var messageHandlerType = typeof(AircraftLandedHandler);
-            var sut = new MessageSubscription(messageType, messageHandlerType);
+            var sut = new MessageHandlerMapping(messageType, messageHandlerType);
 
             Assert.Equal(messageType.FullName, sut.MessageType.FullName);
             Assert.Equal(messageHandlerType.FullName, sut.MessageHandlerType.FullName);
