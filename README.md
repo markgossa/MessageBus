@@ -39,6 +39,8 @@ MessageBus is an abstraction layer for messaging technologies such as Azure Serv
   - [Azure Service Bus](#azure-service-bus)
     - [Configuring Service Bus Processor options](#configuring-service-bus-processor-options)
     - [Configuring Service Bus Subscription Options](#configuring-service-bus-subscription-options)
+  - [Upgrade paths and breaking changes](#upgrade-paths-and-breaking-changes)
+    - [Version 1.x.x to 2.x.x](#version-1xx-to-2xx)
   - [Programming model](#programming-model)
 
 ## Getting Started with MessageBus and Azure Service Bus
@@ -863,6 +865,13 @@ namespace MessageBus.HostedService.Example
     }
 }
 ```
+
+## Upgrade paths and breaking changes
+
+### Version 1.x.x to 2.x.x
+* Incoming messages: 
+  * In version 2.x.x, the default is to use the `Label` field rather than the `MessageType` message property to identify messages. This means that Message Subscriptions will look at the `Label` on the message to identify the message and route it to the correct handler. If you need to still use the `MessageType` property or custom properties, this is still possible by now passing a `SubscriptionFilter` to `IMessageBus.SubscribeToMessage()`.
+  * If using a custom `SubscriptionFilter` to route inbound messages, the message type will be identified by first looking at the `Label` then the `MessageType` property and if that is not found then the name of the event is used (based on the name of the Type of the message).
 
 ## Programming model
 
