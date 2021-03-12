@@ -217,12 +217,12 @@ namespace MessageBus.Microsoft.ServiceBus
             }
         }
 
-        private void AddMessageFilterProperties(MessageHandlerMapping messageSubscription, Type messageType,
+        private void AddMessageFilterProperties(MessageHandlerMapping messageHandlerMapping, Type messageType,
             CorrelationRuleFilter filter)
         {
-            if (messageSubscription.CustomSubscriptionFilterProperties.Count > 0)
+            if (messageHandlerMapping.SubscriptionFilter?.MessageProperties.Count > 0)
             {
-                AddCustomMessageProperties(messageSubscription, filter);
+                AddCustomMessageProperties(messageHandlerMapping, filter);
             }
             else
             {
@@ -231,11 +231,14 @@ namespace MessageBus.Microsoft.ServiceBus
             }
         }
 
-        private static void AddCustomMessageProperties(MessageHandlerMapping messageSubscription, CorrelationRuleFilter filter)
+        private static void AddCustomMessageProperties(MessageHandlerMapping messageHandlerMapping, CorrelationRuleFilter filter)
         {
-            foreach (var property in messageSubscription.CustomSubscriptionFilterProperties)
+            if (messageHandlerMapping.SubscriptionFilter != null)
             {
-                filter.ApplicationProperties.Add(property.Key, property.Value);
+                foreach (var property in messageHandlerMapping.SubscriptionFilter.MessageProperties)
+                {
+                    filter.ApplicationProperties.Add(property.Key, property.Value);
+                }
             }
         }
 

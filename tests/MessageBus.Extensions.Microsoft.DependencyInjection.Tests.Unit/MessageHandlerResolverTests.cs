@@ -56,7 +56,8 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
             Assert.Equal(2, messageSubscriptions.Count());
             Assert.Single(messageSubscriptions.Where(m => m.MessageHandlerType == typeof(AircraftLandedHandler)));
             Assert.Single(messageSubscriptions.Where(m => m.MessageHandlerType == typeof(AircraftTakenOffHandler)));
-            Assert.Equal(subscriptionFilter.MessageProperties, messageSubscriptions.First(m => m.MessageHandlerType == typeof(AircraftLandedHandler)).CustomSubscriptionFilterProperties);
+            Assert.Equal(subscriptionFilter.MessageProperties, messageSubscriptions.First(m => 
+                m.MessageHandlerType == typeof(AircraftLandedHandler)).SubscriptionFilter.MessageProperties);
         }
 
         [Fact]

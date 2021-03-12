@@ -5,23 +5,26 @@ using Xunit;
 
 namespace MessageBus.Abstractions.Tests.Unit
 {
-    public class MessageSubscriptionTests
+    public class MessageHandlerMappingTests
     {
         [Fact]
-        public void CanCreateInstanceWithCustomMessageProperties()
+        public void CanCreateInstanceWithCustomSubscriptionFilter()
         {
-            var messageProperties = new Dictionary<string, string>();
+            var subscriptionFilter = new SubscriptionFilter
+            {
+                MessageProperties = new Dictionary<string, string>()
+            };
             var messageType = typeof(AircraftLanded);
             var messageHandlerType = typeof(AircraftLandedHandler);
-            var sut = new MessageHandlerMapping(messageType, messageHandlerType, messageProperties);
+            var sut = new MessageHandlerMapping(messageType, messageHandlerType, subscriptionFilter);
 
             Assert.Equal(messageType.FullName, sut.MessageType.FullName);
             Assert.Equal(messageHandlerType.FullName, sut.MessageHandlerType.FullName);
-            Assert.Equal(messageProperties, sut.CustomSubscriptionFilterProperties);
+            Assert.Equal(subscriptionFilter, sut.SubscriptionFilter);
         }
         
         [Fact]
-        public void CanCreateInstanceWithoutCustomMessageProperties()
+        public void CanCreateInstanceWithoutCustomSubscriptionFilter()
         {
             var messageType = typeof(AircraftLanded);
             var messageHandlerType = typeof(AircraftLandedHandler);
@@ -29,7 +32,8 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             Assert.Equal(messageType.FullName, sut.MessageType.FullName);
             Assert.Equal(messageHandlerType.FullName, sut.MessageHandlerType.FullName);
-            Assert.Empty(sut.CustomSubscriptionFilterProperties);
+            Assert.Equal(sut.SubscriptionFilter.Label, new SubscriptionFilter().Label);
+            Assert.Equal(sut.SubscriptionFilter.MessageProperties, new SubscriptionFilter().MessageProperties);
         }
     }
 }

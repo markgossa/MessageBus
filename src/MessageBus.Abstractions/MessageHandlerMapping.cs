@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace MessageBus.Abstractions
 {
@@ -7,14 +6,14 @@ namespace MessageBus.Abstractions
     {
         public Type MessageType { get; }
         public Type MessageHandlerType { get; }
-        public Dictionary<string, string> CustomSubscriptionFilterProperties { get; }
+        public SubscriptionFilter? SubscriptionFilter { get; }
 
         public MessageHandlerMapping(Type messageType, Type messageHandlerType, 
-            Dictionary<string, string>? customSubscriptionFilterProperties = null)
+            SubscriptionFilter? subscriptionFilter = null)
         {
             MessageType = messageType;
             MessageHandlerType = messageHandlerType;
-            CustomSubscriptionFilterProperties = customSubscriptionFilterProperties ?? new Dictionary<string, string>();
+            SubscriptionFilter = subscriptionFilter ?? new SubscriptionFilter();
         }
     }
 }
