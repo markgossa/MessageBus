@@ -97,6 +97,8 @@ namespace MessageBus.Abstractions.Tests.Unit
         
         [Theory]
         [InlineData(null, null)]
+        [InlineData("", null)]
+        [InlineData(" ", null)]
         public void BuildValidatesInputsAndThrowsArgumentNullExceptionIfOneIsNullOrEmpty(string messageTypePropertyName,
             Type typeOfMessage)
         {
@@ -106,6 +108,17 @@ namespace MessageBus.Abstractions.Tests.Unit
             };
 
             Assert.Throws<ArgumentNullException>(() => sut.Build(messageTypePropertyName, typeOfMessage));
+        }
+
+        [Fact]
+        public void SetsMessagePropertiesToEmptyDictionaryIfSetToNull()
+        {
+            var sut = new SubscriptionFilter
+            {
+                MessageProperties = null
+            };
+
+            Assert.NotNull(sut.MessageProperties);
         }
     }
 }

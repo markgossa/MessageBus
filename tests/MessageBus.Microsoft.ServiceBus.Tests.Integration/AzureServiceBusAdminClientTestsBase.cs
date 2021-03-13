@@ -22,6 +22,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         protected readonly string _subscription = nameof(AzureServiceBusAdminClientTestsBase);
         protected readonly ServiceBusClient _serviceBusClient;
         protected readonly ServiceBusAdministrationClient _serviceBusAdminClient;
+        private const string _defaultMessageTypePropertyName = "MessageType";
 
         public AzureServiceBusAdminClientTestsBase()
         {
@@ -63,9 +64,11 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         private static CorrelationRuleFilter BuildStandardCorrelationRuleFilter(string messageTypePropertyName, 
             string messageVersionPropertyName, Type messageType)
         {
-            var filter = new CorrelationRuleFilter();
-            filter.ApplicationProperties.Add(messageTypePropertyName, messageType.Name);
-            
+            var filter = new CorrelationRuleFilter
+            {
+                Subject = messageType.Name
+            };
+
             var messageVersion = messageType.GetCustomAttribute<MessageVersionAttribute>();
             if (messageVersion is not null)
             {
@@ -123,6 +126,18 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var subscriptionObject = await _serviceBusAdminClient.GetSubscriptionAsync(_topic, subscription);
 
             Assert.Equal(createSubscriptionOptions, new CreateSubscriptionOptions(subscriptionObject.Value));
+        }
+
+        protected static SubscriptionFilter BuildSubscriptionFilter<T>(Dictionary<string, string> customMessageProperties = null) where T : IMessage
+        {
+            var subscriptionFilter = new SubscriptionFilter
+            {
+                MessageProperties = customMessageProperties
+            };
+
+            subscriptionFilter.Build(_defaultMessageTypePropertyName, typeof(T));
+
+            return subscriptionFilter;
         }
     }
 }

@@ -5,7 +5,12 @@ namespace MessageBus.Abstractions
 {
     public class SubscriptionFilter
     {
-        public Dictionary<string, string> MessageProperties { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> MessageProperties 
+        { 
+            get => _messageProperties; 
+            set => _messageProperties = value ?? new Dictionary<string, string>(); 
+        }
+
         public string? Label
         {
             get
@@ -28,6 +33,11 @@ namespace MessageBus.Abstractions
             set => _label = value;
         }
 
+        private string? _label;
+        private string? _messageTypePropertyName;
+        private string? _messageTypeType;
+        private Dictionary<string, string> _messageProperties = new Dictionary<string, string>();
+
         private bool IsValidBuildParameters() 
             => !string.IsNullOrWhiteSpace(_messageTypePropertyName) && _messageTypeType != null;
 
@@ -35,9 +45,6 @@ namespace MessageBus.Abstractions
             => MessageProperties.TryGetValue(_messageTypePropertyName!, out var messageType)
                 && !string.IsNullOrWhiteSpace(messageType);
 
-        private string? _label;
-        private string? _messageTypePropertyName;
-        private string? _messageTypeType;
 
         public void Build(string messageTypePropertyName, Type message)
         {

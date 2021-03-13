@@ -9,7 +9,7 @@ namespace MessageBus.Abstractions
         public SubscriptionFilter? SubscriptionFilter { get; }
 
         public MessageHandlerMapping(Type messageType, Type messageHandlerType, 
-            SubscriptionFilter? subscriptionFilter = null)
+            SubscriptionFilter subscriptionFilter)
         {
             MessageType = messageType;
             MessageHandlerType = messageHandlerType;

@@ -13,7 +13,6 @@ namespace MessageBus.Microsoft.ServiceBus
     {
         private readonly string? _connectionString;
         private readonly string? _hostName;
-        private string? _messageTypePropertyName;
         private string? _messageVersionPropertyName;
         private readonly ServiceBusAdministrationClient _serviceBusAdminClient;
         private readonly string? _tenantId;
@@ -176,15 +175,25 @@ namespace MessageBus.Microsoft.ServiceBus
         private List<CreateRuleOptions> BuildListOfNewRules(IEnumerable<MessageHandlerMapping> messageHandlerMappings)
         {
             var newRules = new List<CreateRuleOptions>();
-            foreach (var messageSubscription in messageHandlerMappings)
+            foreach (var messageHandlerMapping in messageHandlerMappings)
             {
-                var messageType = messageSubscription.MessageType;
-                var filter = new CorrelationRuleFilter();
-                AddMessageFilterProperties(messageSubscription, messageType, filter);
-                newRules.Add(new CreateRuleOptions(messageType.Name, filter));
+                newRules.Add(MapMessageHandlerMappingToCorrelationRuleFilter(messageHandlerMapping));
             }
 
             return newRules;
+        }
+
+        private CreateRuleOptions MapMessageHandlerMappingToCorrelationRuleFilter(MessageHandlerMapping messageSubscription)
+        {
+            var filter = new CorrelationRuleFilter
+            {
+                Subject = messageSubscription.SubscriptionFilter!.Label
+            };
+
+            AddMessageFilterProperties(messageSubscription, messageSubscription.MessageType, filter);
+
+            var newRule = new CreateRuleOptions(messageSubscription.MessageType.Name, filter);
+            return newRule;
         }
 
         private async Task<List<RuleProperties>> GetExistingRulesAsync()
@@ -226,7 +235,6 @@ namespace MessageBus.Microsoft.ServiceBus
             }
             else
             {
-                AddMessageTypeProperty(messageType, filter);
                 AddMessageVersionProperty(messageType, filter);
             }
         }
@@ -241,9 +249,6 @@ namespace MessageBus.Microsoft.ServiceBus
                 }
             }
         }
-
-        private void AddMessageTypeProperty(Type messageType, CorrelationRuleFilter filter)
-            => filter.ApplicationProperties.Add(_messageTypePropertyName, messageType.Name);
 
         private void AddMessageVersionProperty(Type messageType, CorrelationRuleFilter filter)
         {
