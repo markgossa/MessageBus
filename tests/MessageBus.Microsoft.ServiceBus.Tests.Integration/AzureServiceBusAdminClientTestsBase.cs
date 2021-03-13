@@ -135,7 +135,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 MessageProperties = customMessageProperties
             };
 
-            subscriptionFilter.Build(_defaultMessageTypePropertyName, typeof(T));
+            subscriptionFilter.Build(new MessageBusOptions(), typeof(T));
 
             return subscriptionFilter;
         }

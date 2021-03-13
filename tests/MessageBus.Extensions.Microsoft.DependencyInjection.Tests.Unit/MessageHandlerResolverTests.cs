@@ -35,7 +35,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
         private static SubscriptionFilter BuildSubscriptionFilter<T>() where T : IMessage
         {
             var subscriptionFilter = new SubscriptionFilter();
-            subscriptionFilter.Build(_defaultMessageTypePropertyName, typeof(T));
+            subscriptionFilter.Build(new MessageBusOptions(), typeof(T));
 
             return subscriptionFilter;
         }
@@ -68,6 +68,15 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
             Assert.Single(messageSubscriptions.Where(m => m.MessageHandlerType == typeof(AircraftTakenOffHandler)));
             Assert.Equal(subscriptionFilter.MessageProperties, messageSubscriptions.First(m => 
                 m.MessageHandlerType == typeof(AircraftLandedHandler)).SubscriptionFilter.MessageProperties);
+        }
+        
+        [Fact]
+        public void AddMessageSubscriptionThrowsIfNullSubscriptionFilter()
+        {
+            var sut = new MessageHandlerResolver(new ServiceCollection());
+            sut.SubcribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>(BuildSubscriptionFilter<AircraftTakenOff>());
+
+            Assert.Throws<ArgumentNullException>(() => sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(null));
         }
 
         [Fact]

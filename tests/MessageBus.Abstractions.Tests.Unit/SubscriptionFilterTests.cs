@@ -8,6 +8,7 @@ namespace MessageBus.Abstractions.Tests.Unit
     public class SubscriptionFilterTests
     {
         private const string _defaultMessageTypePropertyName = "MessageType";
+        private const string _defaultMessageVersionPropertyName = "MessageVersion";
 
         [Theory]
         [InlineData(typeof(AircraftTakenOff))]
@@ -19,7 +20,7 @@ namespace MessageBus.Abstractions.Tests.Unit
                 Label = typeOfMessage.Name
             };
             
-            sut.Build(_defaultMessageTypePropertyName, typeOfMessage);
+            sut.Build(new MessageBusOptions(), typeOfMessage);
 
             Assert.Equal(typeOfMessage.Name, sut.Label);
         }
@@ -37,12 +38,13 @@ namespace MessageBus.Abstractions.Tests.Unit
                 }
             };
 
-            sut.Build(_defaultMessageTypePropertyName, typeOfMessage);
+            sut.Build(new MessageBusOptions(), typeOfMessage);
 
             Assert.Equal(typeOfMessage.Name, sut.MessageProperties[_defaultMessageTypePropertyName]);
             Assert.Null(sut.Label);
+            Assert.False(sut.MessageProperties.ContainsKey(_defaultMessageVersionPropertyName));
         }
-        
+
         [Theory]
         [InlineData(typeof(AircraftTakenOff), "MessageType2")]
         [InlineData(typeof(AircraftLanded), "MyMessageIdentifier")]
@@ -57,10 +59,11 @@ namespace MessageBus.Abstractions.Tests.Unit
                 }
             };
 
-            sut.Build(messageTypePropertyName, typeOfMessage);
+            sut.Build(new MessageBusOptions { MessageTypePropertyName = messageTypePropertyName }, typeOfMessage);
 
             Assert.Equal(typeOfMessage.Name, sut.MessageProperties[messageTypePropertyName]);
             Assert.Null(sut.Label);
+            Assert.False(sut.MessageProperties.ContainsKey(_defaultMessageVersionPropertyName));
         }
 
         [Theory]
@@ -79,7 +82,7 @@ namespace MessageBus.Abstractions.Tests.Unit
                 }
             };
 
-            sut.Build(_defaultMessageTypePropertyName, typeOfMessage);
+            sut.Build(new MessageBusOptions(), typeOfMessage);
 
             Assert.Equal(typeOfMessage.Name, sut.Label);
         }
@@ -95,19 +98,16 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.Throws<InvalidOperationException>(() => sut.Label);
         }
         
-        [Theory]
-        [InlineData(null, null)]
-        [InlineData("", null)]
-        [InlineData(" ", null)]
-        public void BuildValidatesInputsAndThrowsArgumentNullExceptionIfOneIsNullOrEmpty(string messageTypePropertyName,
-            Type typeOfMessage)
+        [Fact]
+        public void BuildValidatesInputsAndThrowsArgumentNullExceptionIfOneIsNullOrEmpty()
         {
             var sut = new SubscriptionFilter
             {
                 Label = typeof(AircraftLanded).Name
             };
 
-            Assert.Throws<ArgumentNullException>(() => sut.Build(messageTypePropertyName, typeOfMessage));
+            Assert.Throws<ArgumentNullException>(() => sut.Build(new MessageBusOptions(), null));
+            Assert.Throws<ArgumentNullException>(() => sut.Build(null, typeof(AircraftLanded)));
         }
 
         [Fact]
@@ -119,6 +119,27 @@ namespace MessageBus.Abstractions.Tests.Unit
             };
 
             Assert.NotNull(sut.MessageProperties);
+        }
+
+        [Fact]
+        public void AddsMessageVersionPropertyIfNoCustomMessageProperties()
+        {
+            var sut = new SubscriptionFilter();
+            sut.Build(new MessageBusOptions(), typeof(Models.Events.V2.AircraftLanded));
+            
+            Assert.Equal(2, int.Parse(sut.MessageProperties[_defaultMessageVersionPropertyName]));
+        }
+        
+        [Theory]
+        [InlineData("MyMessageVersion")]
+        [InlineData("Version")]
+        public void AddsCustomMessageVersionPropertyIfNoCustomMessageProperties(string messageVersionPropertyName)
+        {
+            var sut = new SubscriptionFilter();
+            sut.Build(new MessageBusOptions() { MessageVersionPropertyName = messageVersionPropertyName }, 
+                typeof(Models.Events.V2.AircraftLanded));
+            
+            Assert.Equal(2, int.Parse(sut.MessageProperties[messageVersionPropertyName]));
         }
     }
 }

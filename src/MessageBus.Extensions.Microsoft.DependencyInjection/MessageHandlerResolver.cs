@@ -39,8 +39,10 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
             where TMessageHandler : IMessageHandler<TMessage>
         {
             _services.AddTransient(typeof(IMessageHandler<>).MakeGenericType(typeof(TMessage)), typeof(TMessageHandler));
+
             _messageSubscriptions.Add(GetMessageType<TMessage>(subscriptionFilter?.MessageProperties), 
-                new MessageHandlerMapping(typeof(TMessage), typeof(TMessageHandler), subscriptionFilter));
+                new MessageHandlerMapping(typeof(TMessage), typeof(TMessageHandler), subscriptionFilter
+                    ?? throw new ArgumentNullException(nameof(subscriptionFilter))));
         }
 
         private static string GetMessageType<TMessage>(Dictionary<string, string>? messageProperties) where TMessage : IMessage

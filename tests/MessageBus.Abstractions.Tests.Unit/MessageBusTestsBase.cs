@@ -31,7 +31,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         private static List<MessageHandlerMapping> BuildMessageSubscriptions()
         {
             var subscriptionFilter = new SubscriptionFilter();
-            subscriptionFilter.Build(_messageTypeDefaultPropertyName, typeof(AircraftLandedHandler));
+            subscriptionFilter.Build(new MessageBusOptions(), typeof(AircraftLandedHandler));
 
             return new List<MessageHandlerMapping>
         {

@@ -174,8 +174,8 @@ namespace MessageBus.Abstractions
                 subscriptionFilter = new SubscriptionFilter();
             }
 
-            subscriptionFilter.Build(_messageBusOptions.MessageTypePropertyName, typeof(TMessage));
-            return subscriptionFilter;
+            subscriptionFilter.Build(_messageBusOptions, typeof(TMessage));
+            return subscriptionFilter!;
         }
 
         private void AddMessageProperties<T>(Message<T> message) where T : IMessage

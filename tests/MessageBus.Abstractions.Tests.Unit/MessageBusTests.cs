@@ -249,7 +249,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>();
 
             var subscriptionFilter = new SubscriptionFilter();
-            subscriptionFilter.Build(_messageTypeDefaultPropertyName, typeof(AircraftLanded));
+            subscriptionFilter.Build(new MessageBusOptions(), typeof(AircraftLanded));
             Assert.Equal(subscriptionFilter.Label, actualSubscriptionFilter.Label);
             Assert.Equal(subscriptionFilter.MessageProperties, actualSubscriptionFilter.MessageProperties);
         }
