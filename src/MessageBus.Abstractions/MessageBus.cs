@@ -56,8 +56,8 @@ namespace MessageBus.Abstractions
             where TMessage : IMessage
             where TMessageHandler : IMessageHandler<TMessage>
         {
-            _messageHandlerResolver.SubcribeToMessage<TMessage, TMessageHandler>(GetMessageType<TMessage>(subscriptionFilter), 
-                subscriptionFilter);
+            subscriptionFilter = BuildSubscriptionFilter<TMessage>(subscriptionFilter);
+            _messageHandlerResolver.SubcribeToMessage<TMessage, TMessageHandler>(subscriptionFilter);
 
             return this;
         }
@@ -165,6 +165,17 @@ namespace MessageBus.Abstractions
             return subscriptionFilter?.Label
                     ?? messageTypeProperty
                     ?? typeof(TMessage).Name;
+        }
+
+        private SubscriptionFilter BuildSubscriptionFilter<TMessage>(SubscriptionFilter? subscriptionFilter) where TMessage : IMessage
+        {
+            if (subscriptionFilter is null)
+            {
+                subscriptionFilter = new SubscriptionFilter();
+            }
+
+            subscriptionFilter.Build(_messageBusOptions.MessageTypePropertyName, typeof(TMessage));
+            return subscriptionFilter;
         }
 
         private void AddMessageProperties<T>(Message<T> message) where T : IMessage

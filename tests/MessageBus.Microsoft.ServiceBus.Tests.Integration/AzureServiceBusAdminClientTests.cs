@@ -66,7 +66,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             await AssertSubscriptionRules(typeof(AircraftTakenOff), subscription);
             DeleteSubscriptionAsync(nameof(UpdatesRulesWithMultipleHandlersAsync)).Wait();
         }
-        
+
         [Fact]
         public async Task UpdatesRulesWithMessageVersionDefaultPropertyAsync()
         {
@@ -85,7 +85,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             await AssertSubscriptionRules(typeof(AircraftTakenOff), subscription);
             DeleteSubscriptionAsync(nameof(UpdatesRulesWithMessageVersionDefaultPropertyAsync)).Wait();
         }
-        
+
         [Theory]
         [InlineData("Version")]
         [InlineData("MyMessageVersion")]
@@ -102,40 +102,43 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             {
                 MessageVersionPropertyName = messageVersionPropertyName
             };
-            
+
             await new AzureServiceBusAdminClient(_hostname, _topic, subscription, _tenantId).ConfigureAsync(messageHandlerMappings, options);
 
             await AssertSubscriptionRules(typeof(Models.V2.AircraftLanded), subscription, "MessageType", messageVersionPropertyName);
             await AssertSubscriptionRules(typeof(AircraftTakenOff), subscription, "MessageType", messageVersionPropertyName);
             DeleteSubscriptionAsync(nameof(UpdatesRulesWithMessageVersionCustomPropertyAsync)).Wait();
         }
-        
+
         [Fact]
         public async Task UpdatesRulesWithMessageCustomPropertyAsync()
         {
-            var customSubscriptionFilterProperties = new Dictionary<string, string>
+            var subscriptionFilter = new SubscriptionFilter
             {
-                { "MessageTypeName", nameof(AircraftLanded) },
-                { "Version", "1" },
-                { "AircraftType", "Commercial" }
+                MessageProperties = new Dictionary<string, string>
+                {
+                    { "MessageTypeName", nameof(AircraftLanded) },
+                    { "Version", "1" },
+                    { "AircraftType", "Commercial" }
+                }
             };
 
             var messageHandlerMappings = new List<MessageHandlerMapping>
             {
-                new MessageHandlerMapping(typeof(Models.V2.AircraftLanded), typeof(AircraftLandedHandlerV2), customSubscriptionFilterProperties),
+                new MessageHandlerMapping(typeof(Models.V2.AircraftLanded), typeof(AircraftLandedHandlerV2), subscriptionFilter),
                 new MessageHandlerMapping(typeof(AircraftTakenOff), typeof(AircraftTakenOffHandler))
             };
 
             var subscription = nameof(UpdatesRulesWithMessageCustomPropertyAsync);
-            
+
             await new AzureServiceBusAdminClient(_hostname, _topic, subscription, _tenantId).ConfigureAsync(messageHandlerMappings,
                 new MessageBusOptions());
 
-            await AssertSubscriptionRules(typeof(Models.V2.AircraftLanded), subscription, null, null, customSubscriptionFilterProperties);
+            await AssertSubscriptionRules(typeof(Models.V2.AircraftLanded), subscription, null, null, subscriptionFilter.MessageProperties);
             await AssertSubscriptionRules(typeof(AircraftTakenOff), subscription);
             DeleteSubscriptionAsync(nameof(UpdatesRulesWithMessageCustomPropertyAsync)).Wait();
         }
-        
+
         [Fact]
         public async Task HealthCheckReturnsFalseIfInvalidTopic()
         {
@@ -146,7 +149,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             Assert.False(isHealthy);
             await DeleteSubscriptionAsync(subscription);
         }
-        
+
         [Fact]
         public async Task HealthCheckReturnsTrueIfValidSettings()
         {
@@ -157,7 +160,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             Assert.True(isHealthy);
             await DeleteSubscriptionAsync(subscription);
         }
-        
+
         [Fact]
         public async Task HealthCheckReturnsFalseIfInvalidSubscription()
         {
@@ -173,7 +176,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             {
                 new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler)),
             };
-            
+
             var subscription = nameof(CreatesSubscriptionWithCustomOptionsMI);
             await DeleteSubscriptionAsync(subscription);
             var createSubscriptionOptions = new CreateSubscriptionOptions(_topic, subscription)
@@ -188,7 +191,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             await AssertSubscriptionRules(typeof(AircraftLanded), subscription);
             await AssertSubscriptionOptions(subscription, createSubscriptionOptions);
         }
-        
+
         [Fact]
         public async Task CreatesSubscriptionWithCustomOptionsConnStr()
         {
@@ -196,7 +199,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             {
                 new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler)),
             };
-            
+
             var subscription = nameof(CreatesSubscriptionWithCustomOptionsConnStr);
             await DeleteSubscriptionAsync(subscription);
             var createSubscriptionOptions = new CreateSubscriptionOptions(_topic, subscription)

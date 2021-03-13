@@ -12,13 +12,15 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
 {
     public class MessageHandlerResolverTests
     {
+        private const string _defaultMessageTypePropertyName = "MessageType";
+
         [Fact]
         public void MessageHandlerResolverReturnsMessageHandlerInstanceForGivenMessageType()
         {
             var services = new ServiceCollection();
             var sut = new MessageHandlerResolver(services);
-            sut.SubcribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>(nameof(AircraftTakenOff));
-            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(nameof(AircraftLanded));
+            sut.SubcribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>(BuildSubscriptionFilter<AircraftTakenOff>());
+            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(BuildSubscriptionFilter<AircraftLanded>());
             sut.Initialize();
             var handler = sut.Resolve(nameof(AircraftLanded));
 
@@ -28,6 +30,14 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
             var messageContext = new MessageContext<AircraftLanded>(new BinaryData("Hello world!"), new object(),
                 new Mock<IMessageBus>().Object);
             typeof(AircraftLandedHandler).GetMethod("HandleAsync").Invoke(handler, new object[] { messageContext });
+        }
+
+        private static SubscriptionFilter BuildSubscriptionFilter<T>() where T : IMessage
+        {
+            var subscriptionFilter = new SubscriptionFilter();
+            subscriptionFilter.Build(_defaultMessageTypePropertyName, typeof(T));
+
+            return subscriptionFilter;
         }
 
         [Fact]
@@ -49,8 +59,8 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
             };
 
             var sut = new MessageHandlerResolver(new ServiceCollection());
-            sut.SubcribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>(nameof(AircraftTakenOff));
-            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(nameof(AircraftLanded), subscriptionFilter);
+            sut.SubcribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>(BuildSubscriptionFilter<AircraftTakenOff>());
+            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter);
             var messageSubscriptions = sut.GetMessageSubscriptions();
 
             Assert.Equal(2, messageSubscriptions.Count());
@@ -73,7 +83,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
 
             var services = new ServiceCollection();
             var sut = new MessageHandlerResolver(services);
-            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(null, subscriptionFilter);
+            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter);
             sut.Initialize();
             var handler = sut.Resolve("AL");
 
@@ -98,7 +108,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
 
             var services = new ServiceCollection();
             var sut = new MessageHandlerResolver(services);
-            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(null, subscriptionFilter);
+            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(BuildSubscriptionFilter<AircraftLanded>());
             sut.Initialize();
 
             object testCode() => sut.Resolve("AL");

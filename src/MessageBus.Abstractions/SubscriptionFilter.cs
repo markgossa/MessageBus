@@ -8,15 +8,45 @@ namespace MessageBus.Abstractions
         public Dictionary<string, string> MessageProperties { get; set; } = new Dictionary<string, string>();
         public string? Label
         {
-            get => string.IsNullOrWhiteSpace(_label)
-                    ? SubscriptionMessageType?.Name
-                    : _label;
+            get
+            {
+                if (!IsValidBuildParameters())
+                {
+                    throw new InvalidOperationException($"{nameof(SubscriptionFilter)} must be built before use");
+                }
+
+                if (MessageTypePropertyFound())
+                {
+                    return null;
+                }
+
+                return string.IsNullOrWhiteSpace(_label)
+                   ? _messageTypeType
+                   : _label;
+            }
 
             set => _label = value;
         }
 
-        public string? MessageTypePropertyName { get; internal set; }
-        public Type? SubscriptionMessageType { get; internal set; }
+        private bool IsValidBuildParameters() 
+            => !string.IsNullOrWhiteSpace(_messageTypePropertyName) && _messageTypeType != null;
+
+        private bool MessageTypePropertyFound() 
+            => MessageProperties.TryGetValue(_messageTypePropertyName!, out var messageType)
+                && !string.IsNullOrWhiteSpace(messageType);
+
         private string? _label;
+        private string? _messageTypePropertyName;
+        private string? _messageTypeType;
+
+        public void Build(string messageTypePropertyName, Type message)
+        {
+            (_messageTypePropertyName, _messageTypeType) = (messageTypePropertyName, message?.Name);
+
+            if (!IsValidBuildParameters())
+            {
+                throw new ArgumentNullException($"{nameof(messageTypePropertyName)}, {nameof(message)}");
+            }
+        }
     }
 }

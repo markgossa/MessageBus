@@ -1,5 +1,6 @@
 ﻿using MessageBus.Abstractions.Tests.Unit.Handlers;
 using MessageBus.Abstractions.Tests.Unit.Models.Events;
+using System;
 using System.Collections.Generic;
 using Xunit;
 
@@ -24,16 +25,12 @@ namespace MessageBus.Abstractions.Tests.Unit
         }
         
         [Fact]
-        public void CanCreateInstanceWithoutCustomSubscriptionFilter()
+        public void ThrowsIfNullSubscriptionFilter()
         {
             var messageType = typeof(AircraftLanded);
             var messageHandlerType = typeof(AircraftLandedHandler);
-            var sut = new MessageHandlerMapping(messageType, messageHandlerType);
 
-            Assert.Equal(messageType.FullName, sut.MessageType.FullName);
-            Assert.Equal(messageHandlerType.FullName, sut.MessageHandlerType.FullName);
-            Assert.Equal(sut.SubscriptionFilter.Label, new SubscriptionFilter().Label);
-            Assert.Equal(sut.SubscriptionFilter.MessageProperties, new SubscriptionFilter().MessageProperties);
+            Assert.Throws<ArgumentNullException>(() => new MessageHandlerMapping(messageType, messageHandlerType, null));
         }
     }
 }

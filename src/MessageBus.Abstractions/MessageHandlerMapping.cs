@@ -13,7 +13,7 @@ namespace MessageBus.Abstractions
         {
             MessageType = messageType;
             MessageHandlerType = messageHandlerType;
-            SubscriptionFilter = subscriptionFilter ?? new SubscriptionFilter();
+            SubscriptionFilter = subscriptionFilter ?? throw new ArgumentNullException(nameof(SubscriptionFilter));
         }
     }
 }
