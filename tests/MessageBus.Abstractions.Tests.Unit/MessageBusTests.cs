@@ -303,24 +303,6 @@ namespace MessageBus.Abstractions.Tests.Unit
         }
 
         [Theory]
-        [InlineData(null, null)]
-        [InlineData("", "")]
-        [InlineData(" ", " ")]
-        public void SubscribeToMessageThrowsIfBothLabelAndMessageTypeMissingOrNull(string label, string messageType)
-        {
-            var subscriptionFilter = new SubscriptionFilter
-            {
-                Label = label,
-                MessageProperties = new Dictionary<string, string>
-                {
-                    { "MessageType", messageType }
-                }
-            };
-
-            Assert.Throws<ArgumentNullException>(() => _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter));
-        }
-
-        [Theory]
         [InlineData("AircraftTakenOff")]
         [InlineData("AircraftLanded")]
         public void SubscribeToMessageUsesCustomMessageTypeIfLabelNull(string messageType)
@@ -359,20 +341,6 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             _mockMessageHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(expectedMessageType,
                 subscriptionFilter), Times.Once);
-        }
-
-        [Fact]
-        public void SubscribesToMessagesWithCustomPropertiesThrowsIfMissingMessageType()
-        {
-            var subscriptionFilter = new SubscriptionFilter
-            {
-                MessageProperties = new Dictionary<string, string>
-                    {
-                        { "SomethingElse", "AL" }
-                    }
-            };
-
-            Assert.Throws<ArgumentNullException>(() => _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter));
         }
 
         [Fact]

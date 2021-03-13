@@ -56,8 +56,6 @@ namespace MessageBus.Abstractions
             where TMessage : IMessage
             where TMessageHandler : IMessageHandler<TMessage>
         {
-            ThrowIfInvalidSubscriptionFilter(subscriptionFilter);
-
             _messageHandlerResolver.SubcribeToMessage<TMessage, TMessageHandler>(GetMessageType<TMessage>(subscriptionFilter), 
                 subscriptionFilter);
 
@@ -159,16 +157,6 @@ namespace MessageBus.Abstractions
                 .First(i => i.Name.Contains(typeof(IMessageHandler<>).Name))
                 .GenericTypeArguments.First();
 
-        private void ThrowIfInvalidSubscriptionFilter(SubscriptionFilter? subscriptionFilter)
-        {
-            if (subscriptionFilter != null 
-                && MessageTypePropertyNotFound(subscriptionFilter) 
-                && string.IsNullOrWhiteSpace(subscriptionFilter?.Label))
-            {
-                throw new ArgumentNullException($"Subscription Filter label or {_messageBusOptions.MessageTypePropertyName} must be specified");
-            }
-        }
-
         private string GetMessageType<TMessage>(SubscriptionFilter? subscriptionFilter) where TMessage : IMessage
         {
             string? messageTypeProperty = null;
@@ -177,14 +165,6 @@ namespace MessageBus.Abstractions
             return subscriptionFilter?.Label
                     ?? messageTypeProperty
                     ?? typeof(TMessage).Name;
-        }
-
-        private bool MessageTypePropertyNotFound(SubscriptionFilter? subscriptionFilter)
-        {
-            string? messageType = null;
-            return (subscriptionFilter?.MessageProperties != null
-                    && !subscriptionFilter.MessageProperties.TryGetValue(_messageBusOptions.MessageTypePropertyName, out messageType))
-                    || string.IsNullOrWhiteSpace(messageType);
         }
 
         private void AddMessageProperties<T>(Message<T> message) where T : IMessage
