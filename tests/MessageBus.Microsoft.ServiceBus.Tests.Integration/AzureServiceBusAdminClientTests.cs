@@ -4,6 +4,7 @@ using MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -12,7 +13,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
     public class AzureServiceBusAdminClientTests : AzureServiceBusAdminClientTestsBase
     {
         [Fact]
-        public async Task AddsSubscriptionRulesAsync()
+        public async Task AddsStandardSubscriptionRule()
         {
             var messageHandlerMappings = new List<MessageHandlerMapping>
             {
@@ -20,16 +21,41 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 BuildSubscriptionFilter<AircraftLanded>()),
             };
 
-            var subscription = nameof(AddsSubscriptionRulesAsync);
-            await new AzureServiceBusAdminClient(_connectionString, _topic, subscription).ConfigureAsync(messageHandlerMappings,
-                new MessageBusOptions());
+            var subscription = nameof(AddsStandardSubscriptionRule);
+            await new AzureServiceBusAdminClient(_connectionString, _topic, subscription)
+                .ConfigureAsync(messageHandlerMappings, new MessageBusOptions());
 
-            await AssertSubscriptionRules(typeof(AircraftLanded), subscription);
-            DeleteSubscriptionAsync(nameof(AddsSubscriptionRulesAsync)).Wait();
+            await AssertSubscriptionRules(messageHandlerMappings.First(), subscription);
+            DeleteSubscriptionAsync(nameof(AddsStandardSubscriptionRule)).Wait();
+        }
+        
+        [Fact]
+        public async Task AddsCustomSubscriptionRule()
+        {
+            var customMessageProperties = new Dictionary<string, string>
+            {
+                { "AircraftType", "Commercial" },
+                { "AircraftSize", "Heavy" }
+            };
+
+            var subscriptionFilter = BuildSubscriptionFilter<AircraftLanded>(customMessageProperties);
+
+            var messageHandlerMappings = new List<MessageHandlerMapping>
+            {
+                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler), 
+                    subscriptionFilter)
+            };
+
+            var subscription = nameof(AddsCustomSubscriptionRule);
+            await new AzureServiceBusAdminClient(_connectionString, _topic, subscription)
+                .ConfigureAsync(messageHandlerMappings, new MessageBusOptions());
+
+            await AssertSubscriptionRules(messageHandlerMappings.First(), subscription);
+            DeleteSubscriptionAsync(nameof(AddsCustomSubscriptionRule)).Wait();
         }
 
         [Fact]
-        public async Task AddsRulesWithMultipleHandlersAsync()
+        public async Task AddsMultipleSubscriptionRules()
         {
             var messageHandlerMappings = new List<MessageHandlerMapping>
             {
@@ -39,13 +65,13 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                     BuildSubscriptionFilter<AircraftTakenOff>())
             };
 
-            var subscription = nameof(AddsRulesWithMultipleHandlersAsync);
-            await new AzureServiceBusAdminClient(_hostname, _topic, subscription, _tenantId).ConfigureAsync(messageHandlerMappings,
-                new MessageBusOptions());
+            var subscription = nameof(AddsMultipleSubscriptionRules);
+            await new AzureServiceBusAdminClient(_hostname, _topic, subscription, _tenantId)
+                .ConfigureAsync(messageHandlerMappings, new MessageBusOptions());
 
-            await AssertSubscriptionRules(typeof(AircraftLanded), subscription);
-            await AssertSubscriptionRules(typeof(AircraftTakenOff), subscription);
-            DeleteSubscriptionAsync(nameof(AddsRulesWithMultipleHandlersAsync)).Wait();
+            await AssertSubscriptionRules(messageHandlerMappings[0], subscription);
+            await AssertSubscriptionRules(messageHandlerMappings[1], subscription);
+            DeleteSubscriptionAsync(nameof(AddsMultipleSubscriptionRules)).Wait();
         }
 
         [Fact]
@@ -65,7 +91,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             var subscription = nameof(HealthCheckReturnsTrueIfValidSettings);
             await CreateSubscriptionAsync(subscription);
-            var isHealthy = await new AzureServiceBusAdminClient(_hostname, _topic, subscription, _tenantId).CheckHealthAsync();
+            var isHealthy = await new AzureServiceBusAdminClient(_hostname, _topic, subscription, _tenantId)
+                .CheckHealthAsync();
 
             Assert.True(isHealthy);
             await DeleteSubscriptionAsync(subscription);
@@ -101,7 +128,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 .ConfigureAsync(messageHandlerMappings,
                 new MessageBusOptions());
 
-            await AssertSubscriptionRules(typeof(AircraftLanded), subscription);
+            await AssertSubscriptionRules(messageHandlerMappings[0], subscription);
             await AssertSubscriptionOptions(subscription, createSubscriptionOptions);
         }
 
@@ -126,7 +153,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 .ConfigureAsync(messageHandlerMappings,
                 new MessageBusOptions());
 
-            await AssertSubscriptionRules(typeof(AircraftLanded), subscription);
+            await AssertSubscriptionRules(messageHandlerMappings[0], subscription);
             await AssertSubscriptionOptions(subscription, createSubscriptionOptions);
         }
 
@@ -159,7 +186,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             await new AzureServiceBusAdminClient(_hostname, _tenantId, newSubscriptionOptions)
                 .ConfigureAsync(messageHandlerMappings, new MessageBusOptions());
 
-            await AssertSubscriptionRules(typeof(AircraftLanded), subscription);
+            await AssertSubscriptionRules(messageHandlerMappings[0], subscription);
             await AssertSubscriptionOptions(subscription, newSubscriptionOptions);
         }
     }

@@ -695,7 +695,7 @@ namespace MessageBus.Example
 
 To do this, simply create a `SubscriptionFilter` and pass this to the `SubscribeToMessage()` method. Note that specifying custom message properties will mean that `MessageVersion` will not be added so you will need to add this yourself.
 
-Messages will be routed according to the label (preferred) and if this is not specified then the `MessageType` property (or a custom message type property set using `MessageBusOptions`) must exist in the custom `MessageProperties` on the `SubscriptionFilter`.
+Messages will be routed according to the label (preferred) and if this is not specified then the `MessageType` property (or a custom message type property set using `MessageBusOptions`) is used and if this also does not exist then the label on the subscription filter is set to the name of the `Type` of the message.
 
 ```csharp
 private static ServiceProvider ConfigureServices()
