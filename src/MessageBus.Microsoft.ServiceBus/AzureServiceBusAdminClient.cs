@@ -54,7 +54,6 @@ namespace MessageBus.Microsoft.ServiceBus
         public async Task ConfigureAsync(IEnumerable<MessageHandlerMapping> messageHandlerMappings, 
             MessageBusOptions options)
         {
-            _messageTypePropertyName = options?.MessageTypePropertyName;
             _messageVersionPropertyName = options?.MessageVersionPropertyName;
             await CreateOrUpdateSubscriptionAsync();
             await UpdateRulesAsync(messageHandlerMappings);
