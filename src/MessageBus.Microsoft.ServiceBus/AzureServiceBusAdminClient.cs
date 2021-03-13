@@ -24,7 +24,7 @@ namespace MessageBus.Microsoft.ServiceBus
             _createSubscriptionOptions = new CreateSubscriptionOptions(topic, subscription);
             _serviceBusAdminClient = BuildServiceBusAdminClient();
         }
-        
+
         public AzureServiceBusAdminClient(string hostName, string topic, string subscription,
             string tenantId)
         {
@@ -33,7 +33,7 @@ namespace MessageBus.Microsoft.ServiceBus
             _tenantId = tenantId;
             _serviceBusAdminClient = BuildServiceBusAdminClient();
         }
-        
+
         public AzureServiceBusAdminClient(string connectionString, CreateSubscriptionOptions createSubscriptionOptions)
         {
             _connectionString = connectionString;
@@ -51,7 +51,7 @@ namespace MessageBus.Microsoft.ServiceBus
             _serviceBusAdminClient = BuildServiceBusAdminClient();
         }
 
-        public async Task ConfigureAsync(IEnumerable<MessageHandlerMapping> messageHandlerMappings, 
+        public async Task ConfigureAsync(IEnumerable<MessageHandlerMapping> messageHandlerMappings,
             MessageBusOptions options)
         {
             _messageVersionPropertyName = options?.MessageVersionPropertyName;
@@ -63,7 +63,7 @@ namespace MessageBus.Microsoft.ServiceBus
         {
             try
             {
-                var subscription = await _serviceBusAdminClient.GetSubscriptionAsync(_createSubscriptionOptions.TopicName, 
+                var subscription = await _serviceBusAdminClient.GetSubscriptionAsync(_createSubscriptionOptions.TopicName,
                     _createSubscriptionOptions.SubscriptionName);
                 return subscription.Value != null;
             }
@@ -92,7 +92,7 @@ namespace MessageBus.Microsoft.ServiceBus
                 throw new InvalidOperationException("RequiresSession is not yet supported");
             }
         }
-        
+
         private async Task CreateOrUpdateSubscriptionAsync()
         {
             var subscriptionProperties = await GetSubscriptionAsync();
@@ -132,14 +132,14 @@ namespace MessageBus.Microsoft.ServiceBus
 
         private bool SubscriptionSessionSettingsChanged(SubscriptionProperties subscriptionProperties)
             => subscriptionProperties.RequiresSession != _createSubscriptionOptions.RequiresSession;
-        
+
         private Task DeleteSubscriptionAsync()
             => _serviceBusAdminClient.DeleteSubscriptionAsync(_createSubscriptionOptions.TopicName,
                     _createSubscriptionOptions.SubscriptionName);
 
         private bool SubscriptionOptionsAreCorrect(SubscriptionProperties subscriptionProperties)
             => _createSubscriptionOptions == new CreateSubscriptionOptions(subscriptionProperties);
-        
+
         private async Task UpdateSubscriptionAsync(SubscriptionProperties existingSubscriptionProperties)
         {
             var newSubscriptionProperties = CreateNewSubscriptionProperties(existingSubscriptionProperties);
@@ -258,10 +258,14 @@ namespace MessageBus.Microsoft.ServiceBus
             }
         }
 
-        private static bool ExistingRuleIsValid(List<CreateRuleOptions> newRules, RuleProperties existingRule) => 
-            newRules.Any(r => r.Name == existingRule.Name && r.Filter == existingRule.Filter);
-
-        private static bool NewRuleExists(List<RuleProperties> existingRules, CreateRuleOptions newRule) 
-            => existingRules.Any(r => r.Name == newRule.Name && r.Filter == newRule.Filter);
+        private static bool ExistingRuleIsValid(List<CreateRuleOptions> newRules, RuleProperties existingRule) =>
+            newRules.Any(r => RuleIsEqual(existingRule, r));
+        
+        private static bool NewRuleExists(List<RuleProperties> existingRules, CreateRuleOptions newRule)
+            => existingRules.Any(r => RuleIsEqual(r, newRule));
+        
+        private static bool RuleIsEqual(RuleProperties ruleProperties, CreateRuleOptions ruleOptions) 
+            => ruleOptions.Name == ruleProperties.Name 
+                && (CorrelationRuleFilter)ruleOptions.Filter == (CorrelationRuleFilter)ruleProperties.Filter;
     }
 }

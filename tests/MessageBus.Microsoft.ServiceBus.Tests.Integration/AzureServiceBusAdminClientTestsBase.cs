@@ -52,7 +52,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             Assert.Equal(expectedCorrelationRuleFilter, actualRulesForMessageType.First().Filter);
         }
 
-        private static CorrelationRuleFilter BuildCorrelationRuleFilter(SubscriptionFilter subscriptionFilter)
+        protected static CorrelationRuleFilter BuildCorrelationRuleFilter(SubscriptionFilter subscriptionFilter)
         {
             var filter = new CorrelationRuleFilter
             {
@@ -116,6 +116,17 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             subscriptionFilter.Build(new MessageBusOptions(), typeof(T));
 
             return subscriptionFilter;
+        }
+
+        protected async Task CreateSubscriptionRulesAsync(List<MessageHandlerMapping> messageHandlerMappings, string subscription)
+        {
+            await _serviceBusAdminClient.DeleteRuleAsync(_topic, subscription, "$Default");
+            foreach (var messageHandlerMapping in messageHandlerMappings)
+            {
+                var correlationRuleFilter = BuildCorrelationRuleFilter(messageHandlerMappings[0].SubscriptionFilter);
+                await _serviceBusAdminClient.CreateRuleAsync(_topic, subscription, new CreateRuleOptions(nameof(AircraftLanded),
+                    correlationRuleFilter));
+            }
         }
     }
 }
