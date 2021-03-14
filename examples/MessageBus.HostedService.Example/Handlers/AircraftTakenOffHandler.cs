@@ -29,7 +29,10 @@ namespace MessageBus.HostedService.Example.Handlers
             Console.WriteLine($"Raw message as text: {context.Body}");
 
             // Get message properties
-            Console.WriteLine($"MessageType: {context.Properties["MessageType"]}");
+            foreach (var property in context.Properties)
+            {
+                Console.WriteLine($"{property.Key}: {property.Value}");
+            }
 
             try
             {

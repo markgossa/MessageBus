@@ -115,7 +115,8 @@ namespace MessageBus.Microsoft.ServiceBus
             {
                 MessageId = args.Message.MessageId,
                 CorrelationId = args.Message.CorrelationId,
-                DeliveryCount = args.Message.DeliveryCount
+                DeliveryCount = args.Message.DeliveryCount,
+                Label = args.Message.Subject
             };
 
             ThrowIfMessageHandlerNotFound(messageReceivedEventArgs.MessageId);

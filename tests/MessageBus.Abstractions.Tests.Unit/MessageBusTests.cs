@@ -45,37 +45,43 @@ namespace MessageBus.Abstractions.Tests.Unit
             _mockMessageBusClient.Verify(m => m.AddErrorMessageHandler(It.IsAny<Func<MessageErrorReceivedEventArgs, Task>>()), Times.Once);
         }
 
-        [Fact]
-        public async Task CallsCorrectMessageHandlerUsingMessageType1()
+        [Theory]
+        [InlineData(nameof(AircraftTakenOff))]
+        [InlineData(nameof(AircraftLanded))]
+        public async Task CallsCorrectMessageHandlerUsingLabel(string messageType)
         {
             var mockAircraftTakenOffHandler = new AircraftTakenOffHandler();
-            _mockMessageHandlerResolver.Setup(m => m.Resolve(nameof(AircraftTakenOff)))
+            _mockMessageHandlerResolver.Setup(m => m.Resolve(messageType))
                 .Returns(mockAircraftTakenOffHandler);
             var aircraftId = Guid.NewGuid().ToString();
             var args = new MessageReceivedEventArgs(BuildAircraftTakenOffMessage(aircraftId),
-                new object(), new Dictionary<string, string> { { "MessageType", nameof(AircraftTakenOff) } });
+                new object(), new Dictionary<string, string>())
+            {
+                Label = messageType
+            };
 
             await _sut.OnMessageReceived(args);
 
-            _mockMessageHandlerResolver.Verify(m => m.Resolve(nameof(AircraftTakenOff)), Times.Once);
+            _mockMessageHandlerResolver.Verify(m => m.Resolve(messageType), Times.Once);
             Assert.Equal(aircraftId, mockAircraftTakenOffHandler.AircraftId);
             Assert.Equal(1, mockAircraftTakenOffHandler.MessageCount);
         }
 
-        [Fact]
-        public async Task CallsCorrectMessageHandlerUsingMessageType2()
+        [Theory]
+        [InlineData(nameof(AircraftTakenOff))]
+        [InlineData(nameof(AircraftLanded))]
+        public async Task CallsCorrectMessageHandlerUsingMessageType1(string messageType)
         {
-            var mockAircraftTakenOffHandler = new AircraftLandedHandler();
-            _mockMessageHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded)))
+            var mockAircraftTakenOffHandler = new AircraftTakenOffHandler();
+            _mockMessageHandlerResolver.Setup(m => m.Resolve(messageType))
                 .Returns(mockAircraftTakenOffHandler);
-
             var aircraftId = Guid.NewGuid().ToString();
-            var args = new MessageReceivedEventArgs(BuildAircraftLandedMessage(aircraftId),
-                new object(), new Dictionary<string, string> { { "MessageType", nameof(AircraftLanded) } });
+            var args = new MessageReceivedEventArgs(BuildAircraftTakenOffMessage(aircraftId),
+                new object(), new Dictionary<string, string> { { "MessageType", messageType } });
 
             await _sut.OnMessageReceived(args);
 
-            _mockMessageHandlerResolver.Verify(m => m.Resolve(nameof(AircraftLanded)), Times.Once);
+            _mockMessageHandlerResolver.Verify(m => m.Resolve(messageType), Times.Once);
             Assert.Equal(aircraftId, mockAircraftTakenOffHandler.AircraftId);
             Assert.Equal(1, mockAircraftTakenOffHandler.MessageCount);
         }

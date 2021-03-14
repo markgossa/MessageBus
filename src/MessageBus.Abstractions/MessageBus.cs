@@ -109,7 +109,7 @@ namespace MessageBus.Abstractions
         }
 
         private object GetMessageHandler(MessageReceivedEventArgs args) =>
-            _messageHandlerResolver.Resolve(args.MessageProperties[_messageTypePropertyName])
+            _messageHandlerResolver.Resolve(args.Label ?? args.MessageProperties[_messageTypePropertyName])
                 ?? throw new MessageHandlerNotFoundException("Message handler not found or could not be awaited " +
                     $"for MessageId: {args.MessageId}");
 
