@@ -106,7 +106,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             Assert.Equal(createSubscriptionOptions, new CreateSubscriptionOptions(subscriptionObject.Value));
         }
 
-        protected static SubscriptionFilter BuildSubscriptionFilter<T>(Dictionary<string, string> customMessageProperties = null) where T : IMessage
+        protected static SubscriptionFilter BuildSubscriptionFilter<T>(Dictionary<string, string> customMessageProperties = null) 
+            where T : IMessage
         {
             var subscriptionFilter = new SubscriptionFilter
             {

@@ -17,7 +17,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             var messageHandlerMappings = new List<MessageHandlerMapping>
             {
-                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler), 
+                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler),
                 BuildSubscriptionFilter<AircraftLanded>()),
             };
 
@@ -28,9 +28,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             await AssertSubscriptionRules(messageHandlerMappings.First(), subscription);
             await DeleteSubscriptionAsync(subscription);
         }
-        
+
         [Fact]
-        public async Task DoesNotAddStandardSubscriptionRuleIfExists()
+        public async Task DoesNotThrowIfStandardSubscriptionRuleIfExists()
         {
             var messageHandlerMappings = new List<MessageHandlerMapping>
             {
@@ -38,10 +38,37 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 BuildSubscriptionFilter<AircraftLanded>()),
             };
 
-            var subscription = nameof(DoesNotAddStandardSubscriptionRuleIfExists);
+            var subscription = nameof(DoesNotThrowIfStandardSubscriptionRuleIfExists);
             await DeleteSubscriptionAsync(subscription);
             await CreateSubscriptionAsync(subscription);
             await CreateSubscriptionRulesAsync(messageHandlerMappings, subscription);
+
+            await new AzureServiceBusAdminClient(_connectionString, _topic, subscription)
+                .ConfigureAsync(messageHandlerMappings, new MessageBusOptions());
+
+            await AssertSubscriptionRules(messageHandlerMappings[0], subscription);
+            await DeleteSubscriptionAsync(subscription);
+        }
+        
+        [Fact]
+        public async Task UpdatesExistingIncorrectStandardSubscriptionRule()
+        {
+            var messageHandlerMappings = new List<MessageHandlerMapping>
+            {
+                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler),
+                BuildSubscriptionFilter<AircraftLanded>()),
+            };
+            
+            var incorrectMessageHandlerMappings = new List<MessageHandlerMapping>
+            {
+                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler),
+                BuildSubscriptionFilter<AircraftTakenOff>())
+            };
+
+            var subscription = nameof(UpdatesExistingIncorrectStandardSubscriptionRule);
+            await DeleteSubscriptionAsync(subscription);
+            await CreateSubscriptionAsync(subscription);
+            await CreateSubscriptionRulesAsync(incorrectMessageHandlerMappings, subscription);
 
             await new AzureServiceBusAdminClient(_connectionString, _topic, subscription)
                 .ConfigureAsync(messageHandlerMappings, new MessageBusOptions());
@@ -72,7 +99,72 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             await AssertSubscriptionRules(messageHandlerMappings.First(), subscription);
             await DeleteSubscriptionAsync(subscription);
         }
-        
+
+        [Fact]
+        public async Task DoesNotThrowIfCustomSubscriptionRuleIfExists()
+        {
+            var customMessageProperties = new Dictionary<string, string>
+            {
+                { "EventType", "Urgent" },
+                { "Importance", "Very" }
+            };
+
+            var messageHandlerMappings = new List<MessageHandlerMapping>
+            {
+                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler),
+                BuildSubscriptionFilter<AircraftLanded>(customMessageProperties)),
+            };
+
+            var subscription = nameof(DoesNotThrowIfCustomSubscriptionRuleIfExists);
+            await DeleteSubscriptionAsync(subscription);
+            await CreateSubscriptionAsync(subscription);
+            await CreateSubscriptionRulesAsync(messageHandlerMappings, subscription);
+
+            await new AzureServiceBusAdminClient(_connectionString, _topic, subscription)
+                .ConfigureAsync(messageHandlerMappings, new MessageBusOptions());
+
+            await AssertSubscriptionRules(messageHandlerMappings[0], subscription);
+            await DeleteSubscriptionAsync(subscription);
+        }
+
+        [Fact]
+        public async Task UpdatesExistingIncorrectCustomSubscriptionRule()
+        {
+            var correctCustomMessageProperties = new Dictionary<string, string>
+            {
+                { "EventType", "Urgent" },
+                { "Importance", "Very" }
+            };
+            
+            var correctMessageHandlerMappings = new List<MessageHandlerMapping>
+            {
+                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler),
+                BuildSubscriptionFilter<AircraftLanded>(correctCustomMessageProperties)),
+            };
+            
+            var incorrectCustomMessageProperties = new Dictionary<string, string>
+            {
+                { "Importance", "NotVery" }
+            };
+
+            var incorrectMessageHandlerMappings = new List<MessageHandlerMapping>
+            {
+                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler),
+                BuildSubscriptionFilter<AircraftLanded>(incorrectCustomMessageProperties)),
+            };
+
+            var subscription = nameof(UpdatesExistingIncorrectCustomSubscriptionRule);
+            await DeleteSubscriptionAsync(subscription);
+            await CreateSubscriptionAsync(subscription);
+            await CreateSubscriptionRulesAsync(incorrectMessageHandlerMappings, subscription);
+
+            await new AzureServiceBusAdminClient(_connectionString, _topic, subscription)
+                .ConfigureAsync(correctMessageHandlerMappings, new MessageBusOptions());
+
+            await AssertSubscriptionRules(correctMessageHandlerMappings[0], subscription);
+            await DeleteSubscriptionAsync(subscription);
+        }
+
         [Fact]
         public async Task AddsMultipleCustomSubscriptionRules()
         {
@@ -81,7 +173,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 { "AircraftType", "Commercial" },
                 { "AircraftSize", "Heavy" }
             };
-            
+
             var customMessageProperties2 = new Dictionary<string, string>
             {
                 { "TakeOffSpeed", "130kts" }
@@ -109,7 +201,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             var messageHandlerMappings = new List<MessageHandlerMapping>
             {
-                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler), 
+                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler),
                     BuildSubscriptionFilter<AircraftLanded>()),
                 new MessageHandlerMapping(typeof(AircraftTakenOff), typeof(AircraftTakenOffHandler),
                     BuildSubscriptionFilter<AircraftTakenOff>())
@@ -162,7 +254,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             var messageHandlerMappings = new List<MessageHandlerMapping>
             {
-                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler), 
+                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler),
                 BuildSubscriptionFilter<AircraftLanded>()),
             };
 
@@ -187,7 +279,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             var messageHandlerMappings = new List<MessageHandlerMapping>
             {
-                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler), 
+                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler),
                     BuildSubscriptionFilter<AircraftLanded>()),
             };
 
@@ -212,7 +304,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             var messageHandlerMappings = new List<MessageHandlerMapping>
             {
-                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler), 
+                new MessageHandlerMapping(typeof(AircraftLanded), typeof(AircraftLandedHandler),
                     BuildSubscriptionFilter<AircraftLanded>()),
             };
             var subscription = nameof(UpdatesSubscriptionCustomOptions);
