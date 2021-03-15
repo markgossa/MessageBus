@@ -15,6 +15,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             var sut = new Message<IEvent>(aircraftLandedEvent);
 
             Assert.Equal(aircraftLandedEvent.AircraftId, ((AircraftLanded)sut.Body).AircraftId);
+            Assert.Equal(nameof(AircraftLanded), sut.Label);
         }
         
         [Fact]
@@ -25,6 +26,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             var sut = new Message<ICommand>(command);
 
             Assert.Equal(command.Source, ((CreateNewFlightPlan)sut.Body).Source);
+            Assert.Equal(nameof(CreateNewFlightPlan), sut.Label);
         }
 
         [Fact]
@@ -157,6 +159,56 @@ namespace MessageBus.Abstractions.Tests.Unit
             var sut = new Message<ICommand>(eventString);
 
             Assert.False(string.IsNullOrWhiteSpace(sut.MessageId));
+        }
+
+        [Fact]
+        public void AddsMessageVersionPropertyIfOverrideDefaultMessagePropertiesFalse()
+        {
+            var aircraftLandedEventV2 = new Models.Events.V2.AircraftLanded();
+
+            var sut = new Message<IEvent>(aircraftLandedEventV2);
+            sut.Build(new MessageBusOptions());
+
+            Assert.Equal(2, int.Parse(sut.MessageProperties[_defaultMessageVersionPropertyName]));
+        }
+        
+        [Fact]
+        public void DoesNotAddMessageVersionPropertyIfNoMessageVersion()
+        {
+            var aircraftLandedEventV2 = new AircraftLanded();
+
+            var sut = new Message<IEvent>(aircraftLandedEventV2);
+            sut.Build(new MessageBusOptions());
+
+            Assert.False(sut.MessageProperties.ContainsKey(_defaultMessageVersionPropertyName));
+        }
+        
+        [Theory]
+        [InlineData("MyMessageVersion")]
+        [InlineData("Version")]
+        public void AddsMessageCustomVersionPropertyIfOverrideDefaultMessagePropertiesFalse(string messageVersionPropertyName)
+        {
+            var aircraftLandedEventV2 = new Models.Events.V2.AircraftLanded();
+
+            var sut = new Message<IEvent>(aircraftLandedEventV2);
+            sut.Build(new MessageBusOptions { MessageVersionPropertyName = messageVersionPropertyName });
+
+            Assert.Equal(2, int.Parse(sut.MessageProperties[messageVersionPropertyName]));
+        }
+        
+        [Fact]
+        public void DoesNotAddMessageVersionPropertyIfOverrideDefaultMessagePropertiesTrue()
+        {
+            var aircraftLandedEventV2 = new Models.Events.V2.AircraftLanded();
+
+            var sut = new Message<IEvent>(aircraftLandedEventV2)
+            {
+                OverrideDefaultMessageProperties = true
+            };
+
+            sut.Build(new MessageBusOptions());
+
+            Assert.False(sut.MessageProperties.ContainsKey(_defaultMessageVersionPropertyName));
         }
     }
 }

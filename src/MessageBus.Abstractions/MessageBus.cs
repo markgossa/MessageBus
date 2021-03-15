@@ -62,17 +62,9 @@ namespace MessageBus.Abstractions
             return this;
         }
 
-        public async Task PublishAsync(Message<IEvent> eventObject)
-        {
-            AddMessageProperties(eventObject);
-            await _messageBusClient.PublishAsync(eventObject);
-        }
+        public async Task PublishAsync(Message<IEvent> eventObject) => await _messageBusClient.PublishAsync(eventObject);
 
-        public async Task SendAsync(Message<ICommand> command)
-        {
-            AddMessageProperties(command);
-            await _messageBusClient.SendAsync(command);
-        }
+        public async Task SendAsync(Message<ICommand> command) => await _messageBusClient.SendAsync(command);
 
         public IMessageBus AddMessagePreProcessor<T>() where T : class, IMessagePreProcessor
         {
@@ -176,32 +168,6 @@ namespace MessageBus.Abstractions
 
             subscriptionFilter.Build(_messageBusOptions, typeof(TMessage));
             return subscriptionFilter!;
-        }
-
-        private void AddMessageProperties<T>(Message<T> message) where T : IMessage
-        {
-            if (!message.OverrideDefaultMessageProperties)
-            {
-                AddMessageTypeProperty(message);
-                AddMessageVersionProperty(message);
-            }
-        }
-
-        private void AddMessageTypeProperty<T>(Message<T> message) where T : IMessage
-        {
-            if (message.Body != null)
-            {
-                message.MessageProperties.Add(_messageBusOptions.MessageTypePropertyName, message.Body.GetType().Name);
-            }
-        }
-
-        private void AddMessageVersionProperty<T>(Message<T> message) where T : IMessage
-        {
-            var messageVersion = GetMessageVersion(message);
-            if (messageVersion != null)
-            {
-                message.MessageProperties.Add(_messageBusOptions.MessageVersionPropertyName, messageVersion);
-            }
         }
 
         private static string? GetMessageVersion<T>(Message<T> message) where T : IMessage
