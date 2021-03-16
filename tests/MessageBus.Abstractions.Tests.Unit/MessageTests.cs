@@ -1,6 +1,7 @@
 ﻿using MessageBus.Abstractions.Tests.Unit.Models.Commands;
 using MessageBus.Abstractions.Tests.Unit.Models.Events;
 using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace MessageBus.Abstractions.Tests.Unit
@@ -15,7 +16,6 @@ namespace MessageBus.Abstractions.Tests.Unit
             var sut = new Message<IEvent>(aircraftLandedEvent);
 
             Assert.Equal(aircraftLandedEvent.AircraftId, ((AircraftLanded)sut.Body).AircraftId);
-            Assert.Equal(nameof(AircraftLanded), sut.Label);
         }
         
         [Fact]
@@ -26,7 +26,6 @@ namespace MessageBus.Abstractions.Tests.Unit
             var sut = new Message<ICommand>(command);
 
             Assert.Equal(command.Source, ((CreateNewFlightPlan)sut.Body).Source);
-            Assert.Equal(nameof(CreateNewFlightPlan), sut.Label);
         }
 
         [Fact]
@@ -209,6 +208,187 @@ namespace MessageBus.Abstractions.Tests.Unit
             sut.Build(new MessageBusOptions());
 
             Assert.False(sut.MessageProperties.ContainsKey(_defaultMessageVersionPropertyName));
+            Assert.Empty(sut.MessageProperties);
+        }
+        
+        [Fact]
+        public void AddsCustomMessagePropertiesIfOverrideDefaultMessagePropertiesTrue()
+        {
+            var aircraftLandedEventV2 = new Models.Events.V2.AircraftLanded();
+
+            var customMessageProperties = new Dictionary<string, string>
+                {
+                    { "Property1", "1" },
+                    { "Property2", "2" }
+                };
+
+            var sut = new Message<IEvent>(aircraftLandedEventV2)
+            {
+                OverrideDefaultMessageProperties = true,
+                MessageProperties = customMessageProperties
+            };
+
+            sut.Build(new MessageBusOptions());
+
+            Assert.Equal(2, sut.MessageProperties.Count);
+            Assert.Equal(customMessageProperties, sut.MessageProperties);
+        }
+        
+        [Fact]
+        public void AddsCustomMessagePropertiesAndMessageVersionIfOverrideDefaultMessagePropertiesFalse()
+        {
+            var aircraftLandedEventV2 = new Models.Events.V2.AircraftLanded();
+
+            var customMessageProperties = new Dictionary<string, string>
+                {
+                    { "Property1", "1" },
+                    { "Property2", "2" }
+                };
+
+            var sut = new Message<IEvent>(aircraftLandedEventV2)
+            {
+                OverrideDefaultMessageProperties = false,
+                MessageProperties = customMessageProperties
+            };
+
+            sut.Build(new MessageBusOptions());
+
+            Assert.Equal(3, sut.MessageProperties.Count);
+            Assert.Equal(customMessageProperties, sut.MessageProperties);
+            Assert.Equal(2, int.Parse(sut.MessageProperties[_defaultMessageVersionPropertyName]));
+        }
+
+        [Theory]
+        [InlineData("Mylabel")]
+        [InlineData("Mylabel2")]
+        public void LabelReturnsLabelIfLabelSpecified(string label)
+        {
+            var aircraftLandedEvent = BuildAircraftLandedEvent();
+
+            var sut = new Message<IEvent>(aircraftLandedEvent)
+            {
+                Label = label
+            };
+
+            Assert.Equal(label, sut.Label);
+        }
+        
+        [Fact]
+        public void LabelReturnsTheNameOfTheTypeOfTheMessageIfNoLabelOrMessageTypePropertySpecified()
+        {
+            var aircraftLandedEvent = BuildAircraftLandedEvent();
+
+            var sut = new Message<IEvent>(aircraftLandedEvent);
+
+            Assert.Equal(nameof(AircraftLanded), sut.Label);
+        }
+        
+        [Theory]
+        [InlineData("MyAircraftLanded")]
+        [InlineData("AnotherAircraftLanded")]
+        public void LabelReturnsNullIfMessageTypePropertySpecified(string messageType)
+        {
+            var aircraftLandedEvent = BuildAircraftLandedEvent();
+
+            var sut = new Message<IEvent>(aircraftLandedEvent)
+            {
+                MessageProperties = new Dictionary<string, string>
+                {
+                    { "MessageType", messageType }
+                }
+            };
+
+            sut.Build(new());
+
+            Assert.True(string.IsNullOrWhiteSpace(sut.Label));
+            Assert.Equal(messageType, sut.MessageProperties[_defaultMessageTypePropertyName]);
+        }
+        
+        [Theory]
+        [InlineData("MyMessageType", "MyAircraftLanded")]
+        [InlineData("MyMessageType123", "AnotherAircraftLanded")]
+        public void LabelReturnsNullIfCustomMessageTypePropertySpecified(string messageTypePropertyName,
+            string messageType)
+        {
+            var aircraftLandedEvent = BuildAircraftLandedEvent();
+
+            var sut = new Message<IEvent>(aircraftLandedEvent)
+            {
+                MessageProperties = new Dictionary<string, string>
+                {
+                    { messageTypePropertyName, messageType }
+                }
+            };
+
+            sut.Build(new MessageBusOptions { MessageTypePropertyName = messageTypePropertyName });
+
+            Assert.True(string.IsNullOrWhiteSpace(sut.Label));
+            Assert.Equal(messageType, sut.MessageProperties[messageTypePropertyName]);
+        }
+        
+        [Theory]
+        [InlineData("MyMessageType", "")]
+        [InlineData("MyMessageType123", " ")]
+        [InlineData("MyMessageType123", null)]
+        public void LabelReturnsTypeOfMessageIfCustomMessageTypePropertySpecifiedButIsEmpty(string messageTypePropertyName,
+            string messageType)
+        {
+            var aircraftLandedEvent = BuildAircraftLandedEvent();
+
+            var sut = new Message<IEvent>(aircraftLandedEvent)
+            {
+                MessageProperties = new Dictionary<string, string>
+                {
+                    { messageTypePropertyName, messageType }
+                }
+            };
+
+            sut.Build(new MessageBusOptions { MessageTypePropertyName = messageTypePropertyName });
+
+            Assert.Equal(nameof(AircraftLanded), sut.Label);
+            Assert.Equal(messageType, sut.MessageProperties[messageTypePropertyName]);
+        }
+
+        [Theory]
+        [InlineData("mylabel", "AircraftLandedFine")]
+        [InlineData("Label123", "AircraftHadBumpyLanding")]
+        public void LabelReturnsLabelIfBothLabelAndMessageTypeSpecified(string label, 
+            string messageType)
+        {
+            var aircraftLandedEvent = BuildAircraftLandedEvent();
+
+            var sut = new Message<IEvent>(aircraftLandedEvent)
+            {
+                Label = label,
+                MessageProperties = new()
+                {
+                    { "MessageType", messageType }
+                }
+            };
+
+            Assert.Equal(messageType, sut.MessageProperties[_defaultMessageTypePropertyName]);
+            Assert.Equal(label, sut.Label);
+        }
+        
+        [Theory]
+        [InlineData("mylabel", "AircraftLandedFine", "MyMessageType")]
+        [InlineData("Label123", "AircraftHadBumpyLanding", "MessageIdentifier")]
+        public void LabelReturnsLabelIfBothLabelAndCustomMessageTypeSpecified(string label, 
+            string messageType, string messageTypePropertyName)
+        {
+            var aircraftLandedEvent = BuildAircraftLandedEvent();
+
+            var sut = new Message<IEvent>(aircraftLandedEvent)
+            {
+                Label = label,
+                MessageProperties = new()
+                {
+                    { messageTypePropertyName, messageType }
+                }
+            };
+
+            Assert.Equal(messageType, sut.MessageProperties[messageTypePropertyName]);
+            Assert.Equal(label, sut.Label);
         }
     }
 }

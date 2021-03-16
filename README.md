@@ -33,7 +33,7 @@ MessageBus is an abstraction layer for messaging technologies such as Azure Serv
     - [Dead lettering messages](#dead-lettering-messages)
     - [Message Processors](#message-processors)
     - [Message Versioning](#message-versioning)
-    - [Change the default properties (MessageVersion)](#change-the-default-properties-messageversion)
+    - [Change the default message properties](#change-the-default-message-properties)
     - [Using custom subscription filters](#using-custom-subscription-filters)
   - [Health checks](#health-checks)
   - [Azure Service Bus](#azure-service-bus)
@@ -278,7 +278,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Services
 
 ## Sending messages
 
-You can either publish an IEvent or send an ICommand. In either case, the Type of the message being sent is automatically used as the `Label` on the sent message.
+You can either publish an IEvent or send an ICommand. In either case, the Type of the message being sent is automatically used as the `Label` on the sent message unless you override the `Label` with a custom value or you specify a `MessageType` custom message property (or use the MessageBusOptions to set a different `MessageTypePropertyName` instead of `MessageType`). If you specify both a `Label` and `MessageType` custom property then the `Label` is overridden.
 
 You can publish an IEvent or simple string. Likewise, you can either send an ICommand or a simple string.
 
@@ -286,7 +286,7 @@ When sending messages from handlers using `MessageContext.SendAsync()` or `Messa
 
 ### Send commands or publish events from a message handler
 
-You can send commands or publish events from ICommand objects or IEvent objects respectively or you can send just a string as a message. See below.
+You can send commands or publish events from ICommand objects or IEvent objects respectively or you can send just a string as a message. See examples below.
 
 ```csharp
 using MessageBus.Abstractions;
@@ -299,14 +299,14 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers
     {
         public async Task HandleAsync(IMessageContext<AircraftLeftRunway> context)
         {
-            // Publish an event from an IEvent e.g. AircraftReachedGate
+            // Publish an event from an IEvent e.g. AircraftReachedGate. Label is set to AircraftReachedGate.
             var aircraftReachedGateEvent = new AircraftReachedGate { AirlineId = context.Message.RunwayId };
             await context.PublishAsync(new Message<IEvent>(aircraftReachedGateEvent));
 
             // Publish an event from a string
             await context.PublishAsync(new Message<IEvent>("Hello world!"));
 
-            // Publish a command from an ICommand e.g. StartEngines
+            // Publish a command from an ICommand e.g. StartEngines. Label is set to StartEngines.
             var startEnginesCommand = new StartEngines { EngineId = context.Message.Destination };
             await context.SendAsync(new Message<ICommand>(startEnginesCommand));
             
@@ -319,7 +319,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers
 
 ### Send commands or publish events from a service
 
-You can send commands or publish events from ICommand objects or IEvent objects respectively or you can send just a string as a message. See below.
+You can send commands or publish events from ICommand objects or IEvent objects respectively or you can send just a string as a message.
+
+See examples below.
 
 ```csharp
 using MessageBus.Abstractions;
@@ -364,6 +366,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Services
 You can set custom message properties on messages that are sent.
 
 `MessageId` and `CorrelationId` can also be overridden. By default `MessageId` defaults to a new Guid. `CorrelationId` defaults to null if sending from an injected instance of `IMessageBus` but defaults to the `CorrelationId` of the received message when sending using `MessageContext<T>` within a message handler.
+
+If you want to add a `MessageType` property instead of the `Label` on the outgoing message, you can do include this in the custom message properties.
 
 ```csharp
 public async Task SendMessages()
@@ -640,9 +644,11 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Models.V2
 }
 ```
 
-### Change the default properties (MessageVersion)
+### Change the default message properties
 
 If using Azure Service Bus, the `AzureServiceBusAdminClient` is used to create and configure the subscription. By default, the message property that determines the message version is called `MessageVersion` however this can be configured by passing `MessageBusOptions` into `AddMessageBus()`.
+
+By default, received messages are routed to the correct message handler according to the `Label` and if this is not present, it will look for the `MessageType` property on the message. You can the name of the `MessageType` property by using `MessageBusOptions`.
 
 ```csharp
 using MessageBus.Abstractions;
@@ -675,6 +681,7 @@ namespace MessageBus.Example
         {
             var options = new MessageBusOptions
             {
+                MessageTypePropertyName = "MyMessageType",
                 MessageVersionPropertyName = "MyMessageVersion"
             };
 

@@ -8,6 +8,7 @@ namespace MessageBus.Abstractions.Tests.Unit
     public class MessageTestsBase
     {
         protected const string _defaultMessageVersionPropertyName = "MessageVersion";
+        protected const string _defaultMessageTypePropertyName = "MessageType";
 
         protected static CreateNewFlightPlan BuildCreateNewFlightPlanCommand()
            => new CreateNewFlightPlan

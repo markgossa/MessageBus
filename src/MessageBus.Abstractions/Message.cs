@@ -13,12 +13,20 @@ namespace MessageBus.Abstractions
         public Dictionary<string, string> MessageProperties { get; set; }
         public bool OverrideDefaultMessageProperties { get; set; }
         public DateTimeOffset ScheduledEnqueueTime { get; set; }
-        public string Label => Body.GetType().Name;
+        public string? Label
+        {
+            get => !IsMessageTypeSpecified()
+                  ? GetLabel()
+                  : null;
+
+            set => _label = value;
+        }
 
         private MessageBusOptions? _messageBusOptions;
+        private string? _label;
 
         public Message(T body, string? correlationId = null, string? messageId = null,
-            Dictionary<string, string>? messageProperties = null) : this(correlationId, 
+            Dictionary<string, string>? messageProperties = null) : this(correlationId,
                 messageId, messageProperties)
         {
             Body = body;
@@ -37,17 +45,29 @@ namespace MessageBus.Abstractions
             AddMessageVersionProperty();
         }
 
-        private Message(string? correlationId = null, string? messageId = null,
-            Dictionary<string, string>? messageProperties = null)
+        #nullable disable
+        private Message(string correlationId = null, string messageId = null,
+            Dictionary<string, string> messageProperties = null)
         {
             MessageProperties = messageProperties ?? new Dictionary<string, string>();
             CorrelationId = correlationId;
             MessageId = messageId ?? Guid.NewGuid().ToString();
         }
+        # nullable enable
+
+        private bool IsMessageTypeSpecified()
+            => _messageBusOptions != null
+                && MessageProperties.TryGetValue(_messageBusOptions!.MessageTypePropertyName, out var messageType)
+                && !string.IsNullOrWhiteSpace(messageType);
+
+        private string GetLabel()
+            => !string.IsNullOrWhiteSpace(_label)
+                ? _label
+                : Body.GetType().Name;
 
         private void AddMessageVersionProperty()
         {
-            var messageVersion = Body.GetType().CustomAttributes.FirstOrDefault(b => 
+            var messageVersion = Body.GetType().CustomAttributes.FirstOrDefault(b =>
                 b.AttributeType == typeof(MessageVersionAttribute))?.ConstructorArguments
                 .FirstOrDefault().Value?.ToString();
 
