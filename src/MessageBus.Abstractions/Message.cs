@@ -32,22 +32,24 @@ namespace MessageBus.Abstractions
             Body = body;
         }
 
-        public Message(string body, string? correlationId = null, string? messageId = null,
+        public Message(string body, string? label, string? correlationId = null, string? messageId = null,
             Dictionary<string, string>? messageProperties = null) : this(correlationId,
                 messageId, messageProperties)
         {
             BodyAsString = body;
+            _label = label;
         }
 
         internal void Build(MessageBusOptions messageBusOptions)
         {
             _messageBusOptions = messageBusOptions;
             AddMessageVersionProperty();
+            ValidateLabelOrMessageTypePropertyPresent();
         }
 
         #nullable disable
-        private Message(string correlationId = null, string messageId = null,
-            Dictionary<string, string> messageProperties = null)
+        private Message(string correlationId, string messageId,
+            Dictionary<string, string> messageProperties)
         {
             MessageProperties = messageProperties ?? new Dictionary<string, string>();
             CorrelationId = correlationId;
@@ -60,20 +62,28 @@ namespace MessageBus.Abstractions
                 && MessageProperties.TryGetValue(_messageBusOptions!.MessageTypePropertyName, out var messageType)
                 && !string.IsNullOrWhiteSpace(messageType);
 
-        private string GetLabel()
+        private string? GetLabel()
             => !string.IsNullOrWhiteSpace(_label)
                 ? _label
-                : Body.GetType().Name;
+                : Body?.GetType().Name;
 
         private void AddMessageVersionProperty()
         {
-            var messageVersion = Body.GetType().CustomAttributes.FirstOrDefault(b =>
+            var messageVersion = Body?.GetType().CustomAttributes.FirstOrDefault(b =>
                 b.AttributeType == typeof(MessageVersionAttribute))?.ConstructorArguments
                 .FirstOrDefault().Value?.ToString();
 
             if (messageVersion != null && _messageBusOptions != null && !OverrideDefaultMessageProperties)
             {
                 MessageProperties.Add(_messageBusOptions.MessageVersionPropertyName, messageVersion);
+            }
+        }
+
+        private void ValidateLabelOrMessageTypePropertyPresent()
+        {
+            if (Label is null && !IsMessageTypeSpecified())
+            {
+                throw new ArgumentNullException(nameof(Label));
             }
         }
     }

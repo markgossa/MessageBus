@@ -17,7 +17,7 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             Assert.Equal(aircraftLandedEvent.AircraftId, ((AircraftLanded)sut.Body).AircraftId);
         }
-        
+
         [Fact]
         public void CreatesNewMessageFromICommand()
         {
@@ -33,17 +33,17 @@ namespace MessageBus.Abstractions.Tests.Unit
         {
             var eventString = Guid.NewGuid().ToString();
 
-            var sut = new Message<IEvent>(eventString);
+            var sut = new Message<IEvent>(eventString, "MyLabel");
 
             Assert.Equal(eventString, sut.BodyAsString);
         }
-        
+
         [Fact]
         public void CreatesNewICommandMessageFromString()
         {
             var eventString = Guid.NewGuid().ToString();
 
-            var sut = new Message<ICommand>(eventString);
+            var sut = new Message<ICommand>(eventString, "MyLabel");
 
             Assert.Equal(eventString, sut.BodyAsString);
         }
@@ -68,7 +68,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.Equal(messageId, sut.MessageId);
             Assert.Equal(messageProperties, sut.MessageProperties);
         }
-        
+
         [Fact]
         public void CreatesNewCommandMessageWithProperties()
         {
@@ -104,7 +104,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.Equal(messageId, sut.MessageId);
             Assert.Equal(messageProperties, sut.MessageProperties);
         }
-        
+
         [Fact]
         public void CreatesNewCommandMessageWithPropertiesUsingConstructor()
         {
@@ -135,11 +135,11 @@ namespace MessageBus.Abstractions.Tests.Unit
         {
             var eventString = Guid.NewGuid().ToString();
 
-            var sut = new Message<IEvent>(eventString);
+            var sut = new Message<IEvent>(eventString, "MyLabel");
 
             Assert.False(string.IsNullOrWhiteSpace(sut.MessageId));
         }
-        
+
         [Fact]
         public void CreatesNewMessageFromICommandWithDefaultMessageIdAndCorrelationId()
         {
@@ -155,7 +155,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         {
             var eventString = Guid.NewGuid().ToString();
 
-            var sut = new Message<ICommand>(eventString);
+            var sut = new Message<ICommand>(eventString, "MyLabel");
 
             Assert.False(string.IsNullOrWhiteSpace(sut.MessageId));
         }
@@ -170,7 +170,7 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             Assert.Equal(2, int.Parse(sut.MessageProperties[_defaultMessageVersionPropertyName]));
         }
-        
+
         [Fact]
         public void DoesNotAddMessageVersionPropertyIfNoMessageVersion()
         {
@@ -181,7 +181,7 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             Assert.False(sut.MessageProperties.ContainsKey(_defaultMessageVersionPropertyName));
         }
-        
+
         [Theory]
         [InlineData("MyMessageVersion")]
         [InlineData("Version")]
@@ -194,7 +194,7 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             Assert.Equal(2, int.Parse(sut.MessageProperties[messageVersionPropertyName]));
         }
-        
+
         [Fact]
         public void DoesNotAddMessageVersionPropertyIfOverrideDefaultMessagePropertiesTrue()
         {
@@ -210,7 +210,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.False(sut.MessageProperties.ContainsKey(_defaultMessageVersionPropertyName));
             Assert.Empty(sut.MessageProperties);
         }
-        
+
         [Fact]
         public void AddsCustomMessagePropertiesIfOverrideDefaultMessagePropertiesTrue()
         {
@@ -233,7 +233,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.Equal(2, sut.MessageProperties.Count);
             Assert.Equal(customMessageProperties, sut.MessageProperties);
         }
-        
+
         [Fact]
         public void AddsCustomMessagePropertiesAndMessageVersionIfOverrideDefaultMessagePropertiesFalse()
         {
@@ -272,7 +272,7 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             Assert.Equal(label, sut.Label);
         }
-        
+
         [Fact]
         public void LabelReturnsTheNameOfTheTypeOfTheMessageIfNoLabelOrMessageTypePropertySpecified()
         {
@@ -282,7 +282,7 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             Assert.Equal(nameof(AircraftLanded), sut.Label);
         }
-        
+
         [Theory]
         [InlineData("MyAircraftLanded")]
         [InlineData("AnotherAircraftLanded")]
@@ -303,7 +303,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.True(string.IsNullOrWhiteSpace(sut.Label));
             Assert.Equal(messageType, sut.MessageProperties[_defaultMessageTypePropertyName]);
         }
-        
+
         [Theory]
         [InlineData("MyMessageType", "MyAircraftLanded")]
         [InlineData("MyMessageType123", "AnotherAircraftLanded")]
@@ -325,7 +325,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.True(string.IsNullOrWhiteSpace(sut.Label));
             Assert.Equal(messageType, sut.MessageProperties[messageTypePropertyName]);
         }
-        
+
         [Theory]
         [InlineData("MyMessageType", "")]
         [InlineData("MyMessageType123", " ")]
@@ -352,7 +352,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         [Theory]
         [InlineData("mylabel", "AircraftLandedFine")]
         [InlineData("Label123", "AircraftHadBumpyLanding")]
-        public void LabelReturnsLabelIfBothLabelAndMessageTypeSpecified(string label, 
+        public void LabelReturnsLabelIfBothLabelAndMessageTypeSpecified(string label,
             string messageType)
         {
             var aircraftLandedEvent = BuildAircraftLandedEvent();
@@ -369,11 +369,11 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.Equal(messageType, sut.MessageProperties[_defaultMessageTypePropertyName]);
             Assert.Equal(label, sut.Label);
         }
-        
+
         [Theory]
         [InlineData("mylabel", "AircraftLandedFine", "MyMessageType")]
         [InlineData("Label123", "AircraftHadBumpyLanding", "MessageIdentifier")]
-        public void LabelReturnsLabelIfBothLabelAndCustomMessageTypeSpecified(string label, 
+        public void LabelReturnsLabelIfBothLabelAndCustomMessageTypeSpecified(string label,
             string messageType, string messageTypePropertyName)
         {
             var aircraftLandedEvent = BuildAircraftLandedEvent();
@@ -389,6 +389,86 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             Assert.Equal(messageType, sut.MessageProperties[messageTypePropertyName]);
             Assert.Equal(label, sut.Label);
+        }
+
+        [Fact]
+        public void ThrowsIfMessageFromStringAndLabelAndMessageTypeNotSpecified()
+        {
+            var eventString = Guid.NewGuid().ToString();
+            var sut = new Message<IEvent>(eventString, null);
+
+            Assert.Throws<ArgumentNullException>(() => sut.Build(new()));
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData(" ")]
+        public void ThrowsIfMessageFromStringAndLabelEmpty(string label)
+        {
+            var eventString = Guid.NewGuid().ToString();
+            var sut = new Message<IEvent>(eventString, label);
+
+            Assert.Throws<ArgumentNullException>(() => sut.Build(new()));
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData(" ")]
+        public void ThrowsIfMessageFromStringAndMessageTypeEmpty(string messageType)
+        {
+            var eventString = Guid.NewGuid().ToString();
+            var customMessageProperties = new Dictionary<string, string>() { { _defaultMessageTypePropertyName, messageType } };
+            var sut = new Message<IEvent>(eventString, null) { MessageProperties = customMessageProperties };
+
+            Assert.Throws<ArgumentNullException>(() => sut.Build(new()));
+        }
+
+        [Fact]
+        public void DoesNotThrowIfMessageFromStringAndOnlyLabelSpecified()
+        {
+            var eventString = Guid.NewGuid().ToString();
+            var sut = new Message<IEvent>(eventString, "StringMessage");
+            sut.Build(new());
+
+            Assert.Equal(eventString, sut.BodyAsString);
+        }
+
+        [Fact]
+        public void DoesNotThrowIfMessageFromStringAndOnlyMessageTypeSpecified()
+        {
+            var eventString = Guid.NewGuid().ToString();
+            var sut = new Message<IEvent>(eventString, null)
+            {
+                MessageProperties = new()
+                {
+                    { _defaultMessageTypePropertyName, "StringMessage" }
+                }
+            };
+
+            sut.Build(new());
+
+            Assert.Equal(eventString, sut.BodyAsString);
+        }
+
+        [Theory]
+        [InlineData("MyMessageType")]
+        [InlineData("MyMessageType123")]
+        public void DoesNotThrowIfMessageFromStringAndOnlyCustomMessageTypeSpecified(string messageTypePropertyName)
+        {
+            var eventString = Guid.NewGuid().ToString();
+            var sut = new Message<IEvent>(eventString, null)
+            {
+                MessageProperties = new()
+                {
+                    { messageTypePropertyName, "StringMessage" }
+                }
+            };
+
+            sut.Build(new() { MessageTypePropertyName = messageTypePropertyName });
+
+            Assert.Equal(eventString, sut.BodyAsString);
         }
     }
 }
