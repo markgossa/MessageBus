@@ -161,10 +161,7 @@ namespace MessageBus.Abstractions
 
         private SubscriptionFilter BuildSubscriptionFilter<TMessage>(SubscriptionFilter? subscriptionFilter) where TMessage : IMessage
         {
-            if (subscriptionFilter is null)
-            {
-                subscriptionFilter = new SubscriptionFilter();
-            }
+            subscriptionFilter ??= new SubscriptionFilter();
 
             subscriptionFilter.Build(_messageBusOptions, typeof(TMessage));
             return subscriptionFilter!;
