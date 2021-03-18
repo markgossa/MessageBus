@@ -85,15 +85,16 @@ namespace MessageBus.Microsoft.ServiceBus
             await _serviceBusSender.DisposeAsync();
         }
 
-        private async Task SendMessageAsync<T>(Message<T> eventMessage) where T : IMessage
+        private async Task SendMessageAsync<T>(Message<T> message) where T : IMessage
         {
-            var message = new ServiceBusMessage(BuildMessageBody(eventMessage));
-            AddMessageProperties(eventMessage, message);
-            AddMessageId(eventMessage, message);
-            AddCorrelationId(eventMessage, message);
-            AddMessageDelay(eventMessage.ScheduledEnqueueTime, message);
+            var serviceBusMessage = new ServiceBusMessage(BuildMessageBody(message));
+            AddMessageProperties(message, serviceBusMessage);
+            AddMessageId(message, serviceBusMessage);
+            AddCorrelationId(message, serviceBusMessage);
+            AddMessageDelay(message.ScheduledEnqueueTime, serviceBusMessage);
+            AddMessageLabel(message, serviceBusMessage);
 
-            await _serviceBusSender.SendMessageAsync(message);
+            await _serviceBusSender.SendMessageAsync(serviceBusMessage);
         }
 
         private ServiceBusProcessor BuildServiceBusProcessor(ServiceBusClient serviceBusClient, string topic,
@@ -206,5 +207,8 @@ namespace MessageBus.Microsoft.ServiceBus
 
         private void AddMessageDelay(DateTimeOffset enqueueTime, ServiceBusMessage message)
            => message.ScheduledEnqueueTime = enqueueTime;
+
+        private static void AddMessageLabel<T>(Message<T> eventMessage, ServiceBusMessage message) where T : IMessage
+            => message.Subject = eventMessage.Label;
     }
 }
