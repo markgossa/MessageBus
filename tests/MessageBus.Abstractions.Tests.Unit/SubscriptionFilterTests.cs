@@ -29,7 +29,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         [Theory]
         [InlineData(typeof(AircraftTakenOff))]
         [InlineData(typeof(AircraftLanded))]
-        public void ReturnsMessageTypePropertyIfMessageTypePropertyIsSetAndLabelIsNotSet(Type typeOfMessage)
+        public void EffectiveMessageLabelReturnsMessageTypePropertyIfMessageTypePropertyIsSetAndLabelIsNotSet(Type typeOfMessage)
         {
             var sut = new SubscriptionFilter
             {
@@ -50,7 +50,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         [Theory]
         [InlineData(typeof(AircraftTakenOff), "MessageType2")]
         [InlineData(typeof(AircraftLanded), "MyMessageIdentifier")]
-        public void ReturnsMessageTypePropertyIfCustomMessageTypePropertyIsSetAndLabelIsNotSet(Type typeOfMessage,
+        public void EffectiveMessageLabelReturnsMessageTypePropertyIfCustomMessageTypePropertyIsSetAndLabelIsNotSet(Type typeOfMessage,
             string messageTypePropertyName)
         {
             var sut = new SubscriptionFilter
@@ -73,7 +73,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         [InlineData(null, null, typeof(AircraftTakenOff))]
         [InlineData("", "", typeof(AircraftTakenOff))]
         [InlineData(" ", " ",typeof(AircraftLanded))]
-        public void LabelReturnsMessageTypeNamefBothLabelAndMessageNullOrWhitespace(string label, 
+        public void LabelReturnsMessageTypeNameIfBothLabelAndMessageNullOrWhitespace(string label, 
             string messageTypePropertyValue, Type typeOfMessage)
         {
             var sut = new SubscriptionFilter

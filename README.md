@@ -33,8 +33,8 @@ MessageBus is an abstraction layer for messaging technologies such as Azure Serv
     - [Dead lettering messages](#dead-lettering-messages)
     - [Message Processors](#message-processors)
     - [Message Versioning](#message-versioning)
-    - [Change the default message properties](#change-the-default-message-properties)
     - [Using custom subscription filters](#using-custom-subscription-filters)
+    - [Change the default message properties](#change-the-default-message-properties)
   - [Health checks](#health-checks)
   - [Azure Service Bus](#azure-service-bus)
     - [Configuring Service Bus Processor options](#configuring-service-bus-processor-options)
@@ -45,7 +45,7 @@ MessageBus is an abstraction layer for messaging technologies such as Azure Serv
 
 ## Getting Started with MessageBus and Azure Service Bus
 
-MessageBus calls the message handler for the message type that is received based on the `Label` of the message. For example, when a message is received with a `Label` set to `AircraftTakenOff`, the `HandleAsync()` method on the handler for that message type is called.
+MessageBus calls the message handler for the message type that is received based on the `Label` of the message. For example, when a message is received with a `Label` set to `AircraftTakenOff`, the `HandleAsync()` method on the corresponding handler is called.
 
 For a full example, see `MessageBus.HostedService.Example` project in the `examples` folder.
 
@@ -308,14 +308,14 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Handlers
             await context.PublishAsync(new Message<IEvent>(aircraftReachedGateEvent));
 
             // Publish an event from a string
-            await context.PublishAsync(new Message<IEvent>("Hello world!"));
+            await context.PublishAsync(new Message<IEvent>("Hello world!", "MyMessageLabel"));
 
             // Publish a command from an ICommand e.g. StartEngines. Label is set to StartEngines.
             var startEnginesCommand = new StartEngines { EngineId = context.Message.Destination };
             await context.SendAsync(new Message<ICommand>(startEnginesCommand));
             
             // Publish a command from a string
-            await context.SendAsync(new Message<ICommand>("Hello world!"));
+            await context.SendAsync(new Message<ICommand>("Hello world!", "MyMessageLabel"));
         }
     }
 }
@@ -352,14 +352,14 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Services
             await _messageBus.PublishAsync(new Message<IEvent>(aircraftReachedGateEvent));
             
             // Publish an event from a string
-            await _messageBus.PublishAsync(new Message<IEvent>("Hello world!"));
+            await _messageBus.PublishAsync(new Message<IEvent>("Hello world!", "MyMessageLabel"));
 
             // Publish a command from an ICommand e.g. StartEngines
             var startEnginesCommand = new StartEngines { EngineId = context.Message.Destination };
             await _messageBus.SendAsync(new Message<ICommand>(startEnginesCommand));
             
             // Publish a command from a string
-            await _messageBus.SendAsync(new Message<ICommand>("Hello world!"));
+            await _messageBus.SendAsync(new Message<ICommand>("Hello world!", "MyMessageLabel"));
         }
     }
 }
@@ -378,7 +378,7 @@ The example below publishes an event from string with a `Label` of `AircraftLand
 ```csharp
 public async Task SendMessages()
 {
-    var eventObject = new Message<IEvent>("Aircraft 1 just landed", "AircraftLanded")
+    var eventObject = new Message<IEvent>("Aircraft 1 just landed", "AircraftLandedLabel")
     {
         OverrideDefaultMessageProperties = false,
         CorrelationId = "MyCorrelationId",
@@ -650,84 +650,104 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Models.V2
 }
 ```
 
-### Change the default message properties
-
-If using Azure Service Bus, the `AzureServiceBusAdminClient` is used to create and configure the subscription. By default, the message property that determines the message version is called `MessageVersion` however this can be configured by passing `MessageBusOptions` into `AddMessageBus()`.
-
-By default, received messages are routed to the correct message handler according to the `Label` and if this is not present, it will look for the `MessageType` property on the message. You can the name of the `MessageType` property by using `MessageBusOptions`.
-
-```csharp
-using MessageBus.Abstractions;
-using MessageBus.Example.Events;
-using MessageBus.Example.Handlers;
-using MessageBus.Extensions.Microsoft.DependencyInjection;
-using MessageBus.Microsoft.ServiceBus;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace MessageBus.Example
-{
-    public class Startup
-    {
-        public static IConfiguration Configuration { get; private set; }
-
-        public static ServiceProvider Initialize()
-        {
-            BuildConfiguration();
-            return ConfigureServices();
-        }
-
-        private static void BuildConfiguration()
-            => Configuration = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddUserSecrets<Program>()
-                .Build();
-
-        private static ServiceProvider ConfigureServices()
-        {
-            var options = new MessageBusOptions
-            {
-                MessageTypePropertyName = "MyMessageType",
-                MessageVersionPropertyName = "MyMessageVersion"
-            };
-
-            var services = new ServiceCollection();
-            services.AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
-                            Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
-                            Configuration["ServiceBus:TenantId"]))
-                            Configuration["ServiceBus:TenantId"]), options)
-                        .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>();
-            
-            return services.BuildServiceProvider();
-        }
-    }
-}
-```
-
 ### Using custom subscription filters
 
 To do this, simply create a `SubscriptionFilter` and pass this to the `SubscribeToMessage()` method. Note that specifying custom message properties will mean that `MessageVersion` will not be added so you will need to add this yourself.
 
-Messages will be routed according to the label (preferred) and if this is not specified then the `MessageType` property (or a custom message type property set using `MessageBusOptions`) is used and if this also does not exist then the label on the subscription filter is set to the name of the `Type` of the message.
+Messages will be routed according to the `Label` (default) which is set to the name of the `Type` of the message. You can specify your own `Label` or use the `MessageType` property.
+
+The example below routes messages through to the `AircraftTakenOffHandler` if the received message has a label of `MyMessageLabel` and the message properties include a property `AircraftType` which is set to `Heavy`.
 
 ```csharp
-private static ServiceProvider ConfigureServices()
+public void ConfigureServices(IServiceCollection services)
 {
-    var services = new ServiceCollection();
-
-    var customMessageSubscriptionProperties = new Dictionary<string, string>
-    {
-        { "AircraftType", "Commercial" },
-        { "MessageType", nameof(AircraftTakenOff) },
-        { "MessageVersion", "1" }
+    var subscriptionFilter = new SubscriptionFilter 
+    { 
+        Label = "MyMessageLabel",
+        MessageProperties = new Dictionary<string, string>
+        {
+            { "AircraftType", "Heavy" }
+        }
     };
 
-    services.AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
-                    Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
-                    Configuration["ServiceBus:TenantId"]))
-                .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>(customMessageSubscriptionProperties);
-    
-    return services.BuildServiceProvider();
+    services.AddHostedService<MessageBusHostedService>()
+        .AddSingleton<IDependency, SomeDependency>()
+        .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
+                Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
+                Configuration["ServiceBus:TenantId"]))
+            .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>(subscriptionFilter)
+            .AddMessagePreProcessor<MessageReceivedLogger>()
+            .AddMessagePostProcessor<MessageProcessedLogger>();
+    services.AddHealthChecks().AddCheck<MessageBusHealthCheck>("MessageBus");
+}
+```
+
+### Change the default message properties
+
+If using Azure Service Bus, the `AzureServiceBusAdminClient` is used to create and configure the subscription. By default, the message property that determines the message version is called `MessageVersion` however this can be configured by passing `MessageBusOptions` into `AddMessageBus()`.
+
+By default, received messages are routed to the correct message handler if the name of the `Type` of the message matches the `Label` of the received message. If you need to use a custom `MessageType` property then you'll need to  set the `MessageTypePropertyName` using `MessageBusOptions`. You can then use a custome `SubscriptionFilter` to specify ensure those messages are delivered to the handler.
+
+```csharp
+using MessageBus.Extensions.Microsoft.DependencyInjection;
+using MessageBus.Microsoft.ServiceBus;
+using MessageBus.HostedService.Example.Events;
+using MessageBus.HostedService.Example.Handlers;
+using MessageBus.HostedService.Example.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using MessageBus.HostedService.Example.Processors;
+using MessageBus.Abstractions;
+using System.Collections.Generic;
+
+namespace MessageBus.HostedService.Example
+{
+    public class Startup
+    {
+        public IConfiguration Configuration { get; }
+
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        public void ConfigureServices(IServiceCollection services)
+        {
+            var messageBusOptions = new MessageBusOptions
+            {
+                MessageTypePropertyName = "MyMessageTypeIdentifier"
+            };
+
+            var subscriptionFilter = new SubscriptionFilter 
+            { 
+                MessageProperties = new Dictionary<string, string>
+                {
+                    { "MyMessageTypeIdentifier", "AircraftTakenOff" }
+                }
+            };
+
+            services.AddHostedService<MessageBusHostedService>()
+                .AddSingleton<IDependency, SomeDependency>()
+                .AddMessageBus(new AzureServiceBusClientBuilder(Configuration["ServiceBus:Hostname"],
+                        Configuration["ServiceBus:Topic"], Configuration["ServiceBus:Subscription"],
+                        Configuration["ServiceBus:TenantId"]), messageBusOptions)
+                    .SubscribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>(subscriptionFilter)
+                    .AddMessagePreProcessor<MessageReceivedLogger>()
+                    .AddMessagePostProcessor<MessageProcessedLogger>();
+            services.AddHealthChecks().AddCheck<MessageBusHealthCheck>("MessageBus");
+        }
+
+        public void Configure(IApplicationBuilder app)
+        {
+            app.UseRouting();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHealthChecks("/health");
+            });
+        }
+    }
 }
 ```
 
@@ -884,13 +904,17 @@ namespace MessageBus.HostedService.Example
 ## Upgrade paths and breaking changes
 
 ### Version 1.x.x to 2.x.x
+* Services using version 2.x.x is backwards compatible with version 1.x.x.
 * Incoming messages: 
-  * In version 2.x.x, the default is to use the `Label` field rather than the `MessageType` message property to identify messages. This means that Message Subscriptions will look at the `Label` on the message to identify the message and route it to the correct handler. 
-  * If you need to still use the `MessageType` property to route messages to their handler, this is still possible by now passing a `SubscriptionFilter` to `IMessageBus.SubscribeToMessage()`. For instances where you need to specify a custom `MessageTypePropertyName`, this is still possible using `MessageBusOptions`.
+  * In version 2.x.x, the default is to use the `Label` field rather than the `MessageType` message property to identify messages. This means that Message Subscriptions will look at the `Label` on the message to identify the message and route it to the correct handler.
+  * If you need to still use the `MessageType` property to route messages to their handler, this is still possible by now passing a `SubscriptionFilter` to `IMessageBus.SubscribeToMessage()` which has the `Label` to null and a `MessageType` property set. For instances where you need to specify a custom `MessageTypePropertyName`, this is still possible using `MessageBusOptions`.
   * The `SubscriptionFilter` filters inbound messages on the subscription and is linked to a handler by using `IMessageBus.SubscribeToMessage()`
   * Matching messages are routed through to their registered message handler by first looking for the message type in the following order of precedence:
     1. `Label`
     2. `MessageType` property (or custom `MessageType` property name)
+* Outgoing messages:
+  * The `Label` is now set to the name of the `Type` of the message and the `MessageType` property is no longer present however the `Label` can be set to a custom value or set to `null` and the `MessageType` property added to outbound messages for backwards compatibility.
+* Minor interface breaking changes for some interfaces in `MessageBus.Abstractions` to allow for new functionality such as sending message copies and messages with delays.
 
 ## Programming model
 
