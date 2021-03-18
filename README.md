@@ -278,7 +278,11 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Services
 
 ## Sending messages
 
-You can either publish an IEvent or send an ICommand. In either case, the Type of the message being sent is automatically used as the `Label` on the sent message unless you override the `Label` with a custom value or you specify a `MessageType` custom message property (or use the MessageBusOptions to set a different `MessageTypePropertyName` instead of `MessageType`). If you specify both a `Label` and `MessageType` custom property then the `Label` is overridden.
+You can either publish an IEvent or send an ICommand. In either case, the Type of the message being sent is automatically used as the `Label` on the sent message unless you override the `Label` with a custom value or set it to null.
+
+Instead of using `Label`, you can set this to null and specify a `MessageType` custom message property (or use the `MessageBusOptions` to set a different `MessageTypePropertyName` instead of `MessageType`).
+
+If you specify both a `Label` and `MessageType` custom property then the message will have both settings.
 
 You can publish an IEvent or simple string. Likewise, you can either send an ICommand or a simple string.
 
@@ -367,12 +371,14 @@ You can set custom message properties on messages that are sent.
 
 `MessageId` and `CorrelationId` can also be overridden. By default `MessageId` defaults to a new Guid. `CorrelationId` defaults to null if sending from an injected instance of `IMessageBus` but defaults to the `CorrelationId` of the received message when sending using `MessageContext<T>` within a message handler.
 
-If you want to add a `MessageType` property instead of the `Label` on the outgoing message, you can do include this in the custom message properties.
+By default, the `Label` on the sent message is the name of the `Type` of the message however if you want to use a `MessageType` property instead on the outgoing message, you can do include this in the custom message properties and set the `Label` to null.
+
+The example below publishes an event from string with a `Label` of `AircraftLanded`:
 
 ```csharp
 public async Task SendMessages()
 {
-    var eventObject = new Message<IEvent>("Hello World!")
+    var eventObject = new Message<IEvent>("Aircraft 1 just landed", "AircraftLanded")
     {
         OverrideDefaultMessageProperties = false,
         CorrelationId = "MyCorrelationId",

@@ -284,49 +284,6 @@ namespace MessageBus.Abstractions.Tests.Unit
         }
 
         [Theory]
-        [InlineData("MyAircraftLanded")]
-        [InlineData("AnotherAircraftLanded")]
-        public void LabelReturnsNullIfMessageTypePropertySpecified(string messageType)
-        {
-            var aircraftLandedEvent = BuildAircraftLandedEvent();
-
-            var sut = new Message<IEvent>(aircraftLandedEvent)
-            {
-                MessageProperties = new Dictionary<string, string>
-                {
-                    { "MessageType", messageType }
-                }
-            };
-
-            sut.Build(new());
-
-            Assert.True(string.IsNullOrWhiteSpace(sut.Label));
-            Assert.Equal(messageType, sut.MessageProperties[_defaultMessageTypePropertyName]);
-        }
-
-        [Theory]
-        [InlineData("MyMessageType", "MyAircraftLanded")]
-        [InlineData("MyMessageType123", "AnotherAircraftLanded")]
-        public void LabelReturnsNullIfCustomMessageTypePropertySpecified(string messageTypePropertyName,
-            string messageType)
-        {
-            var aircraftLandedEvent = BuildAircraftLandedEvent();
-
-            var sut = new Message<IEvent>(aircraftLandedEvent)
-            {
-                MessageProperties = new Dictionary<string, string>
-                {
-                    { messageTypePropertyName, messageType }
-                }
-            };
-
-            sut.Build(new MessageBusOptions { MessageTypePropertyName = messageTypePropertyName });
-
-            Assert.True(string.IsNullOrWhiteSpace(sut.Label));
-            Assert.Equal(messageType, sut.MessageProperties[messageTypePropertyName]);
-        }
-
-        [Theory]
         [InlineData("MyMessageType", "")]
         [InlineData("MyMessageType123", " ")]
         [InlineData("MyMessageType123", null)]
@@ -389,6 +346,27 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             Assert.Equal(messageType, sut.MessageProperties[messageTypePropertyName]);
             Assert.Equal(label, sut.Label);
+        }
+
+
+        [Theory]
+        [InlineData("AircraftLandedFine")]
+        [InlineData("AircraftHadBumpyLanding")]
+        public void CanSetLabelToNull(string messageType)
+        {
+            var aircraftLandedEvent = BuildAircraftLandedEvent();
+
+            var sut = new Message<IEvent>(aircraftLandedEvent)
+            {
+                Label = null,
+                MessageProperties = new()
+                {
+                    { _defaultMessageTypePropertyName, messageType }
+                }
+            };
+
+            Assert.Equal(messageType, sut.MessageProperties[_defaultMessageTypePropertyName]);
+            Assert.Null(sut.Label);
         }
 
         [Fact]

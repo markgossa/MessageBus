@@ -13,23 +13,16 @@ namespace MessageBus.Abstractions
         public Dictionary<string, string> MessageProperties { get; set; }
         public bool OverrideDefaultMessageProperties { get; set; }
         public DateTimeOffset ScheduledEnqueueTime { get; set; }
-        public string? Label
-        {
-            get => !IsMessageTypeSpecified()
-                  ? GetLabel()
-                  : null;
-
-            set => _label = value;
-        }
+        public string? Label { get; set; }
 
         private MessageBusOptions? _messageBusOptions;
-        private string? _label;
 
         public Message(T body, string? correlationId = null, string? messageId = null,
             Dictionary<string, string>? messageProperties = null) : this(correlationId,
                 messageId, messageProperties)
         {
             Body = body;
+            Label = Body.GetType().Name;
         }
 
         public Message(string body, string? label, string? correlationId = null, string? messageId = null,
@@ -37,7 +30,7 @@ namespace MessageBus.Abstractions
                 messageId, messageProperties)
         {
             BodyAsString = body;
-            _label = label;
+            Label = label;
         }
 
         internal void Build(MessageBusOptions messageBusOptions)
@@ -62,11 +55,6 @@ namespace MessageBus.Abstractions
                 && MessageProperties.TryGetValue(_messageBusOptions!.MessageTypePropertyName, out var messageType)
                 && !string.IsNullOrWhiteSpace(messageType);
 
-        private string? GetLabel()
-            => !string.IsNullOrWhiteSpace(_label)
-                ? _label
-                : Body?.GetType().Name;
-
         private void AddMessageVersionProperty()
         {
             var messageVersion = Body?.GetType().CustomAttributes.FirstOrDefault(b =>
@@ -81,7 +69,7 @@ namespace MessageBus.Abstractions
 
         private void ValidateLabelOrMessageTypePropertyPresent()
         {
-            if (Label is null && !IsMessageTypeSpecified())
+            if (string.IsNullOrWhiteSpace(Label) && !IsMessageTypeSpecified())
             {
                 throw new ArgumentNullException(nameof(Label));
             }
