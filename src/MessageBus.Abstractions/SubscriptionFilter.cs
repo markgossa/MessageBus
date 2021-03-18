@@ -16,10 +16,7 @@ namespace MessageBus.Abstractions
         {
             get
             {
-                if (!IsValidBuildParameters())
-                {
-                    throw new InvalidOperationException($"{nameof(SubscriptionFilter)} must be built before use");
-                }
+                ThrowIfNotBuilt();
 
                 if (MessageTypePropertyFound())
                 {
@@ -34,13 +31,30 @@ namespace MessageBus.Abstractions
             set => _label = value;
         }
 
+        public string EffectiveMessageLabel
+        {
+            get
+            {
+                ThrowIfNotBuilt();
+                return Label ?? MessageProperties[_messageBusOptions!.MessageTypePropertyName];
+            }
+        }
+
         private string? _label;
         private MessageBusOptions? _messageBusOptions;
         private string? _messageTypeType;
         private Dictionary<string, string> _messageProperties = new Dictionary<string, string>();
 
-        private bool IsValidBuildParameters() 
-            => _messageBusOptions != null && _messageTypeType != null;
+        private void ThrowIfNotBuilt()
+        {
+            var isValid = ValidateBuildParameters();
+            if (!isValid)
+            {
+                throw new InvalidOperationException($"{nameof(SubscriptionFilter)} must be built with valid parameters before use");
+            }
+        }
+
+        private bool ValidateBuildParameters() => _messageBusOptions != null && _messageTypeType != null;
 
         private bool MessageTypePropertyFound() 
             => MessageProperties.TryGetValue(_messageBusOptions!.MessageTypePropertyName, out var messageType)
@@ -51,9 +65,9 @@ namespace MessageBus.Abstractions
         {
             (_messageBusOptions, _messageTypeType) = (messageBusOptions, message?.Name);
 
-            if (!IsValidBuildParameters())
+            if (!ValidateBuildParameters())
             {
-                throw new ArgumentNullException($"{nameof(messageBusOptions)}, {nameof(message)}");
+                throw new ArgumentNullException($"Argument {nameof(messageBusOptions)} or {nameof(message)} are null");
             }
 
             AddMessageVersionProperty(message!);

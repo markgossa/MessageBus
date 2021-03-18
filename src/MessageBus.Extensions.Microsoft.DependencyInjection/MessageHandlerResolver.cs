@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace MessageBus.Extensions.Microsoft.DependencyInjection
 {
@@ -38,20 +39,21 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
             where TMessage : IMessage
             where TMessageHandler : IMessageHandler<TMessage>
         {
+            ThrowIfNullSubscriptionFilter(subscriptionFilter);
+
             _services.AddTransient(typeof(IMessageHandler<>).MakeGenericType(typeof(TMessage)), typeof(TMessageHandler));
 
-            _messageSubscriptions.Add(GetMessageType<TMessage>(subscriptionFilter?.MessageProperties), 
+            _messageSubscriptions.Add(subscriptionFilter.EffectiveMessageLabel,
                 new MessageHandlerMapping(typeof(TMessage), typeof(TMessageHandler), subscriptionFilter
                     ?? throw new ArgumentNullException(nameof(subscriptionFilter))));
         }
 
-        private static string GetMessageType<TMessage>(Dictionary<string, string>? messageProperties) where TMessage : IMessage
+        private static void ThrowIfNullSubscriptionFilter(SubscriptionFilter subscriptionFilter)
         {
-            const string messageTypePropertyName = "MessageType";
-
-            return messageProperties != null && messageProperties.TryGetValue(messageTypePropertyName, out var messageType)
-                    ? messageType
-                    : typeof(TMessage).Name;
+            if (subscriptionFilter is null)
+            {
+                throw new ArgumentNullException(nameof(subscriptionFilter));
+            }
         }
     }
 }

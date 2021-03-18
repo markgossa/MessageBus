@@ -10,7 +10,7 @@ using Xunit;
 
 namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
 {
-    public class MessageHandlerResolverTests
+    public class MessageHandlerResolverTests : MessageHandlerResolverTestsBase
     {
         private const string _defaultMessageTypePropertyName = "MessageType";
 
@@ -32,14 +32,6 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
             typeof(AircraftLandedHandler).GetMethod("HandleAsync").Invoke(handler, new object[] { messageContext });
         }
 
-        private static SubscriptionFilter BuildSubscriptionFilter<T>() where T : IMessage
-        {
-            var subscriptionFilter = new SubscriptionFilter();
-            subscriptionFilter.Build(new MessageBusOptions(), typeof(T));
-
-            return subscriptionFilter;
-        }
-
         [Fact]
         public void MessageHandlerResolverThrowsIfCannotFindMessageHandler()
         {
@@ -57,6 +49,8 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
                         { "AircraftType", "Commercial" }
                     }
             };
+
+            subscriptionFilter.Build(new(), typeof(AircraftLanded));
 
             var sut = new MessageHandlerResolver(new ServiceCollection());
             sut.SubcribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>(BuildSubscriptionFilter<AircraftTakenOff>());
@@ -80,7 +74,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
         }
 
         [Fact]
-        public void MessageHandlerResolverReturnsMessageHandlerInstanceForCustomSubscriptionFilterProperties()
+        public void MessageHandlerResolverReturnsMessageHandlerInstanceForCustomSubscriptionFilterMessageProperties()
         {
             var subscriptionFilter = new SubscriptionFilter
             {
@@ -89,6 +83,8 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
                         { "MessageType", "AL" }
                     }
             };
+
+            subscriptionFilter.Build(new(), typeof(AircraftLanded));
 
             var services = new ServiceCollection();
             var sut = new MessageHandlerResolver(services);
@@ -123,6 +119,31 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
             object testCode() => sut.Resolve("AL");
 
             Assert.Throws<MessageHandlerNotFoundException>(testCode);
+        }
+
+        [Theory]
+        [InlineData("MyAircraftLanded")]
+        [InlineData("ItsStillInOnePiece")]
+        public void MessageHandlerResolverReturnsMessageHandlerInstanceForCustomSubscriptionFilterLabel(string label)
+        {
+            var subscriptionFilter = new SubscriptionFilter
+            {
+                Label = label
+            };
+            subscriptionFilter.Build(new(), typeof(AircraftLanded));
+
+            var services = new ServiceCollection();
+            var sut = new MessageHandlerResolver(services);
+            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter);
+            sut.Initialize();
+            var handler = sut.Resolve(label);
+
+            Assert.NotNull(handler);
+            Assert.IsType<AircraftLandedHandler>(handler);
+
+            var messageContext = new MessageContext<AircraftLanded>(new BinaryData("Hello world!"), new object(),
+                new Mock<IMessageBus>().Object);
+            typeof(AircraftLandedHandler).GetMethod("HandleAsync").Invoke(handler, new object[] { messageContext });
         }
     }
 }

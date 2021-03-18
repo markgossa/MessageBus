@@ -23,6 +23,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             sut.Build(new MessageBusOptions(), typeOfMessage);
 
             Assert.Equal(typeOfMessage.Name, sut.Label);
+            Assert.Equal(typeOfMessage.Name, sut.EffectiveMessageLabel);
         }
 
         [Theory]
@@ -43,6 +44,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.Equal(typeOfMessage.Name, sut.MessageProperties[_defaultMessageTypePropertyName]);
             Assert.Null(sut.Label);
             Assert.False(sut.MessageProperties.ContainsKey(_defaultMessageVersionPropertyName));
+            Assert.Equal(typeOfMessage.Name, sut.EffectiveMessageLabel);
         }
 
         [Theory]
@@ -64,6 +66,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.Equal(typeOfMessage.Name, sut.MessageProperties[messageTypePropertyName]);
             Assert.Null(sut.Label);
             Assert.False(sut.MessageProperties.ContainsKey(_defaultMessageVersionPropertyName));
+            Assert.Equal(typeOfMessage.Name, sut.EffectiveMessageLabel);
         }
 
         [Theory]
@@ -85,6 +88,7 @@ namespace MessageBus.Abstractions.Tests.Unit
             sut.Build(new MessageBusOptions(), typeOfMessage);
 
             Assert.Equal(typeOfMessage.Name, sut.Label);
+            Assert.Equal(typeOfMessage.Name, sut.EffectiveMessageLabel);
         }
 
         [Fact]
@@ -96,6 +100,17 @@ namespace MessageBus.Abstractions.Tests.Unit
             };
 
             Assert.Throws<InvalidOperationException>(() => sut.Label);
+        }
+        
+        [Fact]
+        public void ThrowsIfAttemptToGetEffectiveLabelAndNotBuilt()
+        {
+            var sut = new SubscriptionFilter
+            {
+                Label = typeof(AircraftLanded).Name
+            };
+
+            Assert.Throws<InvalidOperationException>(() => sut.EffectiveMessageLabel);
         }
         
         [Fact]
