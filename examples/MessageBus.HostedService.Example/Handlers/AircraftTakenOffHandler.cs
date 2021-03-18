@@ -67,7 +67,8 @@ namespace MessageBus.HostedService.Example.Handlers
                 MessageProperties = new Dictionary<string, string>
                 {
                     { "AircraftId", context.Message.AircraftId }
-                }
+                },
+                Label = "ChangeFrequencyCommand"
             };
 
             await context.SendAsync(changeFrequencyCommand);
