@@ -55,7 +55,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
             var sut = new MessageHandlerResolver(new ServiceCollection());
             sut.SubcribeToMessage<AircraftTakenOff, AircraftTakenOffHandler>(BuildSubscriptionFilter<AircraftTakenOff>());
             sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter);
-            var messageSubscriptions = sut.GetMessageSubscriptions();
+            var messageSubscriptions = sut.GetMessageHandlerMappings();
 
             Assert.Equal(2, messageSubscriptions.Count());
             Assert.Single(messageSubscriptions.Where(m => m.MessageHandlerType == typeof(AircraftLandedHandler)));

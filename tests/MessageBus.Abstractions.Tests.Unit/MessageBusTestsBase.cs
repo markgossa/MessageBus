@@ -23,7 +23,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         {
             _messageSubscriptions = BuildMessageSubscriptions();
 
-            _mockMessageHandlerResolver.Setup(m => m.GetMessageSubscriptions()).Returns(_messageSubscriptions);
+            _mockMessageHandlerResolver.Setup(m => m.GetMessageHandlerMappings()).Returns(_messageSubscriptions);
             _sut = new MessageBus(_mockMessageHandlerResolver.Object, _mockMessageBusAdminClient.Object, _mockMessageBusClient.Object,
                 _mockMessageProcessorResolver.Object);
         }

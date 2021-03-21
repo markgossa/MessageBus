@@ -9,7 +9,7 @@ namespace MessageBus.Abstractions
             where TMessageHandler : IMessageHandler<TMessage>;
 
         object Resolve(string messageType);
-        IEnumerable<MessageHandlerMapping> GetMessageSubscriptions();
+        IEnumerable<MessageHandlerMapping> GetMessageHandlerMappings();
         void Initialize();
     }
 }

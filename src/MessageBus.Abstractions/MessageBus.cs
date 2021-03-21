@@ -41,7 +41,7 @@ namespace MessageBus.Abstractions
         {
             _messageHandlerResolver.Initialize();
             _messageProcessorResolver.Initialize();
-            await _messageBusAdminClient.ConfigureAsync(_messageHandlerResolver.GetMessageSubscriptions(),
+            await _messageBusAdminClient.ConfigureAsync(_messageHandlerResolver.GetMessageHandlerMappings(),
                 _messageBusOptions);
         }
 

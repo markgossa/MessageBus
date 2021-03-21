@@ -33,7 +33,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
             }
         }
 
-        public IEnumerable<MessageHandlerMapping> GetMessageSubscriptions() => _messageSubscriptions.Values;
+        public IEnumerable<MessageHandlerMapping> GetMessageHandlerMappings() => _messageSubscriptions.Values;
 
         public void SubcribeToMessage<TMessage, TMessageHandler>(SubscriptionFilter subscriptionFilter)
             where TMessage : IMessage
