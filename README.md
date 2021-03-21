@@ -53,9 +53,13 @@ For a full example, see `MessageBus.HostedService.Example` project in the `examp
 
 * Create an ASP .NET web application using the standard .NET template
 * Add the MessageBus NuGet packages to your web application project:
-  * MessageBus.Abstractions
-  * MessageBus.Microsoft.ServiceBus
-  * MessageBus.Extensions.Microsoft.DependencyInjection
+
+```powershell
+Install-Package MessageBus.Abstractions
+Install-Package MessageBus.Microsoft.ServiceBus
+Install-Package MessageBus.Extensions.Microsoft.DependencyInjection
+```
+
 * Assign permissions to the managed identity or configure the Shared Access Policy so that MessageBus can create a subscription on the topic and send and receive messages
 
 ### 1. Create messages
@@ -63,7 +67,7 @@ For a full example, see `MessageBus.HostedService.Example` project in the `examp
 To create a message, you can either implement the `IEvent` or `ICommand` interface depending on whether you are handling an event or command. An example event is below:
 
 ```csharp
-using MessageBus.Abstractions;
+using MessageBus.Abstractions.Messages;
 
 namespace MessageBus.HostedService.Example.Events
 {
@@ -76,7 +80,7 @@ namespace MessageBus.HostedService.Example.Events
 ```
 
 ```csharp
-using MessageBus.Abstractions;
+using MessageBus.Abstractions.Messages;
 
 namespace MessageBus.HostedService.Example.Events
 {
@@ -93,6 +97,7 @@ To create a message handler that receives an `AircraftTakenOff` event, create a 
 
 ```csharp
 using MessageBus.Abstractions;
+using MessageBus.Abstractions.Messages;
 using MessageBus.HostedService.Example.Events;
 using MessageBus.HostedService.Example.Services;
 using System;
@@ -198,6 +203,7 @@ If you only need to send a message rather than also receive messages then you ca
 #### Send a command
 ```csharp
 using MessageBus.Abstractions;
+using MessageBus.Abstractions.Messages;
 using System;
 using System.Threading.Tasks;
 
@@ -226,6 +232,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Services
 #### Publish an event
 ```csharp
 using MessageBus.Abstractions;
+using MessageBus.Abstractions.Messages;
 using System;
 using System.Threading.Tasks;
 
@@ -294,6 +301,7 @@ You can send commands or publish events from ICommand objects or IEvent objects 
 
 ```csharp
 using MessageBus.Abstractions;
+using MessageBus.Abstractions.Messages;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
 using System.Threading.Tasks;
 
@@ -329,6 +337,7 @@ See examples below.
 
 ```csharp
 using MessageBus.Abstractions;
+using MessageBus.Abstractions.Messages;
 using System;
 using System.Threading.Tasks;
 
@@ -441,6 +450,7 @@ See below for how to publish an event with a delay of 10 seconds from now. The s
 
 ```csharp
 using MessageBus.Abstractions;
+using MessageBus.Abstractions.Messages;
 using System;
 using System.Threading.Tasks;
 
@@ -557,6 +567,7 @@ Example message pre-processor below simply logs the `MessageId` of the received 
 
 ```csharp
 using MessageBus.Abstractions;
+using MessageBus.Abstractions.Messages;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
@@ -636,6 +647,7 @@ When making breaking changes to messages, you may want to pin message receivers 
 
 ```csharp
 using MessageBus.Abstractions;
+using MessageBus.Abstractions.Messages;
 using System;
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Models.V2
@@ -904,7 +916,7 @@ namespace MessageBus.HostedService.Example
 ## Upgrade paths and breaking changes
 
 ### Version 1.x.x to 2.x.x
-* Services using version 2.x.x is backwards compatible with version 1.x.x.
+* Services using version 2.x.x are backwards compatible with version 1.x.x however some changes are required as below
 * Incoming messages: 
   * In version 2.x.x, the default is to use the `Label` field rather than the `MessageType` message property to identify messages. This means that Message Subscriptions will look at the `Label` on the message to identify the message and route it to the correct handler.
   * If you need to still use the `MessageType` property to route messages to their handler, this is still possible by now passing a `SubscriptionFilter` to `IMessageBus.SubscribeToMessage()` which has the `Label` to null and a `MessageType` property set. For instances where you need to specify a custom `MessageTypePropertyName`, this is still possible using `MessageBusOptions`.
@@ -914,11 +926,14 @@ namespace MessageBus.HostedService.Example
     2. `MessageType` property (or custom `MessageType` property name)
 * Outgoing messages:
   * The `Label` is now set to the name of the `Type` of the message and the `MessageType` property is no longer present however the `Label` can be set to a custom value or set to `null` and the `MessageType` property added to outbound messages for backwards compatibility.
-* Minor interface breaking changes for some interfaces in `MessageBus.Abstractions` to allow for new functionality such as sending message copies and messages with delays.
+* Minor interface breaking changes for some interfaces in `MessageBus.Abstractions` to allow for new functionality such as sending message copies and messages with delays
+* `IMessage`, `IEvent`, `ICommand` and `MessageVersionAttribute` have been moved into the `MessageBus.Abstractions.Messages` namespace
 
 ## Programming model
 
 MessageBus is designed to be extensible so you can use it with any messaging technology and so it can be extended with additional features. See a UML diagram of the abstractions below. For example, any implementation of `IMessageBusClient` or `IMessageBusAdminClient` can be used to enable the use of RabbitMQ or other messaging technologies.
+
+This diagram shows an overview of the programming model only however you should refer to the code available in the `src` folder for a more up to date representation.
 
 ![](docs/MessageBusUmlDiagram.jpg)
 
