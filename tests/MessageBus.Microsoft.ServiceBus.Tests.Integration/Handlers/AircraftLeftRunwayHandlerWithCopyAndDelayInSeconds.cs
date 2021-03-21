@@ -1,4 +1,5 @@
 ﻿using MessageBus.Abstractions;
+using MessageBus.Abstractions.Messages;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Services;
 using System.Linq;

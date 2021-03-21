@@ -1,4 +1,5 @@
 ﻿using MessageBus.Abstractions;
+using MessageBus.Abstractions.Messages;
 using MessageBus.HostedService.Example.Commands;
 using MessageBus.HostedService.Example.Events;
 using MessageBus.HostedService.Example.Services;

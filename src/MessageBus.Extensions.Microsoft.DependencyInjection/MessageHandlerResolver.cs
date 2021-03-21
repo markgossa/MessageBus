@@ -1,4 +1,5 @@
 ﻿using MessageBus.Abstractions;
+using MessageBus.Abstractions.Messages;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;

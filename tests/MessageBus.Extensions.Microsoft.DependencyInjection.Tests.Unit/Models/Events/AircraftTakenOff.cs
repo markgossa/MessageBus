@@ -1,4 +1,4 @@
-﻿using MessageBus.Abstractions;
+﻿using MessageBus.Abstractions.Messages;
 
 namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Models.Events
 {

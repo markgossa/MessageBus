@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using MessageBus.Abstractions.Messages;
+using System.Collections.Generic;
 
 namespace MessageBus.Abstractions
 {

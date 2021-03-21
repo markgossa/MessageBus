@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MessageBus.Abstractions.Messages;
+using System;
 
 namespace MessageBus.Abstractions.Tests.Unit.Models.Events.V2
 {

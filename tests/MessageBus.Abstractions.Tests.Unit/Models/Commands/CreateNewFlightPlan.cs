@@ -1,4 +1,6 @@
-﻿namespace MessageBus.Abstractions.Tests.Unit.Models.Commands
+﻿using MessageBus.Abstractions.Messages;
+
+namespace MessageBus.Abstractions.Tests.Unit.Models.Commands
 {
     public class CreateNewFlightPlan : ICommand
     {

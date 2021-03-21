@@ -1,6 +1,7 @@
 ﻿using Azure.Identity;
 using Azure.Messaging.ServiceBus;
 using MessageBus.Abstractions;
+using MessageBus.Abstractions.Messages;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;

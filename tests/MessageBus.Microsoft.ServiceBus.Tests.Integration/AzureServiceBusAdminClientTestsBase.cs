@@ -1,6 +1,7 @@
 ﻿using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 using MessageBus.Abstractions;
+using MessageBus.Abstractions.Messages;
 using MessageBus.Microsoft.ServiceBus.Tests.Integration.Models;
 using Microsoft.Extensions.Configuration;
 using System;

@@ -1,3 +1,4 @@
+using MessageBus.Abstractions.Messages;
 using MessageBus.Abstractions.Tests.Unit.Handlers;
 using MessageBus.Abstractions.Tests.Unit.Models.Commands;
 using MessageBus.Abstractions.Tests.Unit.Models.Events;

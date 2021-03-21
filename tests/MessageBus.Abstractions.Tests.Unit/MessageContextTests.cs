@@ -1,4 +1,5 @@
-﻿using MessageBus.Abstractions.Tests.Unit.Models.Commands;
+﻿using MessageBus.Abstractions.Messages;
+using MessageBus.Abstractions.Tests.Unit.Models.Commands;
 using MessageBus.Abstractions.Tests.Unit.Models.Events;
 using Moq;
 using System;
