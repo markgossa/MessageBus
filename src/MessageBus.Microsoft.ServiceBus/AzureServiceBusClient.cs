@@ -19,7 +19,7 @@ namespace MessageBus.Microsoft.ServiceBus
         private Func<MessageErrorReceivedEventArgs, Task>? _errorMessageHandler;
         private Func<MessageReceivedEventArgs, Task>? _messageHandler;
 
-        public AzureServiceBusClient(string connectionString, string topic, string subscription, 
+        public AzureServiceBusClient(string? connectionString, string topic, string subscription, 
             ServiceBusProcessorOptions? serviceBusProcessorOptions = null)
         {
             var serviceBusClient = new ServiceBusClient(connectionString);
@@ -29,7 +29,7 @@ namespace MessageBus.Microsoft.ServiceBus
             AddMessageHandlers();
         }
 
-        public AzureServiceBusClient(string hostname, string topic, string subscription,
+        public AzureServiceBusClient(string? hostname, string topic, string subscription,
             string tenantId, ServiceBusProcessorOptions? serviceBusProcessorOptions = null)
         {
             var options = new DefaultAzureCredentialOptions

@@ -18,14 +18,14 @@ namespace MessageBus.Microsoft.ServiceBus
         private readonly string? _tenantId;
         private readonly CreateSubscriptionOptions _createSubscriptionOptions;
 
-        public AzureServiceBusAdminClient(string connectionString, string topic, string subscription)
+        public AzureServiceBusAdminClient(string? connectionString, string topic, string subscription)
         {
             _connectionString = connectionString;
             _createSubscriptionOptions = new CreateSubscriptionOptions(topic, subscription);
             _serviceBusAdminClient = BuildServiceBusAdminClient();
         }
 
-        public AzureServiceBusAdminClient(string hostName, string topic, string subscription,
+        public AzureServiceBusAdminClient(string? hostName, string topic, string subscription,
             string tenantId)
         {
             _hostName = hostName;
