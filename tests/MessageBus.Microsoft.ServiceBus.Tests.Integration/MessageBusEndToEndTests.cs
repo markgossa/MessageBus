@@ -37,14 +37,14 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             Assert.DoesNotContain(await ReceiveMessagesForSubscriptionAsync(inputSubscription),
                 m => m.Body.ToObjectFromJson<AircraftTakenOff>().AircraftId == aircraftLeftRunwayEvent.RunwayId);
             Assert.Single(await ReceiveMessagesForSubscriptionAsync($"{inputSubscription}-Output"),
-                m => m.ApplicationProperties["MessageType"].ToString() == nameof(AircraftReachedGate)
+                m => m.Subject == nameof(AircraftReachedGate)
                 && m.Body.ToObjectFromJson<AircraftReachedGate>().AirlineId == aircraftLeftRunwayEvent.RunwayId);
         }
 
         [Fact]
-        public async Task ReceivesAndSendsEventBasedOnMessagePropertyFilter()
+        public async Task ReceivesAndSendsEventMessagePropertyFilter()
         {
-            var inputSubscription = nameof(ReceivesAndSendsEventBasedOnMessagePropertyFilter);
+            var inputSubscription = nameof(ReceivesAndSendsEventMessagePropertyFilter);
             await CreateEndToEndTestSubscriptions(inputSubscription);
 
             var subscriptionFilter = new SubscriptionFilter
@@ -67,7 +67,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             Assert.DoesNotContain(await ReceiveMessagesForSubscriptionAsync(inputSubscription),
                 m => m.Body.ToObjectFromJson<AircraftTakenOff>().AircraftId == aircraftLeftRunwayEvent.RunwayId);
             Assert.Single(await ReceiveMessagesForSubscriptionAsync($"{inputSubscription}-Output"),
-                m => m.ApplicationProperties["MessageType"].ToString() == nameof(AircraftReachedGate)
+                m => m.Subject == nameof(AircraftReachedGate)
                 && m.Body.ToObjectFromJson<AircraftReachedGate>().AirlineId == aircraftLeftRunwayEvent.RunwayId);
         }
 
@@ -92,7 +92,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             Assert.DoesNotContain(await ReceiveMessagesForSubscriptionAsync(inputSubscription),
                 m => m.Body.ToObjectFromJson<CreateNewFlightPlan>().Destination == setAutopilotCommand.AutopilotId);
             Assert.Single(await ReceiveMessagesForSubscriptionAsync($"{inputSubscription}-Output"),
-                m => m.ApplicationProperties["MessageType"].ToString() == nameof(MonitorAutopilot)
+                m => m.Subject == nameof(MonitorAutopilot)
                 && m.Body.ToObjectFromJson<MonitorAutopilot>().AutopilotIdentifider == setAutopilotCommand.AutopilotId);
         }
 

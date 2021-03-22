@@ -919,7 +919,7 @@ namespace MessageBus.HostedService.Example
 * Services using version 2.x.x are backwards compatible with version 1.x.x however some changes are required as below
 * Incoming messages: 
   * In version 2.x.x, the default is to use the `Label` field rather than the `MessageType` message property to identify messages. This means that Message Subscriptions will look at the `Label` on the message to identify the message and route it to the correct handler.
-  * If you need to still use the `MessageType` property to route messages to their handler, this is still possible by now passing a `SubscriptionFilter` to `IMessageBus.SubscribeToMessage()` which has the `Label` to null and a `MessageType` property set. For instances where you need to specify a custom `MessageTypePropertyName`, this is still possible using `MessageBusOptions`.
+  * If you need to still use the `MessageType` property to route messages to their handler, this is still possible by now passing a `SubscriptionFilter` to `IMessageBus.SubscribeToMessage()` which has the `Label` set to null and a `MessageType` property set. For instances where you need to specify a custom `MessageTypePropertyName`, this is still possible using `MessageBusOptions`.
   * The `SubscriptionFilter` filters inbound messages on the subscription and is linked to a handler by using `IMessageBus.SubscribeToMessage()`
   * Matching messages are routed through to their registered message handler by first looking for the message type in the following order of precedence:
     1. `Label`

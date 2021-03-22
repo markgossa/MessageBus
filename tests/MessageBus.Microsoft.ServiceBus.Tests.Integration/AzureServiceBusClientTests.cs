@@ -80,10 +80,11 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
             await messageBus.StartAsync();
 
-            await Task.Delay(TimeSpan.FromSeconds(6));
+            await Task.Delay(TimeSpan.FromSeconds(2));
             var messages = await ReceiveMessagesForSubscriptionAsync(subscription, true);
 
             Assert.Single(messages.Where(m => IsMatchingAircraftId<AircraftLanded>(m, aircraftlandedEvent.AircraftId)));
+            Assert.Equal(nameof(AircraftLanded), messages.First().Subject);
             Assert.Equal(1, aircraftLandedHandler.MessageCount);
         }
 
@@ -108,6 +109,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
             var messages = await ReceiveMessagesForSubscriptionAsync(subscription, true);
             Assert.Equal(1, aircraftLandedHandler.MessageCount);
+            Assert.Equal(nameof(AircraftLanded), messages.First().Subject);
             Assert.Single(messages.Where(m => IsMatchingAircraftId<AircraftLanded>(m, aircraftlandedEvent.AircraftId)));
         }
 
@@ -133,21 +135,21 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 
             var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
                 .Where(m => IsMatchingAircraftId<AircraftLanded>(m, aircraftlandedEvent.AircraftId));
-
             Assert.Single(matchingMessages);
             Assert.Equal(aircraftType, matchingMessages.First().ApplicationProperties["AircraftType"]);
             Assert.Equal("Heavy", matchingMessages.First().ApplicationProperties["AircraftSize"]);
+            Assert.Equal(nameof(AircraftLanded), matchingMessages.First().Subject);
         }
-        
+
         [Theory]
-        [InlineData("")]
-        [InlineData("Hello world!")]
-        public async Task PublishesEventBodyAsString(string messageString)
+        [InlineData("", "MyMessageLabel")]
+        [InlineData("Hello world!", "WelcomeLabel")]
+        public async Task PublishesEventBodyAsString(string messageString, string label)
         {
             var subscription = nameof(PublishesEventBodyAsString);
             await CreateSubscriptionAsync(subscription);
             var aircraftId = Guid.NewGuid().ToString();
-            var message = new Message<IEvent>(messageString)
+            var message = new Message<IEvent>(messageString, label)
             {
                 MessageProperties = new Dictionary<string, string>
             {
@@ -163,10 +165,11 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 .Where(m => m.Body.ToString() == messageString
                     && m.ApplicationProperties.TryGetValue("AircraftId", out var value)
                     && aircraftId == value.ToString());
-
             Assert.Single(matchingMessages);
-            Assert.Equal(aircraftId, matchingMessages.First().ApplicationProperties["AircraftId"]);
-            Assert.Equal("Heavy", matchingMessages.First().ApplicationProperties["AircraftSize"]);
+            var matchingMessage = matchingMessages.First();
+            Assert.Equal(aircraftId, matchingMessage.ApplicationProperties["AircraftId"]);
+            Assert.Equal("Heavy", matchingMessage.ApplicationProperties["AircraftSize"]);
+            Assert.Equal(label, matchingMessage.Subject);
         }
 
         [Theory]
@@ -196,17 +199,18 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             Assert.Single(matchingMessages);
             Assert.Equal(aircraftType, matchingMessages.First().ApplicationProperties["AircraftType"]);
             Assert.Equal("Heavy", matchingMessages.First().ApplicationProperties["AircraftSize"]);
+            Assert.Equal(nameof(CreateNewFlightPlan), matchingMessages.First().Subject);
         }
 
         [Theory]
-        [InlineData("")]
-        [InlineData("Hello world!")]
-        public async Task SendsCommandBodyAsString(string messageString)
+        [InlineData("", "EmptyLabel")]
+        [InlineData("Hello world!", "WelcomeMessage")]
+        public async Task SendsCommandBodyAsString(string messageString, string label)
         {
             var subscription = nameof(SendsCommandBodyAsString);
             await CreateSubscriptionAsync(subscription);
             var aircraftId = Guid.NewGuid().ToString();
-            var message = new Message<ICommand>(messageString)
+            var message = new Message<ICommand>(messageString, label)
             {
                 MessageProperties = new Dictionary<string, string>
             {
@@ -224,8 +228,10 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                     && aircraftId == value.ToString());
 
             Assert.Single(matchingMessages);
-            Assert.Equal(aircraftId, matchingMessages.First().ApplicationProperties["AircraftId"]);
-            Assert.Equal("Heavy", matchingMessages.First().ApplicationProperties["AircraftSize"]);
+            var matchingMessage = matchingMessages.First();
+            Assert.Equal(aircraftId, matchingMessage.ApplicationProperties["AircraftId"]);
+            Assert.Equal("Heavy", matchingMessage.ApplicationProperties["AircraftSize"]);
+            Assert.Equal(label, matchingMessage.Subject);
         }
 
         [Fact]
@@ -246,7 +252,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var matchingMessages = (await ReceiveMessagesForSubscriptionAsync(subscription))
                 .Where(m => IsMatchingAircraftId<AircraftLanded>(m, aircraftlandedEvent.AircraftId)
                     && m.MessageId == messageId);
-            Assert.Single(matchingMessages);
+            Assert.Single(matchingMessages); 
+            Assert.Equal(nameof(AircraftLanded), matchingMessages.First().Subject);
         }
 
         [Fact]
@@ -269,8 +276,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                     createNewFlightPlanCommand.Destination
                     && m.MessageId == messageId);
             Assert.Single(matchingMessages);
+            Assert.Equal(nameof(CreateNewFlightPlan), matchingMessages.First().Subject);
         }
-        
+
         [Fact]
         public async Task PublishesEventsWithCustomCorrelationId()
         {
@@ -290,7 +298,9 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 .Where(m => IsMatchingAircraftId<AircraftLanded>(m, aircraftlandedEvent.AircraftId)
                     && m.CorrelationId == correlationId);
             Assert.Single(matchingMessages);
+            Assert.Equal(nameof(AircraftLanded), matchingMessages.First().Subject);
         }
+
 
         [Fact]
         public async Task SendsCommandsWithCustomCorrelationId()
@@ -312,6 +322,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                     createNewFlightPlanCommand.Destination
                     && m.CorrelationId == correlationId);
             Assert.Single(matchingMessages);
+            Assert.Equal(nameof(CreateNewFlightPlan), matchingMessages.First().Subject);
         }
     }
 }

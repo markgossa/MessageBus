@@ -21,7 +21,7 @@ using Xunit;
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
 {
-    public class MessageBusTestsBase : IDisposable, IAsyncDisposable
+    public class MessageBusTestsBase
     {
         protected readonly IConfiguration Configuration = new Settings().Configuration;
         protected readonly string _tenantId;
@@ -72,8 +72,16 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             var messages = new List<ServiceBusMessage>();
             for (var i = 0; i < count; i++)
             {
-                var serviceBusMessage = new ServiceBusMessage(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, message.GetType())));
-                serviceBusMessage.ApplicationProperties.Add("MessageType", messageType ?? message.GetType().Name);
+                var serviceBusMessage = new ServiceBusMessage(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, message.GetType())))
+                {
+                    Subject = message.GetType().Name
+                };
+
+                if (!string.IsNullOrWhiteSpace(messageType))
+                {
+                    serviceBusMessage.ApplicationProperties.Add("MessageType", messageType ?? message.GetType().Name);
+                }
+
                 if (messageId is not null)
                 {
                     serviceBusMessage.MessageId = messageId;
@@ -244,26 +252,6 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             await StartMessageBusHostedService(serviceProvider);
 
             return serviceProvider;
-        }
-
-        public void Dispose()
-        {
-            DisposeAsync().AsTask().Wait();
-            GC.SuppressFinalize(this);
-        }
-
-        public async ValueTask DisposeAsync()
-        {
-            if (_serviceProvider is not null)
-            {
-                await _serviceProvider?.GetService<IHostedService>()?.StopAsync(new CancellationToken());
-            }
-
-            if (_azureServiceBusClient is not null)
-            {
-                await _azureServiceBusClient.StopAsync();
-                await _azureServiceBusClient.DisposeAsync().AsTask();
-            }
         }
 
         protected async Task<IEnumerable<ServiceBusReceivedMessage>> FindSetAutopilotCommands(string subscription, SetAutopilot setAutopilotCommand)
