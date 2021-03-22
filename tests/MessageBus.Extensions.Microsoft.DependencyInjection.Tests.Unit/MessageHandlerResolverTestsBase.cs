@@ -7,7 +7,11 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
     {
         protected static SubscriptionFilter BuildSubscriptionFilter<T>() where T : IMessage
         {
-            var subscriptionFilter = new SubscriptionFilter();
+            var subscriptionFilter = new SubscriptionFilter
+            {
+                Label = typeof(T).Name
+            };
+
             subscriptionFilter.Build(new MessageBusOptions(), typeof(T));
 
             return subscriptionFilter;

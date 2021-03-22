@@ -247,7 +247,7 @@ namespace MessageBus.Abstractions.Tests.Unit
         }
 
         [Fact]
-        public void SubscribesToMessages()
+        public void SubscribesToMessagesWithoutCustomSubscriptionFilter()
         {
             SubscriptionFilter actualSubscriptionFilter = null;
             _mockMessageHandlerResolver.Setup(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(
@@ -257,8 +257,8 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             var subscriptionFilter = new SubscriptionFilter();
             subscriptionFilter.Build(new MessageBusOptions(), typeof(AircraftLanded));
-            Assert.Equal(subscriptionFilter.Label, actualSubscriptionFilter.Label);
-            Assert.Equal(subscriptionFilter.MessageProperties, actualSubscriptionFilter.MessageProperties);
+            Assert.Equal(nameof(AircraftLanded), actualSubscriptionFilter.Label);
+            Assert.Equal(new Dictionary<string, string>(), actualSubscriptionFilter.MessageProperties);
         }
 
         [Theory]
@@ -277,7 +277,10 @@ namespace MessageBus.Abstractions.Tests.Unit
             _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter);
 
             _mockMessageHandlerResolver.Verify(m 
-                => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter), Times.Once);
+                => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(It.Is<SubscriptionFilter>(s =>
+                    s.Label == null
+                    && s.MessageProperties == subscriptionFilter.MessageProperties)),
+                Times.Once);
         }
 
         [Fact]
@@ -294,7 +297,10 @@ namespace MessageBus.Abstractions.Tests.Unit
 
             _sut.SubscribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter);
 
-            _mockMessageHandlerResolver.Verify(m => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(subscriptionFilter), 
+            _mockMessageHandlerResolver.Verify(m 
+                => m.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(It.Is<SubscriptionFilter>(s =>
+                    s.Label == null
+                    && s.MessageProperties == subscriptionFilter.MessageProperties)), 
                 Times.Once);
         }
 

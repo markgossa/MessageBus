@@ -11,19 +11,19 @@ namespace MessageBus.Abstractions.Tests.Unit
         private const string _defaultMessageVersionPropertyName = "MessageVersion";
 
         [Theory]
-        [InlineData(typeof(AircraftTakenOff))]
-        [InlineData(typeof(AircraftLanded))]
-        public void LabelReturnsLabelIfSet(Type typeOfMessage)
+        [InlineData(typeof(AircraftTakenOff), "ATO")]
+        [InlineData(typeof(AircraftLanded), "AL")]
+        public void LabelReturnsLabelIfSet(Type typeOfMessage, string label)
         {
             var sut = new SubscriptionFilter
             {
-                Label = typeOfMessage.Name
+                Label = label
             };
             
             sut.Build(new MessageBusOptions(), typeOfMessage);
 
-            Assert.Equal(typeOfMessage.Name, sut.Label);
-            Assert.Equal(typeOfMessage.Name, sut.EffectiveMessageLabel);
+            Assert.Equal(label, sut.Label);
+            Assert.Equal(label, sut.EffectiveMessageLabel);
         }
 
         [Theory]
@@ -69,92 +69,41 @@ namespace MessageBus.Abstractions.Tests.Unit
             Assert.Equal(typeOfMessage.Name, sut.EffectiveMessageLabel);
         }
 
-        [Theory]
-        [InlineData(null, null, typeof(AircraftTakenOff))]
-        [InlineData("", "", typeof(AircraftTakenOff))]
-        [InlineData(" ", " ",typeof(AircraftLanded))]
-        public void LabelReturnsMessageTypeNameIfBothLabelAndMessageNullOrWhitespace(string label, 
-            string messageTypePropertyValue, Type typeOfMessage)
-        {
-            var sut = new SubscriptionFilter
-            {
-                Label = label,
-                MessageProperties = new Dictionary<string, string>
-                {
-                    { _defaultMessageTypePropertyName, messageTypePropertyValue }
-                }
-            };
-
-            sut.Build(new MessageBusOptions(), typeOfMessage);
-
-            Assert.Equal(typeOfMessage.Name, sut.Label);
-            Assert.Equal(typeOfMessage.Name, sut.EffectiveMessageLabel);
-        }
-
-        [Fact]
-        public void ThrowsIfAttemptToGetLabelAndNotBuilt()
-        {
-            var sut = new SubscriptionFilter
-            {
-                Label = typeof(AircraftLanded).Name
-            };
-
-            Assert.Throws<InvalidOperationException>(() => sut.Label);
-        }
-        
-        [Fact]
-        public void ThrowsIfAttemptToGetEffectiveLabelAndNotBuilt()
-        {
-            var sut = new SubscriptionFilter
-            {
-                Label = typeof(AircraftLanded).Name
-            };
-
-            Assert.Throws<InvalidOperationException>(() => sut.EffectiveMessageLabel);
-        }
-        
-        [Fact]
-        public void BuildValidatesInputsAndThrowsArgumentNullExceptionIfOneIsNullOrEmpty()
-        {
-            var sut = new SubscriptionFilter
-            {
-                Label = typeof(AircraftLanded).Name
-            };
-
-            Assert.Throws<ArgumentNullException>(() => sut.Build(new MessageBusOptions(), null));
-            Assert.Throws<ArgumentNullException>(() => sut.Build(null, typeof(AircraftLanded)));
-        }
-
-        [Fact]
-        public void SetsMessagePropertiesToEmptyDictionaryIfSetToNull()
-        {
-            var sut = new SubscriptionFilter
-            {
-                MessageProperties = null
-            };
-
-            Assert.NotNull(sut.MessageProperties);
-        }
-
         [Fact]
         public void AddsMessageVersionPropertyIfNoCustomMessageProperties()
         {
             var sut = new SubscriptionFilter();
             sut.Build(new MessageBusOptions(), typeof(Models.Events.V2.AircraftLanded));
-            
+
             Assert.Equal(2, int.Parse(sut.MessageProperties[_defaultMessageVersionPropertyName]));
         }
-        
+
         [Theory]
         [InlineData("MyMessageVersion")]
         [InlineData("Version")]
         public void AddsCustomMessageVersionPropertyIfNoCustomMessageProperties(string messageVersionPropertyName)
         {
             var sut = new SubscriptionFilter();
-            sut.Build(new MessageBusOptions() { MessageVersionPropertyName = messageVersionPropertyName }, 
+            sut.Build(new MessageBusOptions() { MessageVersionPropertyName = messageVersionPropertyName },
                 typeof(Models.Events.V2.AircraftLanded));
-            
+
             Assert.Equal(2, int.Parse(sut.MessageProperties[messageVersionPropertyName]));
+        }
+
+        [Fact]
+        public void ThrowsIfNoMessageTypeInCustomSubscriptionFilterProperties()
+        {
+            var sut = new SubscriptionFilter
+            {
+                MessageProperties = new Dictionary<string, string>
+                    {
+                        { "SomethingElse", "AL" }
+                    }
+            };
+
+            sut.Build(new MessageBusOptions(), typeof(AircraftLanded));
+
+            Assert.Throws<ArgumentNullException>(() => sut.EffectiveMessageLabel);
         }
     }
 }

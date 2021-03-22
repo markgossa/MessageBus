@@ -150,26 +150,12 @@ namespace MessageBus.Abstractions
                 .First(i => i.Name.Contains(typeof(IMessageHandler<>).Name))
                 .GenericTypeArguments.First();
 
-        private string GetMessageType<TMessage>(SubscriptionFilter? subscriptionFilter) where TMessage : IMessage
-        {
-            string? messageTypeProperty = null;
-            subscriptionFilter?.MessageProperties.TryGetValue(_messageBusOptions.MessageTypePropertyName, out messageTypeProperty);
-            
-            return subscriptionFilter?.Label
-                    ?? messageTypeProperty
-                    ?? typeof(TMessage).Name;
-        }
-
         private SubscriptionFilter BuildSubscriptionFilter<TMessage>(SubscriptionFilter? subscriptionFilter) where TMessage : IMessage
         {
-            subscriptionFilter ??= new SubscriptionFilter();
+            subscriptionFilter ??= new SubscriptionFilter { Label = typeof(TMessage).Name };
 
             subscriptionFilter.Build(_messageBusOptions, typeof(TMessage));
             return subscriptionFilter!;
         }
-
-        private static string? GetMessageVersion<T>(Message<T> message) where T : IMessage
-            => message.Body?.GetType().CustomAttributes.FirstOrDefault(b =>
-                b.AttributeType == typeof(MessageVersionAttribute))?.ConstructorArguments.FirstOrDefault().Value?.ToString();
     }
 }

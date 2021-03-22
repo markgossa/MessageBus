@@ -7,44 +7,27 @@ namespace MessageBus.Abstractions
 {
     public class SubscriptionFilter
     {
-        public Dictionary<string, string> MessageProperties 
-        { 
-            get => _messageProperties; 
-            set => _messageProperties = value ?? new Dictionary<string, string>(); 
-        }
+        public Dictionary<string, string> MessageProperties { get; set; }
 
-        public string? Label
-        {
-            get
-            {
-                ThrowIfNotBuilt();
-
-                if (MessageTypePropertyFound())
-                {
-                    return null;
-                }
-
-                return string.IsNullOrWhiteSpace(_label)
-                   ? _messageTypeType
-                   : _label;
-            }
-
-            set => _label = value;
-        }
+        public string? Label { get; set; }
 
         public string EffectiveMessageLabel
         {
             get
             {
                 ThrowIfNotBuilt();
+                ThrowIfCannotDetermineEffectiveMessageLabel();
                 return Label ?? MessageProperties[_messageBusOptions!.MessageTypePropertyName];
             }
         }
 
-        private string? _label;
         private MessageBusOptions? _messageBusOptions;
         private string? _messageTypeType;
-        private Dictionary<string, string> _messageProperties = new Dictionary<string, string>();
+
+        public SubscriptionFilter()
+        {
+            MessageProperties = new Dictionary<string, string>();
+        }
 
         private void ThrowIfNotBuilt()
         {
@@ -54,6 +37,19 @@ namespace MessageBus.Abstractions
                 throw new InvalidOperationException($"{nameof(SubscriptionFilter)} must be built with valid parameters before use");
             }
         }
+
+        private void ThrowIfCannotDetermineEffectiveMessageLabel()
+        {
+            if (IsLabelAndMessageTypePropertyEmpty())
+            {
+                throw new ArgumentNullException($"{nameof(Label)}, {_messageBusOptions!.MessageTypePropertyName}");
+            }
+        }
+
+        private bool IsLabelAndMessageTypePropertyEmpty()
+            => string.IsNullOrWhiteSpace(Label)
+                && (!MessageProperties.TryGetValue(_messageBusOptions!.MessageTypePropertyName, out var messageType)
+                    || string.IsNullOrWhiteSpace(messageType));
 
         private bool ValidateBuildParameters() => _messageBusOptions != null && _messageTypeType != null;
 
@@ -71,15 +67,14 @@ namespace MessageBus.Abstractions
                 throw new ArgumentNullException($"Argument {nameof(messageBusOptions)} or {nameof(message)} are null");
             }
 
-            AddMessageVersionProperty(message!);
+            AddMessageVersionPropertyIfNoCustomMessageProperties(message!);
         }
 
-        private void AddMessageVersionProperty(Type message)
+        private void AddMessageVersionPropertyIfNoCustomMessageProperties(Type message)
         {
             if (!MessageProperties.Any() && message != null)
             {
                 var messageVersion = GetMessageVersion(message);
-
                 if (messageVersion != null)
                 {
                     MessageProperties.Add(_messageBusOptions!.MessageVersionPropertyName, messageVersion);

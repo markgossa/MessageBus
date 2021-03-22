@@ -112,7 +112,8 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             var subscriptionFilter = new SubscriptionFilter
             {
-                MessageProperties = customMessageProperties
+                Label = typeof(T).Name,
+                MessageProperties = customMessageProperties ?? new()
             };
 
             subscriptionFilter.Build(new MessageBusOptions(), typeof(T));

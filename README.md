@@ -664,9 +664,11 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Models.V2
 
 ### Using custom subscription filters
 
-To do this, simply create a `SubscriptionFilter` and pass this to the `SubscribeToMessage()` method. Note that specifying custom message properties will mean that `MessageVersion` will not be added so you will need to add this yourself.
+To do this, simply create a `SubscriptionFilter` and pass this to the `SubscribeToMessage()` method. Here you can set the `Label` or `MessageProperties` to filter messages on.
 
-Messages will be routed according to the `Label` (default) which is set to the name of the `Type` of the message. You can specify your own `Label` or use the `MessageType` property.
+If both the `Label` and `MessageType` message property are null then the `Label` will be set to the name of the `Type` of the message by default. You can specify your own `Label` or use the `MessageType` property as one of a set of custom message properties.
+
+> :warning: Note that specifying custom message properties will mean that `MessageVersion` will not be added so you will need to add this yourself.
 
 The example below routes messages through to the `AircraftTakenOffHandler` if the received message has a label of `MyMessageLabel` and the message properties include a property `AircraftType` which is set to `Heavy`.
 

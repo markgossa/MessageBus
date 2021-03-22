@@ -44,6 +44,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
         {
             var subscriptionFilter = new SubscriptionFilter
             {
+                Label = nameof(AircraftLanded),
                 MessageProperties = new Dictionary<string, string>
                     {
                         { "AircraftType", "Commercial" }
@@ -98,27 +99,6 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit
             var messageContext = new MessageContext<AircraftLanded>(new BinaryData("Hello world!"), new object(),
                 new Mock<IMessageBus>().Object);
             typeof(AircraftLandedHandler).GetMethod("HandleAsync").Invoke(handler, new object[] { messageContext });
-        }
-
-        [Fact]
-        public void MessageHandlerResolverThrowsIfNoMessageTypeInCustomSubscriptionFilterProperties()
-        {
-            var subscriptionFilter = new SubscriptionFilter
-            {
-                MessageProperties = new Dictionary<string, string>
-                    {
-                        { "SomethingElse", "AL" }
-                    }
-            };
-
-            var services = new ServiceCollection();
-            var sut = new MessageHandlerResolver(services);
-            sut.SubcribeToMessage<AircraftLanded, AircraftLandedHandler>(BuildSubscriptionFilter<AircraftLanded>());
-            sut.Initialize();
-
-            object testCode() => sut.Resolve("AL");
-
-            Assert.Throws<MessageHandlerNotFoundException>(testCode);
         }
 
         [Theory]
