@@ -42,7 +42,8 @@ namespace MessageBus.Abstractions
         {
             if (IsLabelAndMessageTypePropertyEmpty())
             {
-                throw new ArgumentNullException($"{nameof(Label)}, {_messageBusOptions!.MessageTypePropertyName}");
+                throw new ArgumentNullException($"{nameof(Label)} or {_messageBusOptions!.MessageTypePropertyName}",
+                    $"Subscription Filter Label, or {_messageBusOptions!.MessageTypePropertyName} property must be specified");
             }
         }
 
