@@ -1,4 +1,5 @@
-﻿using MessageBus.Abstractions.Tests.Unit.Models.Events;
+﻿using MessageBus.Abstractions.Messages;
+using MessageBus.Abstractions.Tests.Unit.Models.Events;
 using System;
 using System.Linq;
 using System.Reflection;

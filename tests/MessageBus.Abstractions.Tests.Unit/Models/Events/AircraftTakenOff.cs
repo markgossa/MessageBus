@@ -1,4 +1,6 @@
-﻿namespace MessageBus.Abstractions.Tests.Unit.Models.Events
+﻿using MessageBus.Abstractions.Messages;
+
+namespace MessageBus.Abstractions.Tests.Unit.Models.Events
 {
     public class AircraftTakenOff : IEvent
     {

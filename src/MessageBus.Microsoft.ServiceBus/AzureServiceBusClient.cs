@@ -1,6 +1,7 @@
 ﻿using Azure.Identity;
 using Azure.Messaging.ServiceBus;
 using MessageBus.Abstractions;
+using MessageBus.Abstractions.Messages;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -19,7 +20,7 @@ namespace MessageBus.Microsoft.ServiceBus
         private Func<MessageErrorReceivedEventArgs, Task>? _errorMessageHandler;
         private Func<MessageReceivedEventArgs, Task>? _messageHandler;
 
-        public AzureServiceBusClient(string connectionString, string topic, string subscription, 
+        public AzureServiceBusClient(string? connectionString, string topic, string subscription, 
             ServiceBusProcessorOptions? serviceBusProcessorOptions = null)
         {
             var serviceBusClient = new ServiceBusClient(connectionString);
@@ -29,7 +30,7 @@ namespace MessageBus.Microsoft.ServiceBus
             AddMessageHandlers();
         }
 
-        public AzureServiceBusClient(string hostname, string topic, string subscription,
+        public AzureServiceBusClient(string? hostname, string topic, string subscription,
             string tenantId, ServiceBusProcessorOptions? serviceBusProcessorOptions = null)
         {
             var options = new DefaultAzureCredentialOptions
@@ -85,15 +86,16 @@ namespace MessageBus.Microsoft.ServiceBus
             await _serviceBusSender.DisposeAsync();
         }
 
-        private async Task SendMessageAsync<T>(Message<T> eventMessage) where T : IMessage
+        private async Task SendMessageAsync<T>(Message<T> message) where T : IMessage
         {
-            var message = new ServiceBusMessage(BuildMessageBody(eventMessage));
-            AddMessageProperties(eventMessage, message);
-            AddMessageId(eventMessage, message);
-            AddCorrelationId(eventMessage, message);
-            AddMessageDelay(eventMessage.ScheduledEnqueueTime, message);
+            var serviceBusMessage = new ServiceBusMessage(BuildMessageBody(message));
+            AddMessageProperties(message, serviceBusMessage);
+            AddMessageId(message, serviceBusMessage);
+            AddCorrelationId(message, serviceBusMessage);
+            AddMessageDelay(message.ScheduledEnqueueTime, serviceBusMessage);
+            AddMessageLabel(message, serviceBusMessage);
 
-            await _serviceBusSender.SendMessageAsync(message);
+            await _serviceBusSender.SendMessageAsync(serviceBusMessage);
         }
 
         private ServiceBusProcessor BuildServiceBusProcessor(ServiceBusClient serviceBusClient, string topic,
@@ -115,7 +117,8 @@ namespace MessageBus.Microsoft.ServiceBus
             {
                 MessageId = args.Message.MessageId,
                 CorrelationId = args.Message.CorrelationId,
-                DeliveryCount = args.Message.DeliveryCount
+                DeliveryCount = args.Message.DeliveryCount,
+                Label = args.Message.Subject
             };
 
             ThrowIfMessageHandlerNotFound(messageReceivedEventArgs.MessageId);
@@ -205,5 +208,8 @@ namespace MessageBus.Microsoft.ServiceBus
 
         private void AddMessageDelay(DateTimeOffset enqueueTime, ServiceBusMessage message)
            => message.ScheduledEnqueueTime = enqueueTime;
+
+        private static void AddMessageLabel<T>(Message<T> eventMessage, ServiceBusMessage message) where T : IMessage
+            => message.Subject = eventMessage.Label;
     }
 }

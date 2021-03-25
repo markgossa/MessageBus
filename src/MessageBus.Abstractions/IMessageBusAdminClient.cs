@@ -6,7 +6,7 @@ namespace MessageBus.Abstractions
 {
     public interface IMessageBusAdminClient
     {
-        Task ConfigureAsync(IEnumerable<MessageSubscription> messageSubscriptions, 
+        Task ConfigureAsync(IEnumerable<MessageHandlerMapping> messageSubscriptions, 
             MessageBusOptions messageBusOptions = null);
         Task<bool> CheckHealthAsync();
     }

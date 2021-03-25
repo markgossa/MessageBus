@@ -1,4 +1,5 @@
 ﻿using MessageBus.Abstractions;
+using MessageBus.Abstractions.Messages;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 

@@ -1,7 +1,9 @@
 ﻿using MessageBus.Abstractions;
+using MessageBus.Abstractions.Messages;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace MessageBus.Extensions.Microsoft.DependencyInjection
 {
@@ -9,7 +11,7 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
     {
         private readonly IServiceCollection _services;
         private ServiceProvider? _serviceProvider;
-        private readonly Dictionary<string, MessageSubscription> _messageSubscriptions = new Dictionary<string, MessageSubscription>();
+        private readonly Dictionary<string, MessageHandlerMapping> _messageSubscriptions = new Dictionary<string, MessageHandlerMapping>();
 
         public MessageHandlerResolver(IServiceCollection services)
         {
@@ -32,24 +34,27 @@ namespace MessageBus.Extensions.Microsoft.DependencyInjection
             }
         }
 
-        public IEnumerable<MessageSubscription> GetMessageSubscriptions() => _messageSubscriptions.Values;
+        public IEnumerable<MessageHandlerMapping> GetMessageHandlerMappings() => _messageSubscriptions.Values;
 
-        public void SubcribeToMessage<TMessage, TMessageHandler>(Dictionary<string, string>? messageProperties = null)
+        public void SubcribeToMessage<TMessage, TMessageHandler>(SubscriptionFilter subscriptionFilter)
             where TMessage : IMessage
             where TMessageHandler : IMessageHandler<TMessage>
         {
+            ThrowIfNullSubscriptionFilter(subscriptionFilter);
+
             _services.AddTransient(typeof(IMessageHandler<>).MakeGenericType(typeof(TMessage)), typeof(TMessageHandler));
-            _messageSubscriptions.Add(GetMessageType<TMessage>(messageProperties), new MessageSubscription(typeof(TMessage), 
-                typeof(TMessageHandler), messageProperties));
+
+            _messageSubscriptions.Add(subscriptionFilter.EffectiveMessageLabel,
+                new MessageHandlerMapping(typeof(TMessage), typeof(TMessageHandler), subscriptionFilter
+                    ?? throw new ArgumentNullException(nameof(subscriptionFilter))));
         }
 
-        private static string GetMessageType<TMessage>(Dictionary<string, string>? messageProperties) where TMessage : IMessage
+        private static void ThrowIfNullSubscriptionFilter(SubscriptionFilter subscriptionFilter)
         {
-            const string messageTypePropertyName = "MessageType";
-
-            return messageProperties != null && messageProperties.TryGetValue(messageTypePropertyName, out var messageType)
-                    ? messageType
-                    : typeof(TMessage).Name;
+            if (subscriptionFilter is null)
+            {
+                throw new ArgumentNullException(nameof(subscriptionFilter));
+            }
         }
     }
 }

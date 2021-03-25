@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MessageBus.Abstractions
+namespace MessageBus.Abstractions.Messages
 {
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class MessageVersionAttribute : Attribute
@@ -11,7 +11,7 @@ namespace MessageBus.Abstractions
         {
             if (version <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(version), 
+                throw new ArgumentOutOfRangeException(nameof(version),
                     "Version must be an integer greater than 0");
             }
 
