@@ -131,10 +131,10 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         protected async Task<AircraftLanded> CreateSubscriptionAndSendAircraftLandedEventAsync(string subscriptionName)
         {
             await CreateSubscriptionAsync(subscriptionName);
-            var aircraftTakenOffEvent = new AircraftLanded { AircraftId = Guid.NewGuid().ToString() };
-            await SendMessagesAsync(aircraftTakenOffEvent, nameof(AircraftTakenOff));
+            var aircraftLandedEvent = new AircraftLanded { AircraftId = Guid.NewGuid().ToString() };
+            await SendMessagesAsync(aircraftLandedEvent, nameof(AircraftLanded));
 
-            return aircraftTakenOffEvent;
+            return aircraftLandedEvent;
         }
 
         protected async Task CreateSubscriptionAndSendCustomMessageAsync(string messageText, string subscriptionName)
