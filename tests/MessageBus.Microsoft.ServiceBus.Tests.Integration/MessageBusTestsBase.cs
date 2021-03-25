@@ -66,7 +66,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 Timestamp = DateTime.Now
             };
 
-        protected async Task SendMessages(IMessage message, int count = 1, string messageType = null,
+        protected async Task SendMessagesAsync(IMessage message, string subject, int count = 1, string messageType = null,
             string messageId = null)
         {
             var messages = new List<ServiceBusMessage>();
@@ -74,7 +74,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             {
                 var serviceBusMessage = new ServiceBusMessage(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, message.GetType())))
                 {
-                    Subject = message.GetType().Name
+                    Subject = subject
                 };
 
                 if (!string.IsNullOrWhiteSpace(messageType))
@@ -119,25 +119,25 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
             return JsonSerializer.Deserialize<AircraftTakenOff>(contents).AircraftId;
         }
 
-        protected async Task<AircraftTakenOff> CreateSubscriptionAndSendAircraftTakenOffEvent(string subscriptionName)
+        protected async Task<AircraftTakenOff> CreateSubscriptionAndSendAircraftTakenOffEventAsync(string subscriptionName)
         {
             await CreateSubscriptionAsync(subscriptionName);
             var aircraftTakenOffEvent = BuildAircraftTakenOffEvent();
-            await SendMessages(aircraftTakenOffEvent);
+            await SendMessagesAsync(aircraftTakenOffEvent, nameof(AircraftTakenOff));
 
             return aircraftTakenOffEvent;
         }
         
-        protected async Task<AircraftLanded> CreateSubscriptionAndSendAircraftLandedEvent(string subscriptionName)
+        protected async Task<AircraftLanded> CreateSubscriptionAndSendAircraftLandedEventAsync(string subscriptionName)
         {
             await CreateSubscriptionAsync(subscriptionName);
             var aircraftTakenOffEvent = new AircraftLanded { AircraftId = Guid.NewGuid().ToString() };
-            await SendMessages(aircraftTakenOffEvent);
+            await SendMessagesAsync(aircraftTakenOffEvent, nameof(AircraftTakenOff));
 
             return aircraftTakenOffEvent;
         }
 
-        protected async Task CreateSubscriptionAndSendCustomMessage(string messageText, string subscriptionName)
+        protected async Task CreateSubscriptionAndSendCustomMessageAsync(string messageText, string subscriptionName)
         {
             await CreateSubscriptionAsync(subscriptionName); 
             var message = new ServiceBusMessage(Encoding.UTF8.GetBytes(messageText));
@@ -190,14 +190,14 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                 _ => throw new NotImplementedException()
             };
 
-        protected static async Task StartMessageBusHostedService(ServiceProvider serviceProvider)
+        protected static async Task StartMessageBusHostedServiceAsync(ServiceProvider serviceProvider)
         {
             var sut = serviceProvider.GetService<IHostedService>() as MessageBusHostedService;
 
             await sut.StartAsync(new CancellationToken());
         }
 
-        protected async Task CreateEndToEndTestSubscriptions(string subscription)
+        protected async Task CreateEndToEndTestSubscriptionsAsync(string subscription)
         {
             await DeleteSubscriptionAsync(subscription);
             await DeleteSubscriptionAsync($"{subscription}-Output");
@@ -219,27 +219,27 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         protected async Task AssertSendsMessageCopyWithDelay(string inputSubscription, string messageType)
         {
             var aircraftLeftRunwayEvent = new AircraftLeftRunway { RunwayId = Guid.NewGuid().ToString() };
-            await SendMessages(aircraftLeftRunwayEvent, 1, messageType);
+            await SendMessagesAsync(aircraftLeftRunwayEvent, messageType, 1);
             await Task.Delay(TimeSpan.FromSeconds(4));
             Assert.DoesNotContain(await ReceiveMessagesForSubscriptionAsync(inputSubscription),
                 m => m.Body.ToObjectFromJson<AircraftTakenOff>().AircraftId == aircraftLeftRunwayEvent.RunwayId
-                    && m.ApplicationProperties["MessageType"].ToString() == messageType);
-            Assert.Equal(1, await FindAircraftReachedGateEventCount(inputSubscription, aircraftLeftRunwayEvent));
+                    && m.Subject == messageType);
+            Assert.Equal(1, await FindAircraftReachedGateEventCountAsync(inputSubscription, aircraftLeftRunwayEvent));
             await Task.Delay(TimeSpan.FromSeconds(12));
-            Assert.Equal(1, await FindAircraftReachedGateEventCount(inputSubscription, aircraftLeftRunwayEvent));
+            Assert.Equal(1, await FindAircraftReachedGateEventCountAsync(inputSubscription, aircraftLeftRunwayEvent));
         }
 
-        protected async Task<int> FindAircraftReachedGateEventCount(string inputSubscription, AircraftLeftRunway aircraftLeftRunwayEvent)
+        protected async Task<int> FindAircraftReachedGateEventCountAsync(string inputSubscription, AircraftLeftRunway aircraftLeftRunwayEvent)
             => (await ReceiveMessagesForSubscriptionAsync($"{inputSubscription}-Output")).Count(m =>
-                    m.ApplicationProperties["MessageType"].ToString() == nameof(AircraftReachedGate)
+                    m.Subject == nameof(AircraftReachedGate)
                     && m.Body.ToObjectFromJson<AircraftReachedGate>().AirlineId == aircraftLeftRunwayEvent.RunwayId);
 
-        protected async Task<ServiceProvider> StartSendMessageCopyTestService<T>(string inputSubscription, string messageType)
+        protected async Task<ServiceProvider> StartSendMessageCopyTestServiceAsync<T>(string inputSubscription, string messageType)
             where T : IMessageHandler<AircraftLeftRunway>
         {
             var subscriptionFilter = new SubscriptionFilter
             {
-                MessageProperties = new Dictionary<string, string> { { "MessageType", messageType } }
+                Label = messageType
             };
 
             var services = new ServiceCollection();
@@ -249,20 +249,20 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
                         Configuration["Topic"], inputSubscription, Configuration["TenantId"]))
                 .SubscribeToMessage<AircraftLeftRunway, T>(subscriptionFilter);
             var serviceProvider = services.BuildServiceProvider();
-            await StartMessageBusHostedService(serviceProvider);
+            await StartMessageBusHostedServiceAsync(serviceProvider);
 
             return serviceProvider;
         }
 
-        protected async Task<IEnumerable<ServiceBusReceivedMessage>> FindSetAutopilotCommands(string subscription, SetAutopilot setAutopilotCommand)
+        protected async Task<IEnumerable<ServiceBusReceivedMessage>> FindSetAutopilotCommandsAsync(string subscription, SetAutopilot setAutopilotCommand)
             => (await ReceiveMessagesForSubscriptionAsync($"{subscription}-Output")).Where(
-                m => m.ApplicationProperties["MessageType"].ToString() == nameof(SetAutopilot)
+                m => m.Subject == nameof(SetAutopilot)
                     && m.Body.ToObjectFromJson<SetAutopilot>().AutopilotId == setAutopilotCommand.AutopilotId);
 
-        protected async Task<IEnumerable<ServiceBusReceivedMessage>> FindAircraftTakenOffEvents(string subscription, 
+        protected async Task<IEnumerable<ServiceBusReceivedMessage>> FindAircraftTakenOffEventsAsync(string subscription, 
             AircraftTakenOff aircraftTakenOffEvent) 
                 => (await ReceiveMessagesForSubscriptionAsync($"{subscription}-Output")).Where(
-                    m => m.ApplicationProperties["MessageType"].ToString() == nameof(AircraftTakenOff)
+                    m => m.Subject == nameof(AircraftTakenOff)
                         && m.Body.ToObjectFromJson<AircraftTakenOff>().AircraftId == aircraftTakenOffEvent.AircraftId);
     }
 }

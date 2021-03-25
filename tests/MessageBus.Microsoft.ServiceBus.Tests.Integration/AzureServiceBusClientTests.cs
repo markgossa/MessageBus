@@ -19,7 +19,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             var mockTestHandler = new Mock<ITestHandler>();
             var subscription = nameof(CallsCorrectMessageHandlerUsingConnectionString);
-            var aircraftTakenOffEvent = await CreateSubscriptionAndSendAircraftTakenOffEvent(subscription);
+            var aircraftTakenOffEvent = await CreateSubscriptionAndSendAircraftTakenOffEventAsync(subscription);
 
             _azureServiceBusClient = new AzureServiceBusClient(_connectionString, _topic, subscription);
             AddHandlers(mockTestHandler, _azureServiceBusClient);
@@ -36,7 +36,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             var mockTestHandler = new Mock<ITestHandler>();
             var subscription = nameof(CallsCorrectMessageHandlerUsingConnectionString);
-            var aircraftTakenOffEvent = await CreateSubscriptionAndSendAircraftTakenOffEvent(subscription);
+            var aircraftTakenOffEvent = await CreateSubscriptionAndSendAircraftTakenOffEventAsync(subscription);
 
             _azureServiceBusClient = new AzureServiceBusClient(_connectionString, _topic, subscription);
             _azureServiceBusClient.AddErrorMessageHandler(mockTestHandler.Object.ErrorMessageHandler); 
@@ -52,7 +52,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             var mockTestHandler = new Mock<ITestHandler>();
             var subscription = nameof(CallsCorrectMessageHandlerUsingManagedIdentity);
-            var aircraftlandedEvent = await CreateSubscriptionAndSendAircraftLandedEvent(subscription);
+            var aircraftlandedEvent = await CreateSubscriptionAndSendAircraftLandedEventAsync(subscription);
 
             _azureServiceBusClient = new AzureServiceBusClient(_hostname, _topic, subscription, _tenantId);
             AddHandlers(mockTestHandler, _azureServiceBusClient);
@@ -68,7 +68,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         public async Task DeadLettersMessageWithoutReasonAsync()
         {
             var subscription = nameof(DeadLettersMessageWithoutReasonAsync);
-            var aircraftlandedEvent = await CreateSubscriptionAndSendAircraftLandedEvent(subscription);
+            var aircraftlandedEvent = await CreateSubscriptionAndSendAircraftLandedEventAsync(subscription);
             var aircraftLandedHandler = new AircraftLandedHandler();
             var mockMessageHandlerResolver = new Mock<IMessageHandlerResolver>();
             mockMessageHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded))).Returns(aircraftLandedHandler);
@@ -93,7 +93,7 @@ namespace MessageBus.Microsoft.ServiceBus.Tests.Integration
         {
             const string deadLetterReason = "Json Serliazation issue";
             var subscription = nameof(DeadLettersMessageWithReasonAsync);
-            var aircraftlandedEvent = await CreateSubscriptionAndSendAircraftLandedEvent(subscription);
+            var aircraftlandedEvent = await CreateSubscriptionAndSendAircraftLandedEventAsync(subscription);
             var aircraftLandedHandler = new AircraftLandedHandler(deadLetterReason);
             var mockMessageHandlerResolver = new Mock<IMessageHandlerResolver>();
             mockMessageHandlerResolver.Setup(m => m.Resolve(nameof(AircraftLanded))).Returns(aircraftLandedHandler);
