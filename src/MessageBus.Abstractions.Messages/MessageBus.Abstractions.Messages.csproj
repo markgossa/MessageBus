@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
+		<nullable>enable</nullable>
+		<PackageId>MessageBus.Abstractions.Messages</PackageId>
+		<Version>1.0.0</Version>
+		<Authors>Mark Gossa</Authors>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Description>Messaging abstraction for event driven solutions using messaging technologies like Azure Service Bus</Description>
+		<PackageTags>Event driven architecture;Azure Service Bus;Messaging</PackageTags>
+		<PackageProjectUrl>https://github.com/markgossa/MessageBus</PackageProjectUrl>
+	</PropertyGroup>
+
+</Project>

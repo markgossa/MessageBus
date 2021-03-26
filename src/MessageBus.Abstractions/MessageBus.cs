@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MessageBus.Abstractions.Messages;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -41,7 +42,7 @@ namespace MessageBus.Abstractions
         {
             _messageHandlerResolver.Initialize();
             _messageProcessorResolver.Initialize();
-            await _messageBusAdminClient.ConfigureAsync(_messageHandlerResolver.GetMessageSubscriptions(),
+            await _messageBusAdminClient.ConfigureAsync(_messageHandlerResolver.GetMessageHandlerMappings(),
                 _messageBusOptions);
         }
 
@@ -52,26 +53,19 @@ namespace MessageBus.Abstractions
 
         public Task StopAsync() => _messageBusClient.StopAsync();
 
-        public IMessageBus SubscribeToMessage<TMessage, TMessageHandler>(Dictionary<string, string>? messageProperties = null)
+        public IMessageBus SubscribeToMessage<TMessage, TMessageHandler>(SubscriptionFilter? subscriptionFilter = null)
             where TMessage : IMessage
             where TMessageHandler : IMessageHandler<TMessage>
         {
-            _messageHandlerResolver.SubcribeToMessage<TMessage, TMessageHandler>(messageProperties);
+            subscriptionFilter = BuildSubscriptionFilter<TMessage>(subscriptionFilter);
+            _messageHandlerResolver.SubcribeToMessage<TMessage, TMessageHandler>(subscriptionFilter);
 
             return this;
         }
 
-        public async Task PublishAsync(Message<IEvent> eventObject)
-        {
-            AddMessageProperties(eventObject);
-            await _messageBusClient.PublishAsync(eventObject);
-        }
+        public async Task PublishAsync(Message<IEvent> eventObject) => await _messageBusClient.PublishAsync(eventObject);
 
-        public async Task SendAsync(Message<ICommand> command)
-        {
-            AddMessageProperties(command);
-            await _messageBusClient.SendAsync(command);
-        }
+        public async Task SendAsync(Message<ICommand> command) => await _messageBusClient.SendAsync(command);
 
         public IMessageBus AddMessagePreProcessor<T>() where T : class, IMessagePreProcessor
         {
@@ -86,6 +80,12 @@ namespace MessageBus.Abstractions
 
             return this;
         }
+
+        public async Task SendMessageCopyAsync(object messageObject, int delayInSeconds = 0) 
+            => await _messageBusClient.SendMessageCopyAsync(messageObject, delayInSeconds);
+
+        public async Task SendMessageCopyAsync(object messageObject, DateTimeOffset enqueueTime)
+            => await _messageBusClient.SendMessageCopyAsync(messageObject, enqueueTime);
 
         internal async Task OnErrorMessageReceived(MessageErrorReceivedEventArgs args)
             => await Task.Run(() => throw new MessageReceivedException(args.Exception));
@@ -102,7 +102,7 @@ namespace MessageBus.Abstractions
         }
 
         private object GetMessageHandler(MessageReceivedEventArgs args) =>
-            _messageHandlerResolver.Resolve(args.MessageProperties[_messageTypePropertyName])
+            _messageHandlerResolver.Resolve(args.Label ?? args.MessageProperties[_messageTypePropertyName])
                 ?? throw new MessageHandlerNotFoundException("Message handler not found or could not be awaited " +
                     $"for MessageId: {args.MessageId}");
 
@@ -150,34 +150,12 @@ namespace MessageBus.Abstractions
                 .First(i => i.Name.Contains(typeof(IMessageHandler<>).Name))
                 .GenericTypeArguments.First();
 
-        private void AddMessageProperties<T>(Message<T> message) where T : IMessage
+        private SubscriptionFilter BuildSubscriptionFilter<TMessage>(SubscriptionFilter? subscriptionFilter) where TMessage : IMessage
         {
-            if (!message.OverrideDefaultMessageProperties)
-            {
-                AddMessageTypeProperty(message);
-                AddMessageVersionProperty(message);
-            }
-        }
+            subscriptionFilter ??= new SubscriptionFilter { Label = typeof(TMessage).Name };
 
-        private void AddMessageTypeProperty<T>(Message<T> message) where T : IMessage
-        {
-            if (message.Body != null)
-            {
-                message.MessageProperties.Add(_messageBusOptions.MessageTypePropertyName, message.Body.GetType().Name);
-            }
+            subscriptionFilter.Build(_messageBusOptions, typeof(TMessage));
+            return subscriptionFilter!;
         }
-
-        private void AddMessageVersionProperty<T>(Message<T> message) where T : IMessage
-        {
-            var messageVersion = GetMessageVersion(message);
-            if (messageVersion != null)
-            {
-                message.MessageProperties.Add(_messageBusOptions.MessageVersionPropertyName, messageVersion);
-            }
-        }
-
-        private static string? GetMessageVersion<T>(Message<T> message) where T : IMessage
-            => message.Body?.GetType().CustomAttributes.FirstOrDefault(b =>
-                b.AttributeType == typeof(MessageVersionAttribute))?.ConstructorArguments.FirstOrDefault().Value?.ToString();
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using MessageBus.Abstractions.Messages;
+using System.Threading.Tasks;
 
 namespace MessageBus.Abstractions
 {

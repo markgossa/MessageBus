@@ -2,11 +2,11 @@
 
 namespace MessageBus.Microsoft.ServiceBus.Tests.Integration.Services
 {
-    public class SomeDependency : ISomeDependency
+    public class MessageTracker : IMessageTracker
     {
         public List<string> Ids { get; set; }
 
-        public SomeDependency()
+        public MessageTracker()
         {
             Ids = new List<string>();
         }

@@ -1,4 +1,5 @@
 ﻿using MessageBus.Abstractions;
+using MessageBus.Abstractions.Messages;
 using System.Threading.Tasks;
 
 namespace MessageBus.Extensions.Microsoft.DependencyInjection.Tests.Unit.Services

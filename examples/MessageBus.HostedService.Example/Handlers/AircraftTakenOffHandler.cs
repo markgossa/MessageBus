@@ -1,4 +1,5 @@
 ﻿using MessageBus.Abstractions;
+using MessageBus.Abstractions.Messages;
 using MessageBus.HostedService.Example.Commands;
 using MessageBus.HostedService.Example.Events;
 using MessageBus.HostedService.Example.Services;
@@ -29,7 +30,10 @@ namespace MessageBus.HostedService.Example.Handlers
             Console.WriteLine($"Raw message as text: {context.Body}");
 
             // Get message properties
-            Console.WriteLine($"MessageType: {context.Properties["MessageType"]}");
+            foreach (var property in context.Properties)
+            {
+                Console.WriteLine($"{property.Key}: {property.Value}");
+            }
 
             try
             {
@@ -64,7 +68,8 @@ namespace MessageBus.HostedService.Example.Handlers
                 MessageProperties = new Dictionary<string, string>
                 {
                     { "AircraftId", context.Message.AircraftId }
-                }
+                },
+                Label = "ChangeFrequencyCommand"
             };
 
             await context.SendAsync(changeFrequencyCommand);

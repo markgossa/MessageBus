@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MessageBus.Abstractions.Messages;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -16,6 +17,8 @@ namespace MessageBus.Abstractions
         Task DeadLetterMessageAsync(string? reason = null);
         Task PublishAsync(Message<IEvent> eventMessage);
         Task SendAsync(Message<ICommand> command);
+        Task SendMessageCopyAsync(int delayInSeconds = 0);
+        Task SendMessageCopyAsync(DateTimeOffset enqueueTime);
     }
 }
  

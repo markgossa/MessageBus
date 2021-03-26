@@ -4,7 +4,7 @@
 	  <TargetFramework>netcoreapp3.1</TargetFramework>
 	  <nullable>enable</nullable>
 	  <PackageId>MessageBus.Abstractions</PackageId>
-	  <Version>1.1.1</Version>
+	  <Version>2.0.0</Version>
 	  <Authors>Mark Gossa</Authors>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
 	  <Description>Messaging abstraction for event driven solutions using messaging technologies like Azure Service Bus</Description>
@@ -13,6 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="messagebus.abstractions.messages" Version="1.0.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="system.memory.data" Version="1.0.1" />
   </ItemGroup>
